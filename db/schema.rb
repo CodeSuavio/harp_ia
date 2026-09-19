@@ -50,6 +50,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
     t.index ["party_id"], name: "index_candidates_on_party_id"
   end
 
+  create_table "chats", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_chats_on_user_id"
+  end
+
   create_table "deputies", force: :cascade do |t|
     t.string "city_of_birth"
     t.string "cpf"
@@ -86,6 +93,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
     t.datetime "updated_at", null: false
     t.integer "year"
     t.index ["deputy_id"], name: "index_expenses_on_deputy_id"
+  end
+
+  create_table "messages", force: :cascade do |t|
+    t.bigint "chat_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
 
   create_table "parties", force: :cascade do |t|
@@ -140,8 +156,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
   add_foreign_key "bills", "parties"
   add_foreign_key "candidates", "deputies", column: "current_deputy_id"
   add_foreign_key "candidates", "parties"
+  add_foreign_key "chats", "users"
   add_foreign_key "deputies", "parties"
   add_foreign_key "expenses", "deputies"
+  add_foreign_key "messages", "chats"
   add_foreign_key "polls", "bills"
   add_foreign_key "users", "bills"
   add_foreign_key "users", "candidates"
