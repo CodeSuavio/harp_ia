@@ -7,10 +7,12 @@ class ChatsController < ApplicationController
   end
 
   def show
+    @messages = @chat.messages.order(:created_at)
+    @message = Message.new
   end
 
   def create
-    @chat = current_user.chats.create
+    @chat = current_user.chats.new
 
     if @chat.save
       redirect_to @chat
@@ -27,6 +29,6 @@ class ChatsController < ApplicationController
   private
 
   def set_chat
-    @chat = current_user.chats.find(params [:id])
+    @chat = current_user.chats.find(params[:id])
   end
 end

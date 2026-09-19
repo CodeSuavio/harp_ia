@@ -1,0 +1,15 @@
+<h1>Chat</h1>
+
+<div>
+ <% @messages.each do |message| %>
+  <p>
+    <strong><%= message.role %>:</strong>
+    <%= message.content %>
+  <p>
+ <% end %>
+</div>
+
+<%= form_with model: [@chat, @message] do |form| %>
+  <%= form.text_area :content, placeholder: "Digite sua mensagem..." %>
+  <%= form.submit "Enviar", class: "btn btn-primary" %>
+<% end %>
