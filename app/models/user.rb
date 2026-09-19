@@ -8,4 +8,6 @@ class User < ApplicationRecord
   belongs_to :deputy, optional: true
   belongs_to :party, optional: true
   belongs_to :bill, optional: true
+
+  validates :first_name, :last_name, presence: true
 end
