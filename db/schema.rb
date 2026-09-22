@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_22_225603) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -121,24 +121,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.bigint "bill_id", null: false
-    t.bigint "candidate_id", null: false
     t.datetime "created_at", null: false
-    t.bigint "deputy_id", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name"
     t.string "last_name"
-    t.bigint "party_id", null: false
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.datetime "updated_at", null: false
-    t.index ["bill_id"], name: "index_users_on_bill_id"
-    t.index ["candidate_id"], name: "index_users_on_candidate_id"
-    t.index ["deputy_id"], name: "index_users_on_deputy_id"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["party_id"], name: "index_users_on_party_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
@@ -161,10 +153,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
   add_foreign_key "expenses", "deputies"
   add_foreign_key "messages", "chats"
   add_foreign_key "polls", "bills"
-  add_foreign_key "users", "bills"
-  add_foreign_key "users", "candidates"
-  add_foreign_key "users", "deputies"
-  add_foreign_key "users", "parties"
   add_foreign_key "votes", "deputies"
   add_foreign_key "votes", "polls"
 end
