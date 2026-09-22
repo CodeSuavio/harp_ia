@@ -1,1 +1,51 @@
 // Specific CSS for your home-page
+
+.home-hero {
+  background-color: $gray;
+  background-image: radial-gradient(circle at 20% 30%, rgba($orange, 0.15), transparent 45%);
+}
+
+.home-hero-card {
+  max-width: 24rem;
+  padding: 2rem;
+  border-radius: $border-radius-lg;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.text-brand {
+  color: $orange;
+}
+
+.btn-brand {
+  background-color: $orange;
+  border-color: $orange;
+  color: white;
+
+  &:hover {
+    background-color: darken($orange, 8%);
+    border-color: darken($orange, 8%);
+    color: white;
+  }
+}
+
+.candidate-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+.candidate-photo {
+  width: 5rem;
+  height: 5rem;
+  object-fit: cover;
+}
+
+.candidate-photo-placeholder {
+  width: 5rem;
+  height: 5rem;
+  background-color: $light-gray;
+  font-size: 1.5rem;
+}

@@ -1,2 +1,115 @@
-<h1>Pages#home</h1>
-<p>Find me in app/views/pages/home.html.erb</p>
+<% content_for :title, "HARP IA — Electoral Transparency" %>
+
+<section class="home-hero py-5">
+  <div class="container">
+    <div class="row align-items-center gy-5">
+      <div class="col-lg-6 text-white">
+        <h1 class="display-5 fw-bold mb-3">
+          The Eye of <span class="text-brand">Electoral Transparency</span>
+        </h1>
+        <p class="lead text-white-50 mb-4">
+          Independent monitoring powered by real-time data. Access the political
+          intelligence dashboard for a stronger democracy.
+        </p>
+        <ul class="list-unstyled d-flex flex-wrap gap-4 text-white-50 small mb-0">
+          <li><i class="fa-solid fa-check text-brand me-1"></i> Biometric data</li>
+          <li><i class="fa-solid fa-check text-brand me-1"></i> Financial audits</li>
+        </ul>
+      </div>
+
+      <div class="col-lg-6">
+        <div class="home-hero-card ms-lg-auto">
+          <% if user_signed_in? %>
+            <h2 class="h4 text-white text-center mb-3">Welcome back, <%= current_user.first_name %></h2>
+            <p class="text-white-50 text-center mb-0">
+              Keep exploring the candidate directory below.
+            </p>
+          <% else %>
+            <h2 class="h4 text-white text-center mb-4">Sign in to the HARP IA panel</h2>
+
+            <%= simple_form_for :user, url: user_session_path do |f| %>
+              <%= f.input :email,
+                          label: false,
+                          placeholder: "Institutional email",
+                          required: false,
+                          input_html: { autocomplete: "email" } %>
+              <%= f.input :password,
+                          label: false,
+                          placeholder: "Password",
+                          required: false,
+                          input_html: { autocomplete: "current-password" } %>
+              <%= f.button :submit, "Sign in", class: "btn btn-brand w-100" %>
+            <% end %>
+
+            <%= link_to "Forgot your password?", new_user_password_path, class: "d-block text-center text-brand small mt-3" %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="container py-5" data-controller="candidate-filter">
+  <div class="row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-5">
+    <div class="col-md-8">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="fa-solid fa-magnifying-glass text-muted"></i>
+        </span>
+        <input type="text"
+               class="form-control border-start-0"
+               placeholder="Search candidates by name..."
+               data-candidate-filter-target="search"
+               data-action="input->candidate-filter#filter">
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <select class="form-select"
+              data-candidate-filter-target="state"
+              data-action="change->candidate-filter#filter">
+        <option value="">All states</option>
+        <% @states.each do |state| %>
+          <option value="<%= state %>"><%= state %></option>
+        <% end %>
+      </select>
+    </div>
+  </div>
+
+  <h2 class="h4 mb-4">Candidate monitoring</h2>
+
+  <div class="row g-4">
+    <% @candidates.each do |candidate| %>
+      <div class="col-sm-6 col-lg-3"
+           data-candidate-filter-target="card"
+           data-filter-name="<%= [candidate.name, candidate.ballot_name].compact.join(" ").downcase %>"
+           data-filter-state="<%= candidate.state_label %>">
+        <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset" do %>
+          <div class="card candidate-card h-100 text-center border-0 shadow-sm">
+            <div class="card-body">
+              <% if candidate.photo_file.present? %>
+                <%= image_tag candidate.photo_file, class: "candidate-photo rounded-circle mb-3", alt: candidate.ballot_name %>
+              <% else %>
+                <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
+                  <i class="fa-solid fa-user text-muted"></i>
+                </div>
+              <% end %>
+
+              <h3 class="h6 mb-1"><%= candidate.ballot_name.presence || candidate.name %></h3>
+              <p class="text-brand small fw-bold text-uppercase mb-2"><%= candidate.state_label %></p>
+
+              <div class="d-flex justify-content-around border-top pt-2 mt-2 small text-muted">
+                <span>#<%= candidate.number %></span>
+                <span><%= candidate.candidacy_status.presence || "Not informed" %></span>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <p class="text-muted text-center py-5 d-none" data-candidate-filter-target="emptyState">
+    No candidates match your search.
+  </p>
+</section>
