@@ -7,6 +7,7 @@ class ChatsController < ApplicationController
   end
 
   def show
+    authorize @chat
     @messages = @chat.messages.order(:created_at)
     @message = Message.new
   end
