@@ -43,91 +43,94 @@ def blank_marker?(value)
   value.blank? || value.to_s.start_with?("#")
 end
 
-Candidate.destroy_all
-Deputy.destroy_all
-Party.destroy_all
-
-camara_ids = load_json("partidos.json").to_h { |p| [p["sigla"].upcase, p["id"]] }
-
-TSE_PARTIES.each do |p|
-  Party.create!(
-    label: p[:label],
-    name: p[:name],
-    number: p[:number],
-    registered_on: p[:registered_on],
-    former_labels: p[:former_labels],
-    active: true,
-    url: "https://#{p[:url]}",
-    camara_id: camara_ids[p[:label].upcase]
-  )
-end
-
-parties_by_camara_id = Party.where.not(camara_id: nil).pluck(:camara_id, :id).to_h
-parties_by_label = Party.pluck(:label, :id).to_h { |label, id| [label.upcase, id] }
-
-skipped_deputies = 0
-
-load_json("deputados.json").each do |d|
-  party_id = parties_by_camara_id[d["partido_id"]]
-  cpf = d["cpf"].to_s.gsub(/\D/, "")
-
-  if party_id.nil? || cpf.length != 11
-    skipped_deputies += 1
-    next
-  end
-
-  office = d["gabinete"] || {}
-
-  Deputy.create!(
-    party_id: party_id,
-    name: d["nome"],
-    cpf: cpf,
-    state_label: d["sigla_uf"],
-    photo_url: d["url_foto"],
-    email: d["email"],
-    status: d["situacao"],
-    electoral_status: d["condicao_eleitoral"],
-    date_of_birth: d["data_nascimento"],
-    city_of_birth: d["municipio_nascimento"],
-    state_of_birth: d["uf_nascimento"],
-    education_level: d["escolaridade"],
-    social_media: Array(d["redes_sociais"]).join(" "),
-    office_building: office["predio"],
-    office_room: office["sala"],
-    office_phone: office["telefone"]
-  )
-end
-
+stats = Hash.new(0)
 missing_parties = Hash.new(0)
-skipped_candidates = 0
 
-load_json("candidatos_2026.json").each do |c|
-  party_id = parties_by_label[c["sigla_partido"].to_s.upcase]
+ActiveRecord::Base.transaction do
+  camara_ids = load_json("partidos.json").to_h { |p| [p["sigla"].upcase, p["id"]] }
 
-  if party_id.nil?
-    missing_parties[c["sigla_partido"]] += 1
-    skipped_candidates += 1
-    next
+  TSE_PARTIES.each do |p|
+    party = Party.find_or_initialize_by(label: p[:label])
+    stats[party.new_record? ? :parties_created : :parties_updated] += 1
+
+    party.update!(
+      name: p[:name],
+      number: p[:number],
+      registered_on: p[:registered_on],
+      former_labels: p[:former_labels],
+      active: true,
+      url: "https://#{p[:url]}",
+      camara_id: camara_ids[p[:label].upcase]
+    )
   end
 
-  Candidate.create!(
-    party_id: party_id,
-    electoral_id: c["sq_candidato"],
-    name: c["nome"],
-    ballot_name: c["nome_urna"],
-    number: c["numero"],
-    state_label: c["sigla_uf"],
-    candidacy_status: blank_marker?(c["situacao_candidatura"]) ? nil : c["situacao_candidatura"],
-    running_for_reelection: c["concorre_a_reeleicao"],
-    education_level: blank_marker?(c["grau_instrucao"]) ? nil : c["grau_instrucao"],
-    occupation: blank_marker?(c["ocupacao"]) ? nil : c["ocupacao"],
-    gender: blank_marker?(c["genero"]) ? nil : c["genero"],
-    race_color: blank_marker?(c["raca_cor"]) ? nil : c["raca_cor"],
-    photo_file: c["arquivo_foto"]
-  )
+  parties_by_camara_id = Party.where.not(camara_id: nil).pluck(:camara_id, :id).to_h
+  parties_by_label = Party.pluck(:label, :id).to_h { |label, id| [label.upcase, id] }
+
+  load_json("deputados.json").each do |d|
+    party_id = parties_by_camara_id[d["partido_id"]]
+    cpf = d["cpf"].to_s.gsub(/\D/, "")
+
+    if party_id.nil? || cpf.length != 11
+      stats[:deputies_skipped] += 1
+      next
+    end
+
+    office = d["gabinete"] || {}
+
+    deputy = Deputy.find_or_initialize_by(cpf: cpf)
+    stats[deputy.new_record? ? :deputies_created : :deputies_updated] += 1
+
+    deputy.update!(
+      party_id: party_id,
+      name: d["nome"],
+      state_label: d["sigla_uf"],
+      photo_url: d["url_foto"],
+      email: d["email"],
+      status: d["situacao"],
+      electoral_status: d["condicao_eleitoral"],
+      date_of_birth: d["data_nascimento"],
+      city_of_birth: d["municipio_nascimento"],
+      state_of_birth: d["uf_nascimento"],
+      education_level: d["escolaridade"],
+      social_media: Array(d["redes_sociais"]).join(" "),
+      office_building: office["predio"],
+      office_room: office["sala"],
+      office_phone: office["telefone"]
+    )
+  end
+
+  load_json("candidatos_2026.json").each do |c|
+    party_id = parties_by_label[c["sigla_partido"].to_s.upcase]
+
+    if party_id.nil?
+      missing_parties[c["sigla_partido"]] += 1
+      stats[:candidates_skipped] += 1
+      next
+    end
+
+    candidate = Candidate.find_or_initialize_by(electoral_id: c["sq_candidato"])
+    stats[candidate.new_record? ? :candidates_created : :candidates_updated] += 1
+
+    candidate.update!(
+      party_id: party_id,
+      name: c["nome"],
+      ballot_name: c["nome_urna"],
+      number: c["numero"],
+      state_label: c["sigla_uf"],
+      candidacy_status: blank_marker?(c["situacao_candidatura"]) ? nil : c["situacao_candidatura"],
+      running_for_reelection: c["concorre_a_reeleicao"],
+      education_level: blank_marker?(c["grau_instrucao"]) ? nil : c["grau_instrucao"],
+      occupation: blank_marker?(c["ocupacao"]) ? nil : c["ocupacao"],
+      gender: blank_marker?(c["genero"]) ? nil : c["genero"],
+      race_color: blank_marker?(c["raca_cor"]) ? nil : c["raca_cor"],
+      photo_file: c["arquivo_foto"]
+    )
+  end
 end
 
-puts "#{Party.count} partidos, #{Deputy.count} deputados, #{Candidate.count} candidatos"
-puts "deputados pulados: #{skipped_deputies}" if skipped_deputies.positive?
-puts "candidatos pulados: #{skipped_candidates}"
-puts "siglas ainda sem partido: #{missing_parties.sort_by { |_, v| -v }.first(20).to_h}" if missing_parties.any?
+puts "partidos:   #{stats[:parties_created]} criados, #{stats[:parties_updated]} atualizados"
+puts "deputados:  #{stats[:deputies_created]} criados, #{stats[:deputies_updated]} atualizados, #{stats[:deputies_skipped]} pulados"
+puts "candidatos: #{stats[:candidates_created]} criados, #{stats[:candidates_updated]} atualizados, #{stats[:candidates_skipped]} pulados"
+puts "total no banco: #{Party.count} partidos, #{Deputy.count} deputados, #{Candidate.count} candidatos"
+puts "siglas sem partido: #{missing_parties.sort_by { |_, v| -v }.first(20).to_h}" if missing_parties.any?
