@@ -5,43 +5,43 @@
     <div class="row align-items-center gy-5">
       <div class="col-lg-6 text-white">
         <h1 class="display-5 fw-bold mb-3">
-          The Eye of <span class="text-brand">Electoral Transparency</span>
+          Os olhos da <span class="text-brand"> transparência eleitoral </span>
         </h1>
         <p class="lead text-white-50 mb-4">
-          Independent monitoring powered by real-time data. Access the political
-          intelligence dashboard for a stronger democracy.
+          Monitoramento independente baseado em dados em tempo real.
+          Acesse o painel de inteligência política para uma democracia mais forte.
         </p>
         <ul class="list-unstyled d-flex flex-wrap gap-4 text-white-50 small mb-0">
-          <li><i class="fa-solid fa-check text-brand me-1"></i> Biometric data</li>
-          <li><i class="fa-solid fa-check text-brand me-1"></i> Financial audits</li>
+          <li><i class="fa-solid fa-check text-brand me-1"></i> Transparência eleitoral</li>
+          <li><i class="fa-solid fa-check text-brand me-1"></i> Transparência financeira</li>
         </ul>
       </div>
 
       <div class="col-lg-6">
         <div class="home-hero-card ms-lg-auto">
           <% if user_signed_in? %>
-            <h2 class="h4 text-white text-center mb-3">Welcome back, <%= current_user.first_name %></h2>
+            <h2 class="h4 text-white text-center mb-3">Bem-vindo de volta, <%= current_user.first_name %></h2>
             <p class="text-white-50 text-center mb-0">
-              Keep exploring the candidate directory below.
+              Continue explorando o diretório de candidatos abaixo.
             </p>
           <% else %>
-            <h2 class="h4 text-white text-center mb-4">Sign in to the HARP IA panel</h2>
+            <h2 class="h4 text-white text-center mb-4">Entre na sua conta HARPIA</h2>
 
             <%= simple_form_for :user, url: user_session_path do |f| %>
               <%= f.input :email,
                           label: false,
-                          placeholder: "Institutional email",
+                          placeholder: "E-mail",
                           required: false,
                           input_html: { autocomplete: "email" } %>
               <%= f.input :password,
                           label: false,
-                          placeholder: "Password",
+                          placeholder: "Senha",
                           required: false,
                           input_html: { autocomplete: "current-password" } %>
               <%= f.button :submit, "Sign in", class: "btn btn-brand w-100" %>
             <% end %>
 
-            <%= link_to "Forgot your password?", new_user_password_path, class: "d-block text-center text-brand small mt-3" %>
+            <%= link_to "Esqueceu sua senha?", new_user_password_path, class: "d-block text-center text-brand small mt-3" %>
           <% end %>
         </div>
       </div>
@@ -58,7 +58,7 @@
         </span>
         <input type="text"
                class="form-control border-start-0"
-               placeholder="Search candidates by name..."
+               placeholder="Procure pelo nome do candidato..."
                data-candidate-filter-target="search"
                data-action="input->candidate-filter#filter">
       </div>
@@ -68,7 +68,7 @@
       <select class="form-select"
               data-candidate-filter-target="state"
               data-action="change->candidate-filter#filter">
-        <option value="">All states</option>
+        <option value="">Todos os estados</option>
         <% @states.each do |state| %>
           <option value="<%= state %>"><%= state %></option>
         <% end %>
@@ -76,7 +76,7 @@
     </div>
   </div>
 
-  <h2 class="h4 mb-4">Candidate monitoring</h2>
+  <h2 class="h4 mb-4">Feed dos candidatos</h2>
 
   <div class="row g-4">
     <% @candidates.each do |candidate| %>
@@ -110,6 +110,6 @@
   </div>
 
   <p class="text-muted text-center py-5 d-none" data-candidate-filter-target="emptyState">
-    No candidates match your search.
+    Nenhum candidato foi encontrado da sua pesquisa.
   </p>
 </section>
