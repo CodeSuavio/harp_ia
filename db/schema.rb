@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_22_233436) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -105,8 +105,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_184329) do
   end
 
   create_table "parties", force: :cascade do |t|
+    t.boolean "active"
+    t.integer "camara_id"
     t.datetime "created_at", null: false
+    t.string "former_labels"
+    t.string "label"
+    t.string "name"
+    t.integer "number"
+    t.date "registered_on"
+    t.string "succeeded_by"
     t.datetime "updated_at", null: false
+    t.string "url"
   end
 
   create_table "polls", force: :cascade do |t|
