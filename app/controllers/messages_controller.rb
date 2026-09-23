@@ -6,7 +6,16 @@ class MessagesController < ApplicationController
     @message = @chat.messages.new(message_params)
     @message.role = "user"
 
+    authorize @message
+
     if @message.save
+      llm_chat = RubyLLM.chat
+      response = llm_chat.ask(@message.content)
+
+      @chat.messages.create!(
+        content: response.content,
+        role: "assistant"
+      )
       redirect_to @chat
     else
       redirect_to @chat, alert: "Nao foi possivel enviar a mensagem."
