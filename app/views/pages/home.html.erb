@@ -1,115 +1,172 @@
-<% content_for :title, "HARP IA — Electoral Transparency" %>
+<div data-controller="candidate-filter" class="home-wrapper">
 
-<section class="home-hero py-5">
-  <div class="container">
-    <div class="row align-items-center gy-5">
-      <div class="col-lg-6 text-white">
-        <h1 class="display-5 fw-bold mb-3">
-          Os olhos da <span class="text-brand"> transparência eleitoral </span>
-        </h1>
-        <p class="lead text-white-50 mb-4">
-          Monitoramento independente baseado em dados em tempo real.
-          Acesse o painel de inteligência política para uma democracia mais forte.
-        </p>
-        <ul class="list-unstyled d-flex flex-wrap gap-4 text-white-50 small mb-0">
-          <li><i class="fa-solid fa-check text-brand me-1"></i> Transparência eleitoral</li>
-          <li><i class="fa-solid fa-check text-brand me-1"></i> Transparência financeira</li>
-        </ul>
-      </div>
+<!-- Hero Section Criativo com Mira de Câmera -->
+  <section class="hero-section position-relative overflow-hidden d-flex align-items-center">
+    <div class="hero-glow"></div>
+    <div class="container hero-content position-relative z-1">
+      <div class="row align-items-center">
 
-      <div class="col-lg-6">
-        <div class="home-hero-card ms-lg-auto">
-          <% if user_signed_in? %>
-            <h2 class="h4 text-white text-center mb-3">Bem-vindo de volta, <%= current_user.first_name %></h2>
-            <p class="text-white-50 text-center mb-0">
-              Continue explorando o diretório de candidatos abaixo.
-            </p>
-          <% else %>
-            <h2 class="h4 text-white text-center mb-4">Entre na sua conta HARPIA</h2>
-
-            <%= simple_form_for :user, url: user_session_path do |f| %>
-              <%= f.input :email,
-                          label: false,
-                          placeholder: "E-mail",
-                          required: false,
-                          input_html: { autocomplete: "email" } %>
-              <%= f.input :password,
-                          label: false,
-                          placeholder: "Senha",
-                          required: false,
-                          input_html: { autocomplete: "current-password" } %>
-              <%= f.button :submit, "Entrar", class: "btn btn-brand w-100" %>
-            <% end %>
-
-            <%= link_to "Esqueceu sua senha?", new_user_password_path, class: "d-block text-center text-brand small mt-3" %>
-          <% end %>
+        <!-- Texto (Esquerda) -->
+        <div class="col-lg-6 text-center text-lg-start mb-5 mb-lg-0">
+          <h1 class="display-4 fw-bolder text-white mb-3 letter-spacing-tight">
+            Foque nos seus <br><span class="text-gold">Candidatos</span>
+          </h1>
+          <p class="lead text-white-50 mb-0 mx-auto mx-lg-0" style="max-width: 450px;">
+            Pesquise, compare e acompanhe os dados como um verdadeiro investigador. A política sob as suas lentes.
+          </p>
         </div>
+
+        <!-- Mira de Câmera com Mapa em Flash (Direita) -->
+        <div class="col-lg-6 d-flex justify-content-center mt-5 mt-lg-0">
+          <div class="camera-viewfinder">
+
+            <!-- Bordas da Mira (Cantos) -->
+            <div class="vf-corner vf-tl"></div>
+            <div class="vf-corner vf-tr"></div>
+            <div class="vf-corner vf-bl"></div>
+            <div class="vf-corner vf-br"></div>
+
+            <!-- Cruz de mira central (Crosshair) -->
+            <div class="vf-crosshair-x"></div>
+            <div class="vf-crosshair-y"></div>
+
+            <!-- Efeito de Lente e Scanner -->
+            <div class="lens-glare"></div>
+            <div class="scanner-line"></div>
+
+            <!-- Globo Holográfico (SVG Inline) -->
+            <div class="hologram-container">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" class="hologram-base" style="width: 250px; height: 250px; fill: currentColor;">
+                <path d="M149.2 119.5l-6-6.4 1-5.1 4-1.3 5-1.9 4.3 1.9 2-3 8-1.5 5.5-5 5.5-2.7 7-6.2 5.5-2.5 5.4-3.1 3.2 2 3.1 4.7-3.1 4.3.4 3 6-3 6.8-.7 6-2 15 8.7 13.5.7 3.5-3 5.4 3 9.7-.3 3.4 2.8 5.7-.3 8.3-4.1.8 1.9 5.8 4 6.7 4 3.7.8 7 3.4.4-4 2.7-4.4 2-5 3-4 8 2.6 6 5.5.6-3 3-5 5.6-2 4 4.5 4.5 3-2 11.4 3-2 5 2.5 7.4.3 4 5 7 2.3 3.6-.8 6.5-6.5-1.7-8 1.5-6.6-4.6-2-3-4 1-5.7-1.4-8 4.6-4 4.8 2 2 4.4 1 2.6-3.8 3-5 3.5 2 .5 2 2.7 2 7.7 2 3 5 4.3 5 5 1 2 .2 3.5 5 .5 4 4.3 4-3 1.3.8-3 1.5-6 1.8-6 2.5-6-3.3-7.5-3.3 1-3.6 7-3.7 4-5.3 1-5-1.6-4 1-5 2.8-5 6-3.7.7-6 1.3-4-1.6-7-4-3-4 3-4 5.3-3.7 6.4-12.7 5.7-3.7 4.5-3-3.6-2 1.3 2 4 10.4-3-1-3-4-4 1-8 6.5-3 2 1.7 5-2.3 5.3-3-4-4.5 3-5 7 3-3-4 1-4.7-3.8-3-2 1-3 1-4 3 2.5-2.5 3-2 1.5 3 2 4 4.5-5 3-4-5-3.5 1-4.7 6.3-5.3 1-5.8 1.8-3-1.6-5.4 5-3-6-4.4 1.4-4.6-5 4.6-8.5-7.5 1.5-3.5 3-5.7-1-4-2-3-3 2-2 1.4-6-1.5-3 1.5-2 3.4-3.5-3-11.8 1.4-7 4-6 6.3-4 6-2 3-5 3-5.7-2.7-5-.3-7 5.7-4 7-6 7.5-6.7 4-5.4 2-5.4 5-5-2-6 2-3 4-3-5 4-5.4-1.7-6 3.6-5 6-1 5 1 3.5-5.5 3.5-6 4-6-1-5 6.4-3.5 1-6.5-3-5-2-4 3-4 1.3-5-2 1.5-6-2.6-5-.5-5 1.6-3 4-5 1.6-4.8 6.4-1.6 3.4-1.6 4-3-1.4-5 1.7-12-6 4-3.5 3-5-2.5-12.7-4-4.3 3.5-5 1-8-3.4-2.8-4 5.4-8.8.7-2.6-3 1-5-2-4-2.4 2-3.4 3.7-.7 7-6-1-5-3-5 3-4.5.3-3 5-3-2-2-4 2.5-4-5-2 3.5-4-1.3-3-3.6-2 1-3.6.5-2-6 2.4-3-2-6-5-3.7-6.5 1-5.4-2-4 5-5.5-2.4 4 1 5.3 3.5 2 3-4.6-3-6 4.7 3.5 5 1-3.6-5.6-3.8 2-3.7 1.4-4-2-4-3 5.4-7-5.5 1.4-4-6.4 1-6 2.5 2 4.4.4 3 6-5 4-4.4 2-2.5 1-5 2.6-3 3.7 1.4 3 2.7.5 4 4.5 1 5 3-2 6 5.5-1.5 5.5-2.7 6.3-5.5 4-5.7 3-5 5.7.5 7 2.3-1.5 3-2 6 3 4.5 1 4 4.5 3 2 4-5 1.6-2 5 2-4.5 4-4.3 5.4 3 3 5 3.6 2 4 4.5-4 5 1-3 5 3-2.6 6 1.4 6 5-1.5 6 1.8 7-3 5.4-1.4 5.6 1.5 6 5.7-4 7-6.5-1.6 3-2.8 1.4 4.5 5.4-3.4 4 3 2.6-6-2-5 3 5.6-2 3 3.7 5.7 2-2.4 3 1-2.4-4 2 2.5 5 2.4-4.5-2 3-3-3 3-5 1-4-3 1.4-6-1-3 2 1.4 4.5 2.4-4 2 3.3.4-3.6 6 1 4 4 3.5 2.5-3 5.7 1-4 4 2.4-3-4 6 1 6-5-1.3-6.5 6-3.8.7-3.8 6-4-1 4.5 3.5 5 6-4-1.5 4.5 5 2 2 3 5-3-3 3-3-4-2-4.6-2.5 4 2.4-1.7 4 3 2-2 3-4-1.8 3-2 6-4 4-2-3-3 1.5-6-3.6 6-5 3-4.4 5-1.7-6-1.5-4-5-4 4.4 3-4.5 4 4.6.4-1.5 3-5.5.8 4 6 1 4 3-3.6 3-2.5 2-5 2-4-2 3.4 3 4 5.3 2-3.4-4 1-5 2-4.6 3-5.5 1-6.5 1-3-3-5 3.5-3.4.4-6 2-3 2.5 4.5 3.6-2 3-3-3.6 2-4 3 4-5 3.5-5 5 1.4-3-3 1.5-5 4 2 3 6 4-6 3-1.6 3-2-2-4 2-5.4.6-4 1.4-7 4-5 6.6-4 7.4-2 5 3-6.4 1 6 5.4 6 5 2-4 5.7-6 4 2 6-2 4 4.7 3.5-3 5-5-2-4.5 4-5-2 3.5-1 4 4-2-2-4 3 3.3.5 3-2.4 3-4 6 4-1.6 2 1.7 6 5.4-3 4 1-5-2 3 4.5 1-6 2-4 3 3 3 5.6-3 5 4 2.5 2-2 5-6 2-5-2-6-3-5-1 4 2.7 3.6.4-3 4 4.3 1-5 5.5-2.6 6.3 3.6 3-2-2-3.5 3-5.5 1.5-4 2 4.4-5 2 3.3.4 3-5 6 3 4.6-2.6 5 4-3 5.5 2 2.3 4 1-6.4-1-6 3 5 4.4 2-1 4.5 5 1 5-2-2-5-4-5-1 2-5.4 6 4 3.7-6.5 3.4-6.3 4 4 4.6 1.4 3-1-3.6 6 3 2.6-3 1.4-7 3.8-2 6.5-6-3.8 2-6-3-2-2.5 3-6 5.8-2-3 4-2-3-2-5 1-6 3.5 3 2 4.6 1.4-3 4-5.5-1-4-2 3 4.6 2-1 3.5 2.5 4 4 3-1 2 2-6 2-6-5-3-2.6-6-2.6 5.6-1.5-3.6 2-5-4-5 2.5 4-2.5 3-2.4 4 2 2.7 5.7 4-1 6-4-1-5 1-6 1.5 5 2.5 5.4 4.6 2 2 3.8 6-3 4 5 1.6-4 4.5 2.5-6.5 1-4.7 6.4 5-3 3-5.6 1.6 5-1-3 5 5 1.6 3-5 3.6-2 3-4-1 4-3-3 6.6-4 4.6-5 4 1 6-5.5 1.5-3.5 4.4-2.4 1 6-3.5 3.5-5 5-2-5-4 4-1.6 4-5.4 2-5.4-3-3 1.6-4.5-2.5 4 2-5.6 4-6 2-3 2.6 4.3-1-3.7 6.4 4 5.3 2 2 4-1 5 1 3-3-1 2.5 4-5 3-5.7 3.6 2-4-1-4.5 2 2 3-1.6 2 1.7 4 3-5 3-3.7 1-4.6 6 4 3-2-6-2 5 2 5-6 1-4 4 2.3-4-2-4 5-2.5 5-2 3.6 4.6 1-4-3 3.6 5 3-2-6-3 4-4.5 2 1-3.8 6 1 6 3 4-2 5-3-3 4 1 3 3 5 2 2.5-4-5-3.5 2-4-2.4 3-5.5-2-4 3 2.5-2.5 2-6 1.4 3.7-2 5.5-1.5 5 3-5.7-3.7 1-5.3-3.6 3.6-2.3 3.3 2 3 5.4 2.6-2.5-1.4-6-5-5-2-6-5-2 1-5 3.3-4 6 5.7-4 5-2.5 4-5 2.5-4.5-1 4 4.3 2 2 3 4-2 4 1-5 3.6 2-2-4-2-4-3-4-4-5-2-4 3 2.4-1.5 3 2 3-5-1 4-2-3.6 4-4 4 4 6-3.6 5.5-1.5 4-5 1 5-4.5 4.5 3-6-2 5-2 4.4-6.4 3.4-3.4-1 4 3 1.6-3 1.5 6-3 4 5 1-3.5 5.5 3-4-2 3 2 4.5 4 3.6-2 3-2 5 1-2 5-5-3-3-5 3 2 4 4 6.7 4 1.4 3.6-6-3-6-4.5-5 3-2 5.6-3 1-3-3 5-1.5 4.6 1 5-4 5.3 2 2 4 3 2.4-2.4-2-4.5 3.5-3 5 2-1 4-3 3-5-2 4 2 2.3 5 1.5-3-2-5 3-3 4 4 6.6-4 5 1.6 4-2-5 3-4-3-5 5.3 4 4 1.4-4-3.6-2 2-6 4-2 6 2-4.6 3-3 5-2-3-4.5 3-6-4 1-4-3 1-3.5-5-3 1.6-3-1.6-4.5 4.5 1-4.7 3.8-3-2 1-3.6 5-1.3 2 4-2.5 1.5 5 2 3.7 4.5-2.5-1-4-2-3.6 5.6-1.5 4.5-2.5-4-5-4 4 4.3-1.4 3-3 5-4 5.4-1.5 4.6-2 2-3 4 3.6-2.6 6 1 4 3-2 1.4-3-5-4.6-5 4 3 3 5.4-2 4-4.5-1-5 3-5-2-2-5 3-4-2 3 2 4.4-3.6-1-5-2 3-3.5-2-4 1.4-2.5 2.5 4-3-4-3-5-4.4 2-5-4 4-2 4-3 2 3-5-1.3-4-3 1.4 3-5-2 4.5-2-3.6-4-1 4 4-3 1-5 2.4 4.5-1 4 3 1.6-4.3 1-5-3 1 4.5 3-2-5 1 4-3.8 2-6.5-1-5.3 2-2.5 4.5-3.3-3-4-5-1-6 2-6 3 4-2 6.5-6-3.8 1-6 4-3 5.4 1 6-2 5 1 3 3 5 2 2-1 3.5 3 2-6 2-3 4 2 4-4 2 4 3-2 5-1.3 4 2-2-4.5 3.5-3 5-1.6 3 1.5 6-4-2 5-3-3 4.6-2 3-5-3-3 5-1-5.4-1.5 5-2 3-4.5-1-3.7 4 4 3 2-2 3.5-3 2.5-4-5 1.5-6-1.5-3 2.5-2.5 1.4-3 4-5-3 1-4-3 1 4.6-2-4-2 5-2-2-5-4-4 2-2 4 1-5-4 4-4-5-2 1 4 4 4 1 2 2.5-4.5 2-4 4 1 6.5-2-4-3-4 1-4 4 2-4-5-2 3-5 3.5 2 2.5-1 3.5 2.4-3 1 4.6-2-3.6-1.5-3 1 3 3 5.5-2 4-3-5 1-4.7 4.6-5 4-4 2.5-1.5 3.7 2 5.3 2 2-3 1 3 3-5 1-3.6-2 2-4.6 3 3 5 1.5 4-1-6.5-3-5 3.5-3-5-2.4 1.5-3 3-4 4-4-1-3 5 3-2 4-2 4-2-4.6 1.4 3 3 4-2.5 2.5 3.3.4 3.7-2.6 6 1.5 4 4 3.7 1-4-2-3-4 3.7 4 4 6 1 4 3.3.4-3 1.4-5.3 3.6 1.5 5.5-2-2-5.4 1.5 5 1-5-4 4-3-4 1 6-3 4-3-5 1-5-2-4 2-4 4.5-4.6 1 4 4-3 1.6-4.6 2-3.5 1-6 3 3.5 2-1 4.5 3-2 1.7 6 5.6-2 4.4 2 2-4-5-1.5-6-5-5-2 5 2.6 4-4-5-3.3-3.6 2-3-2-2 3.6-2 2-4-2-4-4-3 1-5 2.6-5-3 1.4-3-2 4-5-1.5-6-2.5-5 3-3-4.5-4-2.5 4.5-1-4-4-3.5-3.6 1 5-4.3 1-4.6 2-4-3-4.4 2-4-2.4 3-5.5 2-4.6 3 3 5-1.4 4.6-3 5.4 2 2.6 4.3 1.4-3 4-3.7 1.4-3 2 3-4-2-3 2.5 2 5 2-4-2 5 2-4-5-4.3-1-3.6-2 2 3 5 3-3.7-1.4-3-2-5 3.3-3.6 1-4.6 3-2-2 3-4.6-3.4.5-2-5 3-5 3.6-1.5-4.5-1.5-3 2 2-5-2-2.7-5-.3-4 2-4-5 3 2 3.7 1 4.6 3-3-6-2-4-5 2 2 4.4-4-5-3 1.4-4.5 1.5-5.5 2.5-4-3-1.6 3 1.6-4 4.5-3.6-1.5-4 2-4.6 3-2-2 3.6 1.4-4 4.3 1-5 1.6 5 2.4-4-5 2-5-4-5-1-3 1-5-3 1.4 3 4.5-2 2 4-5-2 1-3.6-2-2 4.5 2 2-5 2 2 5-5-2.5 1-5.6-3-5.3-2-2-4 1.4-3 1-4.5 2.5 4-5 1 5 1-5.3-2 2-4-5-1-5 2-2-5 3 1 3 3 4 5 1-5-4 2 2 3.6 1 4.5-3 3-5 1-5 2.3 4 1.3-4-2-4-5-3.5-2-3 4-5 1.6 3-1.5 3 2 5 2.4 4-5-1.5 5 2.5 4 4.5 1-3-4-5 1 5 3-2-5.4 1 6-3 4-3 4 1-5-2 3-4.5 1-5 1.6 5.6 1 5 3-4.4-3 1.5-5.6 3 1.4 5.3-2 3 1.4-4-5 2.6-4 1.4 3 2 3 4.6 3.4 3.7-1 4.6-2-3.6-1-5 1.5 4 4 1-4-5-2-3 2-4-2 3.5 1 4 4.4-3 1.5-5 2 4-2-4.5 3.6-1-4-3-2-5-3-3 4.6 1 4-2 5 2 3.6-1 5 2.4 3 1.4-4.4 2 2.5-4 1.5 3 1-4-3 1-3.6 2-2-4.5-1-4-2 3.5-2 3-5-2.6 1-5 3.3.4-3 4.3 1-4-5-2-4 1.6-3 1 5.4-2 4-4.5-1 5.3-1.5-5-3-2-4 3 3 5 3.5 2-1 4 4.4-4.5-2 3 5.3-2 3-4 1-6 2-2-4 3.6-2 1-6 2.4 4-4-5-1-4-2-4-3 2 2 5-3 5-1-5 2.3 4-4.5 1.5-5 3-3-4-4 2.5-1.5-5 2-4 5.5-2-5-4-5-4 4.6 1.4 3.6-1.5-3-1-3 5-3-2-6-4.5 4-3-4-5-2-5 3 1 5.6-2-3 4.5-2 3.6 1.4 4.6-5 4-4 2-5-3.5 2.5 3-4 2.3-4-2-3.5-3-2.6-6-2.4 4-3.6 2-3 3-3-5 3-4-4.5 3-4 5 1-4-3-5-3.6 2 2 4 1 6-5-4 4.3-1-4.4-2.6-6-1.4 4.5 2 2 4 4.6 1-4.6 2-2-4-5-1-5 2-4 5.6-2 3 1.4 5-3 4.4 2.6-6-2-5 2 2-5 2.4-1.5-4-5-1-5-4.4-1.6 3 2 4 4 1 5 1 3-3 4-1.6-3 1-4.6-3.4 3.7-2 6.5 1-5 3-4-4-1 4 4.5 1-4 4.4-2-4 3-5 1 4.5-1.5-3-1.6-4.4-2.6-6-3.4 3 2.5 4-4.5-2 3.6 1.4-4-5-4-3 2 3-5-1.3-4-2 3-5-2.6-4-1.4-3.6-3 1-6-3.6-5.5 1.5 5 2.5 4 4-2-3-4 3.6-2 3-1 5 2 3.5 2.5 4-2-5-4.5 1.5-4-4-4 1 4.6 3 2 5-4-2-4-5-3.5-2-3 4-2 4 4 1 5 1.4-3-3 1-5 2.4 4.5-2-4 1.5 3 2 4-2-5-3 1.4 4 4.6 2-2-4-5-1 4 3 1-3.6-3 2.5-1-5-2.3 4 1.3 4 3-2 5-2-5-4-5 1 5 3.3.4-3-4.6 2 2 4.4 1-5 2-4 5-3 5-1-5 3 2 3-5-1 4 4-3 1-3.6 2 2-4-2-5-4 4 4 1 5-4.4-3 1.5 5-2 3.5 2-4-2-3-4-4.5-2 1-5-2-3.5-3 1 5.3 2-2-4-5-4 4 3.4 1 4 4-2 4-3 2 2 5 2-3 4.5 1.4-3-5 3-5-2-3 4 2.4-3.7 1-4.3 1-5-2-4 4.5-2-3 5-1-5-3 2 3 5 3 2-2 4.4-4-5-3 1.4-4.5-2-3.6-3 1-4-2 3-5-1.3-4-2 3.5 1-5 2 2.5-4.5-3.5-2-3 4.5-2 1 3.5 2-2 4-5-4 4.6 1 4-2 5 2-3 4 2-5-3-5.4-1.5 4.5-2-4 3 2 4.5-4 4.6 2-2 3-5 3-2.6 1-4.4-2.6 5 4-5-1-5 2-4 5.6-2 3.4-3 1-5-3 1 4 4.5 1 4.6-2-2-4-5-4-2.6 1.5-3 1-3.6-3 2 2.5-4-2-4-5-3 1.6 3 1.5 5-2 3.5 2.5-1 3.4-3.7-1 4.6 3-2-6-2 5.4-2 4-5-1-5-4 4 4 1.5 5 1-3.6-3 2 2.5-4.5-1-4-2 3-5-1-5-4 4 4 1.5 5 1-3.6-3 2 2.5-4.5-1-4-2 3-5-1-5-3 1-3.6-3 2 2.5-4.5-1-4-2 3-5-1-5-4 4 4.3 1.4 3-3 1.4-3-5-4-3 2 3 5-1-5 2 2.4 4.6-4.5-2-3 4-2 5-3-5-1-5-3 1-3.6-3 2 2.5-4.5-1-4-2 3-5-1-5-4 4 4.3 1.4 3-3 1.4-3-5-4-3 2 3 5-1-5 2 2.4 4.6-4.5-2-3 4-2 5-3-5-1-5-3 1-3.6-3 2 2.5-4.5-1-4-2 3-5-1-5-4z"/>
+              </svg>
+
+              <!-- Flashes (Estados pulsando) -->
+              <div class="flash-dot dot-norte"></div>
+              <div class="flash-dot dot-nordeste"></div>
+              <div class="flash-dot dot-centro"></div>
+              <div class="flash-dot dot-sudeste"></div>
+              <div class="flash-dot dot-sul"></div>
+            </div>
+
+          </div>
+        </div>
+
       </div>
     </div>
-  </div>
-</section>
+  </section>
 
-<section class="container py-5" data-controller="candidate-filter">
-  <div class="row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-5">
-    <div class="col-md-8">
-      <div class="input-group">
-        <span class="input-group-text bg-white border-end-0">
-          <i class="fa-solid fa-magnifying-glass text-muted"></i>
-        </span>
-        <input type="text"
-               class="form-control border-start-0"
-               placeholder="Procure pelo nome do candidato..."
-               data-candidate-filter-target="search"
-               data-action="input->candidate-filter#filter">
-      </div>
-    </div>
+  <!-- Search Bar Flutuante (Mantida) -->
+  <section class="container search-container">
+    <div class="search-card shadow-lg bg-white rounded-pill p-2">
+      <div class="row g-0 align-items-center">
 
-    <div class="col-md-4">
-      <select class="form-select"
-              data-candidate-filter-target="state"
-              data-action="change->candidate-filter#filter">
-        <option value="">Todos os estados</option>
-        <% @states.each do |state| %>
-          <option value="<%= state %>"><%= state %></option>
-        <% end %>
-      </select>
-    </div>
-  </div>
+        <div class="col-md-7 border-end px-3">
+          <div class="input-group input-group-lg border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <input type="text"
+                   class="form-control border-0 shadow-none bg-transparent fw-medium"
+                   placeholder="Busque por nome ou nome de urna..."
+                   data-candidate-filter-target="search"
+                   data-action="input->candidate-filter#filter">
+          </div>
+        </div>
 
-  <h2 class="h4 mb-4">Feed dos candidatos</h2>
-
-  <div class="row g-4">
-    <% @candidates.each do |candidate| %>
-      <div class="col-sm-6 col-lg-3"
-           data-candidate-filter-target="card"
-           data-filter-name="<%= [candidate.name, candidate.ballot_name].compact.join(" ").downcase %>"
-           data-filter-state="<%= candidate.state_label %>">
-        <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset" do %>
-          <div class="card candidate-card h-100 text-center border-0 shadow-sm">
-            <div class="card-body">
-              <% if candidate.photo_file.present? %>
-                <%= image_tag candidate.photo_file, class: "candidate-photo rounded-circle mb-3", alt: candidate.ballot_name %>
-              <% else %>
-                <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
-                  <i class="fa-solid fa-user text-muted"></i>
-                </div>
+        <div class="col-md-5 px-3">
+          <div class="input-group input-group-lg border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted">
+              <i class="fa-solid fa-location-crosshairs"></i>
+            </span>
+            <select class="form-select border-0 shadow-none bg-transparent text-muted fw-medium"
+                    data-candidate-filter-target="state"
+                    data-action="change->candidate-filter#filter">
+              <option value="">Filtre por Estado</option>
+              <% @states.each do |state| %>
+                <option value="<%= state %>"><%= state %></option>
               <% end %>
+            </select>
+          </div>
+        </div>
 
-              <h3 class="h6 mb-1"><%= candidate.ballot_name.presence || candidate.name %></h3>
-              <p class="text-brand small fw-bold text-uppercase mb-2"><%= candidate.state_label %></p>
+      </div>
+    </div>
+  </section>
 
-              <div class="d-flex justify-content-around border-top pt-2 mt-2 small text-muted">
-                <span>#<%= candidate.number %></span>
-                <span><%= candidate.candidacy_status.presence || "Not informed" %></span>
+  <!-- Grid de Cartões (Exatamente como a imagem de inspiração) -->
+  <section class="container py-5 mt-4">
+    <div class="row g-4">
+
+      <% @candidates.each do |candidate| %>
+        <div class="col-md-6 col-xl-4"
+             data-candidate-filter-target="card"
+             data-filter-name="<%= [candidate.name, candidate.ballot_name].compact.join(' ').downcase %>"
+             data-filter-state="<%= candidate.state_label %>">
+
+          <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset" do %>
+            <div class="card inspiration-card h-100 bg-white">
+              <div class="card-body p-4 d-flex align-items-center gap-4">
+
+                <!-- Foto (Esquerda) -->
+                <div class="inspiration-photo-wrapper flex-shrink-0">
+                  <% if candidate.photo_file.present? %>
+                    <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name %>
+                  <% else %>
+                    <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="fa-solid fa-user text-gold"></i>
+                    </div>
+                  <% end %>
+                </div>
+
+                <!-- Dados e Barras (Direita) -->
+                <div class="inspiration-data flex-grow-1 min-w-0">
+                  <h3 class="h6 fw-bold text-navy mb-1 text-truncate">
+                    <%= candidate.ballot_name.presence || candidate.name %>
+                  </h3>
+
+                  <div class="d-flex align-items-center text-muted small mb-3">
+                    <i class="fa-solid fa-location-dot me-2 text-gold"></i>
+                    <%= candidate.state_label %> (Brasil)
+                  </div>
+
+                  <!-- Barra 1: Situação (Simulando o "Skills" da imagem) -->
+                  <div class="mb-2">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="data-label text-muted">Situação</span>
+                      <span class="data-value text-navy"><%= candidate.candidacy_status.presence || "Aguardando" %></span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 4px;">
+                      <div class="progress-bar bg-gold" style="width: 100%"></div>
+                    </div>
+                  </div>
+
+                  <!-- Barra 2: Número (Simulando o "Experience" da imagem) -->
+                  <div>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <span class="data-label text-muted">Número</span>
+                      <span class="data-value text-navy"><%= candidate.number %></span>
+                    </div>
+                    <div class="progress rounded-pill" style="height: 4px;">
+                      <div class="progress-bar bg-navy" style="width: 100%"></div>
+                    </div>
+                  </div>
+
+                </div>
               </div>
             </div>
-          </div>
-        <% end %>
-      </div>
-    <% end %>
-  </div>
+          <% end %>
+        </div>
+      <% end %>
 
-  <p class="text-muted text-center py-5 d-none" data-candidate-filter-target="emptyState">
-    Nenhum candidato foi encontrado da sua pesquisa.
-  </p>
-</section>
+    </div>
+
+    <!-- Empty State -->
+    <div class="text-center py-5 d-none empty-state bg-white rounded-4 shadow-sm mt-4" data-candidate-filter-target="emptyState">
+      <div class="mb-3">
+        <i class="fa-solid fa-ghost fa-3x text-pastel-yellow"></i>
+      </div>
+      <h4 class="h5 text-navy fw-bold">Nenhum registro encontrado</h4>
+      <p class="text-muted">Ajuste os filtros de estado ou tente outro nome.</p>
+    </div>
+  </section>
+</div>

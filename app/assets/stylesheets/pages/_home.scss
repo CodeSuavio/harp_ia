@@ -1,51 +1,280 @@
-// Specific CSS for your home-page
+// ==========================================
+// 1. VARIÁVEIS E PALETA DE CORES
+// ==========================================
+$navy-blue: #0A1128;      // Azul escuro profundo (fundo principal e Navbar)
+$royal-blue: #1C3B87;     // Azul médio
+$gold: #F08A5D;           // Alaranjado/Dourado inspirado na referência "Harpia"
+$pastel-yellow: #FFF8E7;  // Amarelo pastel como luz de fundo
+$bg-color: #F4F6F9;       // Cinza muito claro para o fundo da página
 
-.home-hero {
-  background-color: $gray;
-  background-image: radial-gradient(circle at 20% 30%, rgba($orange, 0.15), transparent 45%);
+body {
+  background-color: $bg-color;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
 }
 
-.home-hero-card {
-  max-width: 24rem;
-  padding: 2rem;
-  border-radius: $border-radius-lg;
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
+// --- CLASSES UTILITÁRIAS GERAIS ---
+.text-navy { color: $navy-blue !important; }
+.text-gold { color: $gold !important; }
+.text-pastel-yellow { color: $pastel-yellow !important; }
+.bg-gold { background-color: $gold !important; }
+.bg-navy { background-color: $navy-blue !important; }
+.tracking-wider { letter-spacing: 1px; }
+.letter-spacing-tight { letter-spacing: -1px; }
 
-.text-brand {
-  color: $orange;
-}
+// ==========================================
+// 2. NAVBAR MINIMALISTA (Estilo Harpia)
+// ==========================================
+.custom-navbar {
+  background-color: $navy-blue;
+  padding: 1.2rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
 
-.btn-brand {
-  background-color: $orange;
-  border-color: $orange;
-  color: white;
+  // Estilo minimalista da Logo em texto
+  .navbar-brand {
+    .brand-text {
+      font-size: 1.25rem;
+      font-weight: 500;
+      letter-spacing: 2px; // tracking-widest
+    }
+  }
 
-  &:hover {
-    background-color: darken($orange, 8%);
-    border-color: darken($orange, 8%);
-    color: white;
+  // Ícone Sanduíche Mobile
+  .toggle-icon {
+    font-size: 1.5rem;
+  }
+
+  // Links do menu
+  .nav-link {
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    color: rgba(255, 255, 255, 0.7) !important;
+    transition: color 0.2s ease;
+
+    &:hover, &.active {
+      color: #FFFFFF !important;
+    }
+  }
+
+  // O botão de destaque "SIGN UP / LOG OUT"
+  .btn-auth {
+    background-color: $gold;
+    color: white !important;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+    border: none;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+
+    &:hover {
+      opacity: 0.85;
+      transform: translateY(-1px);
+    }
   }
 }
 
-.candidate-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+// ==========================================
+// 3. HOME - HERO CRIATIVO & BUSCA FLUTUANTE
+// ==========================================
+.hero-section {
+  background-color: $navy-blue;
+  // Criando um padrão sutil de grade ao fundo para não ficar "liso"
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 30px 30px;
+  padding: 8rem 0 10rem 0;
+  position: relative;
 
-  &:hover {
-    transform: translateY(-4px);
+  // O Brilho Dourado centralizado imitando o mapa luminoso da imagem
+  .hero-glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, rgba($gold, 0.15) 0%, transparent 60%);
+    z-index: 0;
+    pointer-events: none;
   }
 }
 
-.candidate-photo {
-  width: 5rem;
-  height: 5rem;
+.search-container {
+  margin-top: -3.5rem; // Faz a barra flutuar sobre o Hero
+  position: relative;
+  z-index: 10;
+}
+
+.search-card {
+  border: 1px solid rgba(0, 0, 0, 0.05);
+  box-shadow: 0 15px 35px rgba($navy-blue, 0.1) !important;
+
+  .form-control, .form-select {
+    color: $navy-blue;
+    &:focus { box-shadow: none; }
+  }
+
+  .input-group-text i {
+    color: $gold; // Ícones da busca em dourado/laranja
+  }
+}
+
+// ==========================================
+// 4. HOME - GRID DE CARTÕES (Estilo Dashboard)
+// ==========================================
+.inspiration-card {
+  border: 1px solid rgba($navy-blue, 0.08);
+  border-radius: 16px; // Bordas bem arredondadas
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.02);
+
+  &:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 15px 30px rgba($navy-blue, 0.08);
+    border-color: rgba($gold, 0.3);
+  }
+}
+
+// Envolve a foto criando um "anel"
+.inspiration-photo-wrapper {
+  width: 75px;
+  height: 75px;
+  padding: 3px;
+  border: 2px solid rgba($gold, 0.3);
+  border-radius: 50%;
+}
+
+.inspiration-photo {
+  width: 100%;
+  height: 100%;
   object-fit: cover;
 }
 
-.candidate-photo-placeholder {
-  width: 5rem;
-  height: 5rem;
-  background-color: $light-gray;
-  font-size: 1.5rem;
+.inspiration-photo-placeholder {
+  width: 100%;
+  height: 100%;
+  background-color: rgba($gold, 0.1);
+  font-size: 1.8rem;
+  color: $gold;
+}
+
+// Tipografia e Barras de Progresso dentro do cartão
+.data-label {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.data-value {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+// Empty State (Quando o filtro não acha ninguém)
+.empty-state {
+  border: 1px dashed rgba($navy-blue, 0.2);
+  background-color: rgba(255, 255, 255, 0.5) !important;
+}
+
+// ==========================================
+// MIRA DE CÂMERA (VIEWFINDER & HOLOGRAPHY)
+// ==========================================
+
+.camera-viewfinder {
+  position: relative;
+  width: 320px;
+  height: 320px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%; // A mira é quadrada, mas o brilho base é redondo
+  background: radial-gradient(circle, rgba($royal-blue, 0.2) 0%, transparent 70%);
+  box-shadow: inset 0 0 50px rgba($navy-blue, 0.5);
+
+  // Cantos da Mira
+  .vf-corner {
+    position: absolute;
+    width: 40px;
+    height: 40px;
+    border: 3px solid $gold;
+    opacity: 0.8;
+  }
+  .vf-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
+  .vf-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
+  .vf-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
+  .vf-br { bottom: 0; right: 0; border-left: none; border-top: none; }
+
+  // Linhas da Cruz Central (Crosshair)
+  .vf-crosshair-x, .vf-crosshair-y {
+    position: absolute;
+    background-color: rgba($gold, 0.3);
+  }
+  .vf-crosshair-x { width: 100%; height: 1px; top: 50%; left: 0; }
+  .vf-crosshair-y { height: 100%; width: 1px; left: 50%; top: 0; }
+
+  // Brilho de Lente de Câmera
+  .lens-glare {
+    position: absolute;
+    width: 150px;
+    height: 300px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+    transform: rotate(45deg);
+    top: -50px;
+    left: 50px;
+    pointer-events: none;
+  }
+
+  // Linha de Scanner (Animada)
+  .scanner-line {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: rgba($gold, 0.6);
+    box-shadow: 0 0 10px $gold;
+    animation: scan 4s linear infinite;
+  }
+
+  // Mapa Central (Usando ícone fontawesome gigante)
+  .hologram-container {
+    position: relative;
+    font-size: 14rem;
+    color: rgba($royal-blue, 0.6);
+    text-shadow: 0 0 20px rgba($royal-blue, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  // Pontos Piscantes (Simulando os estados sendo rastreados)
+  .flash-dot {
+    position: absolute;
+    width: 8px;
+    height: 8px;
+    background-color: white;
+    border-radius: 50%;
+    box-shadow: 0 0 15px 3px $gold;
+    animation: flash 2s infinite alternate;
+  }
+
+  // Posicionando os pontos geograficamente sobre o mapa
+  .dot-norte    { top: 25%; left: 35%; animation-delay: 0.1s; }
+  .dot-nordeste { top: 35%; right: 20%; animation-delay: 1.5s; }
+  .dot-centro   { top: 50%; left: 45%; animation-delay: 0.7s; }
+  .dot-sudeste  { bottom: 35%; right: 35%; animation-delay: 2.1s; }
+  .dot-sul      { bottom: 15%; left: 50%; animation-delay: 0.4s; }
+}
+
+// Animações
+@keyframes scan {
+  0% { top: 0; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+@keyframes flash {
+  0%, 100% { opacity: 0.1; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.5); box-shadow: 0 0 20px 5px $gold; }
 }
