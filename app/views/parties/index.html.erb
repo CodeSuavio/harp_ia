@@ -1,3 +1,16 @@
-<div class="container">
-  <h1>Partidos</h1>
+<div class="container my-4">
+  <h1 class="mb-4">Partidos</h1>
+
+  <% if @parties.empty? %>
+    <p class="text-muted">Nenhum partido cadastrado.</p>
+  <% else %>
+    <div class="list-group">
+      <% @parties.each do |party| %>
+        <%= link_to party_path(party), class: "list-group-item list-group-item-action d-flex justify-content-between align-items-center" do %>
+          <span><strong><%= party.label %></strong> — <%= party.name %></span>
+          <span class="badge bg-secondary rounded-pill"><%= party.deputies.size %></span>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
 </div>
