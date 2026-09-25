@@ -1,3 +1,42 @@
-<div class="container">
-  <h1>Candidatos</h1>
+<div class="container py-5">
+  <h1 class="h3 mb-4">Candidatos</h1>
+
+  <%= form_with url: candidates_path, method: :get,
+                data: {
+                  turbo_frame: "candidates_list",
+                  controller: "filter-form",
+                  action: "input->filter-form#submit change->filter-form#submit"
+                },
+                class: "row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-5" do %>
+    <div class="col-md-5">
+      <div class="input-group">
+        <span class="input-group-text bg-white border-end-0">
+          <i class="fa-solid fa-magnifying-glass text-muted"></i>
+        </span>
+        <%= text_field_tag :q, params[:q],
+              placeholder: "Procure pelo nome do candidato...",
+              class: "form-control border-start-0" %>
+      </div>
+    </div>
+
+    <div class="col-md-3">
+      <%= select_tag :state,
+            options_for_select([["Todos os estados", ""]] + @states.map { |s| [s, s] }, params[:state]),
+            class: "form-select" %>
+    </div>
+
+    <div class="col-md-3">
+      <%= select_tag :party,
+            options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
+            class: "form-select" %>
+    </div>
+
+    <div class="col-md-1">
+      <%= link_to "Limpar", candidates_path, class: "btn btn-outline-secondary w-100" %>
+    </div>
+  <% end %>
+
+  <%= turbo_frame_tag "candidates_list", data: { turbo_action: "advance" } do %>
+    <%= render "list" %>
+  <% end %>
 </div>
