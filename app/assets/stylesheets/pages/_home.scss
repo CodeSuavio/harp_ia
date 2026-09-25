@@ -21,6 +21,7 @@ body {
 .tracking-wider { letter-spacing: 1px; }
 .letter-spacing-tight { letter-spacing: -1px; }
 
+
 // ==========================================
 // 2. NAVBAR MINIMALISTA (Estilo Harpia)
 // ==========================================
@@ -71,6 +72,7 @@ body {
   }
 }
 
+
 // ==========================================
 // 3. HOME - HERO CRIATIVO & BUSCA FLUTUANTE
 // ==========================================
@@ -117,6 +119,7 @@ body {
     color: $gold; // Ícones da busca em dourado/laranja
   }
 }
+
 
 // ==========================================
 // 4. HOME - GRID DE CARTÕES (Estilo Dashboard)
@@ -176,10 +179,10 @@ body {
   background-color: rgba(255, 255, 255, 0.5) !important;
 }
 
-// ==========================================
-// MIRA DE CÂMERA (VIEWFINDER & HOLOGRAPHY)
-// ==========================================
 
+// ==========================================
+// 5. MIRA DE CÂMARA (VIEWFINDER & HOLOGRAFIA MASCARADA)
+// ==========================================
 .camera-viewfinder {
   position: relative;
   width: 320px;
@@ -212,7 +215,7 @@ body {
   .vf-crosshair-x { width: 100%; height: 1px; top: 50%; left: 0; }
   .vf-crosshair-y { height: 100%; width: 1px; left: 50%; top: 0; }
 
-  // Brilho de Lente de Câmera
+  // Brilho de Lente de Câmara
   .lens-glare {
     position: absolute;
     width: 150px;
@@ -236,18 +239,35 @@ body {
     animation: scan 4s linear infinite;
   }
 
-  // Mapa Central (Usando ícone fontawesome gigante)
+  // O Truque Mágico: Máscara CSS do Brasil
   .hologram-container {
     position: relative;
-    font-size: 14rem;
-    color: rgba($royal-blue, 0.6);
-    text-shadow: 0 0 20px rgba($royal-blue, 0.8);
     display: flex;
     align-items: center;
     justify-content: center;
+    width: 250px;
+    height: 250px;
   }
 
-  // Pontos Piscantes (Simulando os estados sendo rastreados)
+  .map-mask {
+    width: 100%;
+    height: 100%;
+    background-color: $royal-blue; // A cor holográfica do mapa
+    opacity: 0.6;
+
+    // Puxa a silhueta do Brasil da Wikimedia
+    -webkit-mask-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brazil_silhouette.svg');
+    -webkit-mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+
+    mask-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brazil_silhouette.svg');
+    mask-size: contain;
+    mask-repeat: no-repeat;
+    mask-position: center;
+  }
+
+  // Pontos Piscantes (Flashes dos estados rastreados)
   .flash-dot {
     position: absolute;
     width: 8px;
@@ -258,7 +278,7 @@ body {
     animation: flash 2s infinite alternate;
   }
 
-  // Posicionando os pontos geograficamente sobre o mapa
+  // Posicionamento geográfico sobre a máscara
   .dot-norte    { top: 25%; left: 35%; animation-delay: 0.1s; }
   .dot-nordeste { top: 35%; right: 20%; animation-delay: 1.5s; }
   .dot-centro   { top: 50%; left: 45%; animation-delay: 0.7s; }
@@ -266,7 +286,7 @@ body {
   .dot-sul      { bottom: 15%; left: 50%; animation-delay: 0.4s; }
 }
 
-// Animações
+// Animações do Radar e dos Flashes
 @keyframes scan {
   0% { top: 0; opacity: 0; }
   10% { opacity: 1; }
