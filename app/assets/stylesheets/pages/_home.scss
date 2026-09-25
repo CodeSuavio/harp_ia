@@ -324,3 +324,38 @@ body {
   0% { opacity: 0.1; transform: scale(0.5); }
   100% { opacity: 1; transform: scale(1.2); }
 }
+// ==========================================
+// 6. FOOTER MINIMALISTA
+// ==========================================
+.custom-footer {
+  background-color: $navy-blue;
+  color: rgba(255, 255, 255, 0.7);
+  border-top: 2px solid $gold; // Uma linha dourada fina para separar do conteúdo claro
+
+  .brand-text {
+    font-size: 1.1rem;
+    letter-spacing: 2px;
+  }
+
+  .footer-links {
+    a {
+      color: rgba(255, 255, 255, 0.7);
+      text-decoration: none;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      transition: color 0.2s ease, transform 0.2s ease;
+
+      &:hover {
+        color: $gold;
+        transform: translateY(-1px);
+      }
+    }
+  }
+
+  .footer-copyright {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.4);
+    letter-spacing: 0.5px;
+  }
+}

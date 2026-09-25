@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
   <head>
-    <title><%= content_for(:title) || "Harp Ia" %></title>
+    <title><%= content_for(:title) || "Harpia" %></title>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="application-name" content="Harp Ia">
+    <meta name="application-name" content="Harpia">
     <meta name="mobile-web-app-capable" content="yes">
     <%= csrf_meta_tags %>
     <%= csp_meta_tag %>
@@ -23,9 +23,19 @@
     <%= javascript_importmap_tags %>
   </head>
 
-  <body><%= render "shared/navbar" %>
+  <body>
+    <!-- Navbar Partilhada -->
+    <%= render "shared/navbar" %>
+
+    <!-- Alertas Flash -->
     <%= render "shared/flashes" %>
 
-    <%= yield %>
+    <!-- Conteúdo Principal da Página -->
+    <main>
+      <%= yield %>
+    </main>
+
+    <!-- Footer Partilhado -->
+    <%= render "shared/footer" %>
   </body>
 </html>
