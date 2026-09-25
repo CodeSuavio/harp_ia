@@ -78,13 +78,9 @@ body {
 // ==========================================
 .hero-section {
   background-color: $navy-blue;
-  // Criando um padrão sutil de grade ao fundo para não ficar "liso"
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
-  background-size: 30px 30px;
   padding: 8rem 0 10rem 0;
   position: relative;
+  overflow: hidden; // Impede que o brilho central passe dos limites
 
   // O Brilho Dourado centralizado imitando o mapa luminoso da imagem
   .hero-glow {
@@ -119,7 +115,6 @@ body {
     color: $gold; // Ícones da busca em dourado/laranja
   }
 }
-
 
 // ==========================================
 // 4. HOME - GRID DE CARTÕES (Estilo Dashboard)
@@ -181,7 +176,7 @@ body {
 
 
 // ==========================================
-// 5. MIRA DE CÂMARA (VIEWFINDER & HOLOGRAFIA MASCARADA)
+// 5. MIRA DE CÂMARA (VIEWFINDER & RADAR DE CAPITAIS)
 // ==========================================
 .camera-viewfinder {
   position: relative;
@@ -190,8 +185,8 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%; // A mira é quadrada, mas o brilho base é redondo
-  background: radial-gradient(circle, rgba($royal-blue, 0.2) 0%, transparent 70%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba($royal-blue, 0.15) 0%, transparent 70%);
   box-shadow: inset 0 0 50px rgba($navy-blue, 0.5);
 
   // Cantos da Mira
@@ -199,33 +194,20 @@ body {
     position: absolute;
     width: 40px;
     height: 40px;
-    border: 3px solid $gold;
-    opacity: 0.8;
+    border: 3px solid rgba($gold, 0.8);
   }
   .vf-tl { top: 0; left: 0; border-right: none; border-bottom: none; }
   .vf-tr { top: 0; right: 0; border-left: none; border-bottom: none; }
   .vf-bl { bottom: 0; left: 0; border-right: none; border-top: none; }
   .vf-br { bottom: 0; right: 0; border-left: none; border-top: none; }
 
-  // Linhas da Cruz Central (Crosshair)
+  // Linhas da Cruz Central
   .vf-crosshair-x, .vf-crosshair-y {
     position: absolute;
-    background-color: rgba($gold, 0.3);
+    background-color: rgba($gold, 0.2);
   }
   .vf-crosshair-x { width: 100%; height: 1px; top: 50%; left: 0; }
   .vf-crosshair-y { height: 100%; width: 1px; left: 50%; top: 0; }
-
-  // Brilho de Lente de Câmara
-  .lens-glare {
-    position: absolute;
-    width: 150px;
-    height: 300px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
-    transform: rotate(45deg);
-    top: -50px;
-    left: 50px;
-    pointer-events: none;
-  }
 
   // Linha de Scanner (Animada)
   .scanner-line {
@@ -237,56 +219,95 @@ body {
     background-color: rgba($gold, 0.6);
     box-shadow: 0 0 10px $gold;
     animation: scan 4s linear infinite;
+    z-index: 10;
   }
 
-  // O Truque Mágico: Máscara CSS do Brasil
+  // Container do Mapa de Pontos e Máscara
   .hologram-container {
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 250px;
-    height: 250px;
+    width: 220px;
+    height: 220px;
+
+    // Silhueta Tática de Fundo do Brasil (Azul escuro e translúcido)
+    .map-silhouette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba($navy-blue, 0.4);
+      z-index: 1;
+
+      -webkit-mask-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brazil_silhouette.svg');
+      -webkit-mask-size: contain;
+      -webkit-mask-repeat: no-repeat;
+      -webkit-mask-position: center;
+
+      mask-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brazil_silhouette.svg');
+      mask-size: contain;
+      mask-repeat: no-repeat;
+      mask-position: center;
+    }
   }
 
-  .map-mask {
-    width: 100%;
-    height: 100%;
-    background-color: $royal-blue; // A cor holográfica do mapa
-    opacity: 0.6;
-
-    // Puxa a silhueta do Brasil da Wikimedia
-    -webkit-mask-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brazil_silhouette.svg');
-    -webkit-mask-size: contain;
-    -webkit-mask-repeat: no-repeat;
-    -webkit-mask-position: center;
-
-    mask-image: url('https://upload.wikimedia.org/wikipedia/commons/e/e0/Brazil_silhouette.svg');
-    mask-size: contain;
-    mask-repeat: no-repeat;
-    mask-position: center;
-  }
-
-  // Pontos Piscantes (Flashes dos estados rastreados)
-  .flash-dot {
+  // Pontos base das capitais (Brancos/Azulados piscando)
+  .capital-dot {
     position: absolute;
+    width: 4px;
+    height: 4px;
+    background-color: rgba(255, 255, 255, 0.7);
+    border-radius: 50%;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.5);
+    animation: twinkle 3s infinite alternate;
+    z-index: 2; // Fica na frente da silhueta
+  }
+
+  // Ponto principal em Destaque (Brasília)
+  .flash-main {
     width: 8px;
     height: 8px;
-    background-color: white;
-    border-radius: 50%;
+    background-color: $gold;
     box-shadow: 0 0 15px 3px $gold;
-    animation: flash 2s infinite alternate;
+    animation: flash 1.5s infinite alternate;
+    z-index: 5;
   }
 
-  // Posicionamento geográfico sobre a máscara
-  .dot-norte    { top: 25%; left: 35%; animation-delay: 0.1s; }
-  .dot-nordeste { top: 35%; right: 20%; animation-delay: 1.5s; }
-  .dot-centro   { top: 50%; left: 45%; animation-delay: 0.7s; }
-  .dot-sudeste  { bottom: 35%; right: 35%; animation-delay: 2.1s; }
-  .dot-sul      { bottom: 15%; left: 50%; animation-delay: 0.4s; }
+  // Coordenadas formando o Brasil e tempos diferentes para piscar caótico
+  // NORTE
+  .dot-rr { top: 5%; left: 35%; animation-delay: 0.1s; }
+  .dot-ap { top: 10%; left: 60%; animation-delay: 1.2s; }
+  .dot-am { top: 20%; left: 25%; animation-delay: 0.5s; }
+  .dot-pa { top: 18%; left: 55%; animation-delay: 0.8s; }
+  .dot-ac { top: 32%; left: 5%; animation-delay: 1.5s; }
+  .dot-ro { top: 35%; left: 20%; animation-delay: 0.3s; }
+  .dot-to { top: 38%; left: 60%; animation-delay: 2.1s; }
+  // NORDESTE
+  .dot-ma { top: 22%; left: 75%; animation-delay: 0.4s; }
+  .dot-pi { top: 28%; left: 80%; animation-delay: 1.8s; }
+  .dot-ce { top: 23%; left: 88%; animation-delay: 0.9s; }
+  .dot-rn { top: 25%; left: 96%; animation-delay: 2.5s; }
+  .dot-pb { top: 29%; left: 98%; animation-delay: 0.2s; }
+  .dot-pe { top: 32%; left: 97%; animation-delay: 1.1s; }
+  .dot-al { top: 36%; left: 95%; animation-delay: 0.7s; }
+  .dot-se { top: 39%; left: 93%; animation-delay: 1.6s; }
+  .dot-ba { top: 48%; left: 85%; animation-delay: 0.1s; }
+  // CENTRO-OESTE
+  .dot-mt { top: 45%; left: 38%; animation-delay: 2.2s; }
+  .dot-ms { top: 62%; left: 45%; animation-delay: 1.3s; }
+  .dot-go { top: 52%; left: 60%; animation-delay: 0.6s; }
+  .dot-df { top: 50%; left: 65%; animation-delay: 0s; }
+  // SUDESTE
+  .dot-mg { top: 62%; left: 75%; animation-delay: 1.9s; }
+  .dot-es { top: 64%; left: 88%; animation-delay: 0.4s; }
+  .dot-rj { top: 70%; left: 83%; animation-delay: 2.7s; }
+  .dot-sp { top: 73%; left: 70%; animation-delay: 0.8s; }
+  // SUL
+  .dot-pr { top: 78%; left: 65%; animation-delay: 1.4s; }
+  .dot-sc { top: 85%; left: 68%; animation-delay: 0.5s; }
+  .dot-rs { top: 92%; left: 60%; animation-delay: 2.0s; }
 }
 
-// Animações do Radar e dos Flashes
+// Animações
 @keyframes scan {
   0% { top: 0; opacity: 0; }
   10% { opacity: 1; }
@@ -295,6 +316,11 @@ body {
 }
 
 @keyframes flash {
-  0%, 100% { opacity: 0.1; transform: scale(0.8); }
+  0%, 100% { opacity: 0.3; transform: scale(0.8); }
   50% { opacity: 1; transform: scale(1.5); box-shadow: 0 0 20px 5px $gold; }
+}
+
+@keyframes twinkle {
+  0% { opacity: 0.1; transform: scale(0.5); }
+  100% { opacity: 1; transform: scale(1.2); }
 }
