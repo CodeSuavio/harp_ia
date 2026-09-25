@@ -5,17 +5,16 @@
   <div class="container pt-5 pb-4">
     <div class="row align-items-center">
 
-      <!-- Logo / Nome da Marca -->
+      <%# <!-- Logo / Nome da Marca -->
       <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
         <span class="brand-text text-white fw-bold tracking-wider">SEU LOGO</span>
-      </div>
+      </div> %>
 
       <!-- Links Úteis -->
       <div class="col-md-4 mb-3 mb-md-0">
         <div class="footer-links d-flex justify-content-center gap-4">
-          <a href="#">Sobre Nós</a>
-          <a href="#">Privacidade</a>
-          <a href="#">Contato</a>
+          <%= link_to "Sobre Nós", about_path %>
+          <%= link_to "Contato", contact_path %>
         </div>
       </div>
 
