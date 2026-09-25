@@ -1,42 +1,66 @@
 <div class="container py-5">
   <h1 class="h3 mb-4">Candidatos</h1>
 
-  <%= form_with url: candidates_path, method: :get,
-                data: {
-                  turbo_frame: "candidates_list",
-                  controller: "filter-form",
-                  action: "input->filter-form#submit change->filter-form#submit"
-                },
-                class: "row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-5" do %>
-    <div class="col-md-5">
-      <div class="input-group">
-        <span class="input-group-text bg-white border-end-0">
-          <i class="fa-solid fa-magnifying-glass text-muted"></i>
-        </span>
-        <%= text_field_tag :q, params[:q],
-              placeholder: "Procure pelo nome do candidato...",
-              class: "form-control border-start-0" %>
-      </div>
-    </div>
-
-    <div class="col-md-3">
-      <%= select_tag :state,
-            options_for_select([["Todos os estados", ""]] + @states.map { |s| [s, s] }, params[:state]),
-            class: "form-select" %>
-    </div>
-
-    <div class="col-md-3">
-      <%= select_tag :party,
-            options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
-            class: "form-select" %>
-    </div>
-
-    <div class="col-md-1">
-      <%= link_to "Limpar", candidates_path, class: "btn btn-outline-secondary w-100" %>
-    </div>
-  <% end %>
-
   <%= turbo_frame_tag "candidates_list", data: { turbo_action: "advance" } do %>
+    <%= form_with url: candidates_path, method: :get,
+                  data: {
+                    controller: "filter-form",
+                    action: "input->filter-form#submit change->filter-form#submit"
+                  },
+                  class: "row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-4" do %>
+      <div class="col-lg-4">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fa-solid fa-magnifying-glass text-muted"></i>
+          </span>
+          <%= text_field_tag :q, params[:q],
+                id: "candidate-search",
+                placeholder: "Nome do candidato ou sigla do partido...",
+                class: "form-control border-start-0",
+                data: { turbo_permanent: true } %>
+        </div>
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <%= select_tag :state,
+              options_for_select(
+                [["Todos os estados", ""]] + @states.map { |s| ["#{s} (#{@state_counts[s].to_i})", s] },
+                params[:state]
+              ),
+              class: "form-select" %>
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <% ordered_parties = @parties.sort_by { |p| [-@party_counts[p.id].to_i, p.label] } %>
+        <%= select_tag :party,
+              options_for_select(
+                [["Todos os partidos", ""]] + ordered_parties.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] },
+                params[:party]
+              ),
+              class: "form-select" %>
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <%= select_tag :gender,
+              options_for_select(
+                [["Todos os gêneros", ""],
+                 ["Feminino (#{@gender_counts['FEMININO'].to_i})", "FEMININO"],
+                 ["Masculino (#{@gender_counts['MASCULINO'].to_i})", "MASCULINO"]],
+                params[:gender]
+              ),
+              class: "form-select" %>
+      </div>
+
+      <div class="col-lg-2 col-md-6">
+        <%= select_tag :sort,
+              options_for_select(
+                [["Ordenar por nome", "name"], ["Ordenar por estado", "state"], ["Ordenar por número", "number"]],
+                params[:sort]
+              ),
+              class: "form-select" %>
+      </div>
+    <% end %>
+
     <%= render "list" %>
   <% end %>
 </div>

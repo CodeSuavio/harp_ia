@@ -1,0 +1,75 @@
+<% chips = {
+     "q"                => params[:q].presence,
+     "state"            => params[:state].presence,
+     "party"            => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?),
+     "electoral_status" => params[:electoral_status].presence
+   }.compact %>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="text-muted small me-2">
+    <%= @total %> <%= "deputado".pluralize(@total) %>
+  </span>
+
+  <% chips.each do |key, label| %>
+    <%= link_to deputies_path(request.query_parameters.except(key, "page")),
+          data: { turbo_frame: "_top" },
+          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+      <%= label %> &times;
+    <% end %>
+  <% end %>
+
+  <% if chips.any? %>
+    <%= link_to "Limpar tudo", deputies_path,
+          data: { turbo_frame: "_top" },
+          class: "small text-decoration-none ms-1" %>
+  <% end %>
+</div>
+
+<% if @deputies.empty? %>
+  <p class="text-muted text-center py-5">
+    Nenhum deputado foi encontrado na sua pesquisa.
+  </p>
+<% else %>
+  <div class="row g-4">
+    <% @deputies.each do |deputy| %>
+      <div class="col-sm-6 col-lg-3">
+        <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset" do %>
+          <div class="card candidate-card h-100 text-center border-0 shadow-sm">
+            <div class="card-body">
+              <% if deputy.photo_url.present? %>
+                <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
+              <% else %>
+                <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
+                  <i class="fa-solid fa-user text-muted"></i>
+                </div>
+              <% end %>
+
+              <h3 class="h6 mb-1"><%= deputy.name %></h3>
+              <p class="text-brand small fw-bold text-uppercase mb-2">
+                <%= deputy.party&.label %> &middot; <%= deputy.state_label %>
+              </p>
+
+              <div class="border-top pt-2 mt-2 small text-muted">
+                <%= deputy.electoral_status %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+
+  <% if @total_pages > 1 %>
+    <nav class="d-flex justify-content-center align-items-center gap-3 mt-5">
+      <% if @page > 1 %>
+        <%= link_to "Anterior", deputies_path(request.query_parameters.merge(page: @page - 1)), class: "btn btn-outline-secondary btn-sm" %>
+      <% end %>
+
+      <span class="small text-muted">Página <%= @page %> de <%= @total_pages %></span>
+
+      <% if @page < @total_pages %>
+        <%= link_to "Próxima", deputies_path(request.query_parameters.merge(page: @page + 1)), class: "btn btn-outline-secondary btn-sm" %>
+      <% end %>
+    </nav>
+  <% end %>
+<% end %>

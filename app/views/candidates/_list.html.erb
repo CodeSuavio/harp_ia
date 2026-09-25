@@ -1,6 +1,29 @@
-<p class="text-muted small mb-3">
-  <%= @total %> <%= "candidato".pluralize(@total) %>
-</p>
+<% chips = {
+     "q"      => params[:q].presence,
+     "state"  => params[:state].presence,
+     "party"  => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?),
+     "gender" => params[:gender].presence&.capitalize
+   }.compact %>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="text-muted small me-2">
+    <%= @total %> <%= "candidato".pluralize(@total) %>
+  </span>
+
+  <% chips.each do |key, label| %>
+    <%= link_to candidates_path(request.query_parameters.except(key, "page")),
+          data: { turbo_frame: "_top" },
+          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+      <%= label %> &times;
+    <% end %>
+  <% end %>
+
+  <% if chips.any? %>
+    <%= link_to "Limpar tudo", candidates_path,
+          data: { turbo_frame: "_top" },
+          class: "small text-decoration-none ms-1" %>
+  <% end %>
+</div>
 
 <% if @candidates.empty? %>
   <p class="text-muted text-center py-5">
@@ -19,12 +42,12 @@
 
               <h3 class="h6 mb-1"><%= candidate.ballot_name.presence || candidate.name %></h3>
               <p class="text-brand small fw-bold text-uppercase mb-2">
-                <%= candidate.party&.label %> · <%= candidate.state_label %>
+                <%= candidate.party&.label %> &middot; <%= candidate.state_label %>
               </p>
 
               <div class="d-flex justify-content-around border-top pt-2 mt-2 small text-muted">
                 <span>#<%= candidate.number %></span>
-                <span><%= candidate.candidacy_status.presence || "Não informado" %></span>
+                <span><%= candidate.gender&.capitalize %></span>
               </div>
             </div>
           </div>

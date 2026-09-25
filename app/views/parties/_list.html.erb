@@ -1,0 +1,61 @@
+<div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+  <span class="text-muted small me-2">
+    <%= @total %> <%= "partido".pluralize(@total) %>
+  </span>
+
+  <% if params[:q].present? %>
+    <%= link_to parties_path(request.query_parameters.except("q")),
+          data: { turbo_frame: "_top" },
+          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+      <%= params[:q] %> &times;
+    <% end %>
+  <% end %>
+
+  <% if params[:bench] == "1" %>
+    <%= link_to parties_path(request.query_parameters.except("bench")),
+          data: { turbo_frame: "_top" },
+          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+      Com bancada &times;
+    <% end %>
+  <% end %>
+</div>
+
+<% if @parties.empty? %>
+  <p class="text-muted text-center py-5">Nenhum partido encontrado.</p>
+<% else %>
+  <div class="list-group">
+    <% @parties.each do |party| %>
+      <% bench = @deputy_counts[party.id].to_i %>
+      <%= link_to party_path(party), class: "list-group-item list-group-item-action py-3" do %>
+        <div class="d-flex justify-content-between align-items-center gap-3">
+          <div>
+            <strong class="me-2"><%= party.label %></strong>
+            <span class="text-muted"><%= party.name %></span>
+            <% if party.former_labels.present? %>
+              <span class="text-muted small d-block">
+                antes: <%= party.former_labels.split.join(", ") %>
+              </span>
+            <% end %>
+          </div>
+
+          <div class="text-end small text-muted flex-shrink-0">
+            <div>
+              <% if bench.positive? %>
+                <span class="badge text-bg-primary rounded-pill"><%= bench %></span>
+                <%= "deputado".pluralize(bench) %>
+              <% else %>
+                <span class="badge text-bg-light border">sem bancada</span>
+              <% end %>
+            </div>
+            <div class="mt-1">
+              nº <%= party.number %>
+              <% if party.registered_on.present? %>
+                &middot; desde <%= party.registered_on.year %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>
