@@ -5,23 +5,24 @@
   <div class="container pt-5 pb-4">
     <div class="row align-items-center">
 
-      <!-- Logo / Nome da Marca -->
+      <!-- Chat bot -->
       <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
-        <span class="brand-text text-white fw-bold tracking-wider">SEU LOGO</span>
+        <%= link_to chats_path, class: "btn btn-auth rounded-pill px-4 py-2 fw-bold text-uppercase d-inline-flex align-items-center shadow-sm text-white" do %>
+          <i class="fa-solid fa-robot me-2 text-gold"></i> Fale com o Chatbot
+        <% end %>
       </div>
 
       <!-- Links Úteis -->
       <div class="col-md-4 mb-3 mb-md-0">
         <div class="footer-links d-flex justify-content-center gap-4">
-          <a href="#">Sobre Nós</a>
-          <a href="#">Privacidade</a>
-          <a href="#">Contato</a>
+          <%= link_to "Sobre Nós", about_path %>
+          <%= link_to "Contato", contact_path %>
         </div>
       </div>
 
       <!-- Direitos Reservados e Ano Dinâmico -->
       <div class="col-md-4 text-center text-md-end footer-copyright">
-        &copy; <%= Time.current.year %> SeuProjeto. <br class="d-md-none">
+        &copy; <%= Time.current.year %> HarpIA. <br class="d-md-none">
         Todos os direitos reservados.
       </div>
 
