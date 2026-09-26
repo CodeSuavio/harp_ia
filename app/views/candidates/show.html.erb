@@ -3,8 +3,12 @@
 
   <div class="row mt-3">
     <div class="col-md-4">
-      <% if @candidate.photo_file.present? %>
+      <% if @candidate.photo_file.to_s.start_with?("http") %>
         <%= image_tag @candidate.photo_file, class: "img-fluid rounded", alt: @candidate.ballot_name %>
+      <% else %>
+        <div class="candidate-photo-large rounded d-flex align-items-center justify-content-center">
+          <span class="text-muted"><%= @candidate.ballot_name.to_s.first %></span>
+        </div>
       <% end %>
     </div>
 
