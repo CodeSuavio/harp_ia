@@ -9,11 +9,10 @@ class MessagesController < ApplicationController
     authorize @message
 
     if @message.save
-      llm_chat = RubyLLM.chat
-      response = llm_chat.ask(@message.content)
+      assistant_response = ChatbotService.new(@message).call
 
       @chat.messages.create!(
-        content: response.content,
+        content: assistant_response,
         role: "assistant"
       )
       redirect_to @chat
