@@ -1,27 +1,58 @@
-<h2>Change your password</h2>
+<div class="hero-section d-flex align-items-center justify-content-center py-5" style="min-height: 100vh;">
+  <!-- Brilho dourado ao fundo imitando a identidade visual da Harpia -->
+  <div class="hero-glow"></div>
 
-<%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
-  <%= f.error_notification %>
+  <div class="container position-relative z-1">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-5">
 
-  <%= f.input :reset_password_token, as: :hidden %>
-  <%= f.full_error :reset_password_token %>
+        <!-- Cartão branco flutuante -->
+        <div class="card inspiration-card border-0 shadow-lg p-4 p-md-5">
 
-  <div class="form-inputs">
-    <%= f.input :password,
-                label: "New password",
-                required: true,
-                autofocus: true,
-                hint: ("#{@minimum_password_length} characters minimum" if @minimum_password_length),
-                input_html: { autocomplete: "new-password" } %>
-    <%= f.input :password_confirmation,
-                label: "Confirm your new password",
-                required: true,
-                input_html: { autocomplete: "new-password" } %>
+          <div class="text-center mb-4">
+            <div class="mb-3">
+              <i class="fa-solid fa-lock fa-2x text-gold"></i>
+            </div>
+            <h2 class="fw-bolder text-navy mb-2">Redefinir Senha</h2>
+            <p class="text-muted small">Escolha uma nova senha segura para o seu acesso.</p>
+          </div>
+
+          <%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :put }) do |f| %>
+            <%= f.error_notification %>
+
+            <%= f.input :reset_password_token, as: :hidden %>
+            <%= f.full_error :reset_password_token %>
+
+            <div class="form-inputs">
+              <div class="mb-3">
+                <%= f.input :password,
+                            label: "Nova Senha",
+                            required: true,
+                            autofocus: true,
+                            hint: ("Mínimo de #{@minimum_password_length} caracteres" if @minimum_password_length),
+                            input_html: { autocomplete: "new-password", class: "bg-light border-0 py-2 rounded-3" } %>
+              </div>
+
+              <div class="mb-3">
+                <%= f.input :password_confirmation,
+                            label: "Confirme a Nova Senha",
+                            required: true,
+                            input_html: { autocomplete: "new-password", class: "bg-light border-0 py-2 rounded-3" } %>
+              </div>
+            </div>
+
+            <div class="form-actions d-grid mt-4">
+              <%= f.button :submit, "ALTERAR SENHA", class: "btn btn-auth rounded-pill py-3 fw-bold text-uppercase shadow-sm" %>
+            </div>
+          <% end %>
+
+          <!-- Links auxiliares (Login, Criar conta, etc) -->
+          <div class="mt-4 text-center pt-3 border-top">
+            <%= render "devise/shared/links" %>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="form-actions">
-    <%= f.button :submit, "Change my password" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>
