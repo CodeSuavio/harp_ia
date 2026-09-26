@@ -33,7 +33,7 @@
   <div class="row g-4">
     <% @candidates.each do |candidate| %>
       <div class="col-sm-6 col-lg-3">
-        <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset" do %>
+        <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
           <div class="card candidate-card h-100 text-center border-0 shadow-sm">
             <div class="card-body">
               <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
