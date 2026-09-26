@@ -1,3 +1,100 @@
-<div class="container">
-  <h1>Partido</h1>
+<div class="container py-5">
+  <%= link_to "← Partidos", parties_path, class: "small text-decoration-none" %>
+
+  <div class="d-flex flex-wrap align-items-baseline gap-3 mt-3 mb-1">
+    <h1 class="h2 mb-0"><%= @party.label %></h1>
+    <% if @party.number.present? %>
+      <span class="badge text-bg-secondary rounded-pill fs-6">nº <%= @party.number %></span>
+    <% end %>
+  </div>
+
+  <p class="lead text-muted"><%= @party.name %></p>
+
+  <% if @party.former_labels.present? %>
+    <p class="small text-muted">
+      Siglas anteriores: <%= @party.former_labels.split.join(", ") %>
+    </p>
+  <% end %>
+
+  <div class="row g-3 my-4">
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0"><%= @deputies.size %></div>
+        <div class="small text-muted">na Câmara</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0"><%= @candidate_count %></div>
+        <div class="small text-muted">candidatos 2026</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0">
+          <%= @party.registered_on.present? ? @party.registered_on.year : "—" %>
+        </div>
+        <div class="small text-muted">registro no TSE</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0"><%= @state_bench.size %></div>
+        <div class="small text-muted">
+          <%= "estado".pluralize(@state_bench.size) %> com bancada
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mb-5">
+    <% if @party.url.present? %>
+      <%= link_to "Site oficial", @party.url, target: "_blank", rel: "noopener",
+            class: "btn btn-outline-secondary btn-sm" %>
+    <% end %>
+
+    <% if @candidate_count.positive? %>
+      <%= link_to "Ver candidatos deste partido", candidates_path(party: @party.id),
+            class: "btn btn-primary btn-sm" %>
+    <% end %>
+  </div>
+
+  <h2 class="h5 mb-3">Bancada na Câmara</h2>
+
+  <% if @deputies.empty? %>
+    <p class="text-muted">
+      Este partido não tem deputado federal em exercício.
+      <% if @candidate_count.positive? %>
+        Ele aparece aqui porque tem <%= @candidate_count %>
+        <%= "candidato".pluralize(@candidate_count) %> em 2026.
+      <% end %>
+    </p>
+  <% else %>
+    <p class="small text-muted mb-3">
+      <% @state_bench.first(8).each do |state, count| %>
+        <span class="badge text-bg-light border me-1"><%= state %> <%= count %></span>
+      <% end %>
+    </p>
+
+    <div class="row g-4">
+      <% @deputies.each do |deputy| %>
+        <div class="col-sm-6 col-lg-3">
+          <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset" do %>
+            <div class="card candidate-card h-100 text-center border-0 shadow-sm">
+              <div class="card-body">
+                <% if deputy.photo_url.present? %>
+                  <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
+                <% end %>
+                <h3 class="h6 mb-1"><%= deputy.name %></h3>
+                <p class="text-brand small fw-bold text-uppercase mb-0"><%= deputy.state_label %></p>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
 </div>

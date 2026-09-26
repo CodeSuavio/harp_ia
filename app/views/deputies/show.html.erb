@@ -1,3 +1,56 @@
-<div class="container">
-  <h1>Deputado</h1>
+<div class="container my-4">
+  <%= link_to "← Deputados", deputies_path %>
+
+  <div class="row mt-3">
+    <div class="col-md-4">
+      <% if @deputy.photo_url.present? %>
+        <%= image_tag @deputy.photo_url, class: "img-fluid rounded", alt: @deputy.name %>
+      <% end %>
+    </div>
+
+    <div class="col-md-8">
+      <h1><%= @deputy.name %></h1>
+      <p class="text-muted">
+        <%= link_to @deputy.party.label, party_path(@deputy.party) if @deputy.party %>
+        · <%= @deputy.state_label %>
+      </p>
+
+      <dl class="row">
+        <dt class="col-sm-4">Situação</dt>
+        <dd class="col-sm-8"><%= @deputy.status %></dd>
+
+        <dt class="col-sm-4">Situação eleitoral</dt>
+        <dd class="col-sm-8"><%= @deputy.electoral_status %></dd>
+
+        <dt class="col-sm-4">Nascimento</dt>
+        <dd class="col-sm-8">
+          <%= @deputy.date_of_birth&.strftime("%d/%m/%Y") %>
+          <%= "— #{@deputy.city_of_birth}/#{@deputy.state_of_birth}" if @deputy.city_of_birth.present? %>
+        </dd>
+
+        <dt class="col-sm-4">Escolaridade</dt>
+        <dd class="col-sm-8"><%= @deputy.education_level %></dd>
+
+        <dt class="col-sm-4">Gabinete</dt>
+        <dd class="col-sm-8">
+          <%= "Prédio #{@deputy.office_building}, sala #{@deputy.office_room}" if @deputy.office_building.present? %>
+          <% if @deputy.office_phone.present? %>
+            <br><%= link_to "(61) #{@deputy.office_phone}", "tel:+5561#{@deputy.office_phone.gsub(/\D/, '')}" %>
+          <% end %>
+        </dd>
+
+        <dt class="col-sm-4">E-mail</dt>
+        <dd class="col-sm-8"><%= mail_to @deputy.email if @deputy.email.present? %></dd>
+
+        <dt class="col-sm-4">Redes sociais</dt>
+        <dd class="col-sm-8">
+          <% @deputy.social_media.to_s.split.each do |url| %>
+            <%= link_to URI.parse(url).host.to_s.sub(/\Awww\./, ""), url, target: "_blank", rel: "noopener", class: "me-2" %>
+          <% end %>
+        </dd>
+      </dl>
+
+      <%= link_to "Ver gastos", deputy_expenses_path(@deputy), class: "btn btn-primary" %>
+    </div>
+  </div>
 </div>
