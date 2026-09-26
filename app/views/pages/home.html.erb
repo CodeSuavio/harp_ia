@@ -141,7 +141,7 @@
 
                 <!-- Foto (Esquerda) -->
                 <div class="inspiration-photo-wrapper flex-shrink-0">
-                  <% if candidate.photo_file.present? %>
+                  <% if candidate.photo_file.to_s.start_with?("http") %>
                     <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name %>
                   <% else %>
                     <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
