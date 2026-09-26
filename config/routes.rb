@@ -1,6 +1,12 @@
 Rails.application.routes.draw do
   devise_for :users
+
+  # Página inicial principal
   root to: "pages#home"
+
+  # Páginas institucionais (Sobre Nós e Contato)
+  get "sobre", to: "pages#about", as: :about
+  get "contato", to: "pages#contact", as: :contact
 
   # ==========================================
   # ÁREA PÚBLICA (Apenas Leitura)

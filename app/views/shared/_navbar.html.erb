@@ -1,38 +1,60 @@
-<nav class="navbar navbar-expand-sm navbar-light navbar-lewagon">
-  <div class="container-fluid">
-    <%= link_to "#", class: "navbar-brand" do %>
-      <%= image_tag "https://raw.githubusercontent.com/lewagon/fullstack-images/master/uikit/logo.png" %>
+<nav class="navbar navbar-expand-lg custom-navbar sticky-top">
+  <div class="container px-lg-4">
+
+    <!-- Logo "HARPIA" Minimalista inspirada na imagem -->
+    <%= link_to root_path, class: "navbar-brand py-0" do %>
+      <%= image_tag "logo.png", alt: "GovTrack Logo", style: "height: 40px; width: auto;" %>
+      <span class="brand-text text-white tracking-widest text-uppercase">HarpIA</span>
     <% end %>
 
-    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+    <!-- Botão Menu Sanduíche (Mobile) -->
+    <button class="navbar-toggler border-0 shadow-none px-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+      <i class="fa-solid fa-bars-staggered toggle-icon text-white"></i>
     </button>
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
-      <ul class="navbar-nav me-auto">
+
+      <!-- Links Principais Centralizados (ou alinhados à direita dependendo do espaço) -->
+      <ul class="navbar-nav ms-auto mb-2 mb-lg-0 fw-medium gap-lg-3 align-items-lg-center">
+        <li class="nav-item">
+          <%= link_to "HOME", root_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(root_path)}" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "CANDIDATOS", candidates_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(candidates_path)}" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "DEPUTADOS", deputies_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(deputies_path)}" %>
+        </li>
+        <li class="nav-item">
+          <%= link_to "PARTIDOS", parties_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(parties_path)}" %>
+        </li>
+
+        <!-- Espaçador visual antes dos botões de auth -->
+        <li class="nav-item d-none d-lg-block ms-lg-3">
+          <div class="vr bg-white opacity-25" style="height: 24px;"></div>
+        </li>
+
         <% if user_signed_in? %>
-          <li class="nav-item active">
-            <%= link_to "Home", "#", class: "nav-link" %>
+          <!-- Botões do Usuário Logado -->
+          <li class="nav-item text-center mt-3 mt-lg-0">
+            <%= link_to chats_path, class: "nav-link text-uppercase" do %>
+               MESSAGES
+            <% end %>
           </li>
-          <li class="nav-item">
-            <%= link_to "Messages", "#", class: "nav-link" %>
-          </li>
-          <li class="nav-item dropdown">
-          <a href="#" class="avatar" id="navbarDropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-            <%= image_tag "https://kitt.lewagon.com/placeholder/users/ssaunier", class: "avatar", alt: "dropdown menu" %>
-          </a>
-            <div class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
-              <%= link_to "Action", "#", class: "dropdown-item" %>
-              <%= link_to "Another action", "#", class: "dropdown-item" %>
-              <%= link_to "Log out", destroy_user_session_path, data: {turbo_method: :delete}, class: "dropdown-item" %>
-            </div>
+          <li class="nav-item text-center mt-2 mt-lg-0">
+            <%= link_to "SAIR", destroy_user_session_path, data: { turbo_method: :delete }, class: "btn btn-auth rounded px-4 fw-medium text-uppercase" %>
           </li>
         <% else %>
-          <li class="nav-item">
-            <%= link_to "Login", new_user_session_path, class: "nav-link" %>
+          <!-- Botões de Login/Cadastro inspirados na imagem (Laranja/Dourado) -->
+          <li class="nav-item text-center mt-3 mt-lg-0">
+            <%= link_to "ENTRAR", new_user_session_path, class: "nav-link text-uppercase nav-hover" %>
+          </li>
+          <li class="nav-item text-center mt-2 mt-lg-0">
+            <%= link_to "CADASTRE-SE", new_user_registration_path, class: "btn btn-auth rounded px-4 fw-medium text-uppercase ms-lg-2" %>
           </li>
         <% end %>
       </ul>
+
     </div>
   </div>
 </nav>
