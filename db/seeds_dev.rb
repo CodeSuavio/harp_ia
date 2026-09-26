@@ -1,4 +1,5 @@
 require "json"
+require "zlib"
 
 DIR = Rails.root.join("db", "seed_data")
 
@@ -36,7 +37,13 @@ TSE_PARTIES = [
 ]
 
 def load_json(file)
-  JSON.parse(File.read(DIR.join(file)))
+  plain = DIR.join(file)
+  return JSON.parse(File.read(plain)) if plain.exist?
+
+  gz = DIR.join("#{file}.gz")
+  raise "Arquivo nao encontrado: #{file} nem #{file}.gz em #{DIR}" unless gz.exist?
+
+  JSON.parse(Zlib::GzipReader.open(gz) { |f| f.read })
 end
 
 def blank_marker?(value)
