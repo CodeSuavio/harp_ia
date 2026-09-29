@@ -1,0 +1,85 @@
+.user-message {
+  // Aparência e posicionamento
+  background-color: rgba($gold, 0.75);
+  color: $navy-blue;
+  padding: 12px 16px;
+  border-radius: 16px;
+  max-width: 60%;
+  width: fit-content;
+  margin: 16px 0 16px auto;
+  // Comportamento do texto
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+
+.assistant-message {
+  // Estiliza as respostas
+  //da IA para melhorar a leitura
+  color: $navy-blue;
+  max-width: 70%;
+  margin: 24px 32px;
+  line-height: 1.6;
+}
+
+// Organiza o campo de mensagem e o botão de envio
+// em uma única barra
+.chat-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 24px 32px;
+}
+
+// Estiliza o campo onde o usuário digita a mensagem
+.chat-input {
+  flex: 1;
+  resize: none;
+  border: 1px solid rgba($navy-blue, 0.2);
+  border-radius: 16px;
+  padding: 12px 16px;
+  color: $navy-blue;
+  min-height: 48px;
+  max-height: 120px;
+}
+
+// Estiliza o botão de envio seguindo a paleta
+// do HarpIA
+.chat-submit {
+  background-color: $gold;
+  color: $navy-blue;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 20px;
+  cursor: pointer;
+}
+
+// ----- CHAT INDEX -----
+// Alinha o título da conversa e o ícone de exclusão
+.chat-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+// Remove o estilo padrão do botão de exclusão
+.chat-delete {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+// Botão para iniciar uma nova conversa
+.new-chat-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: $navy-blue;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 16px;
+  font-weight: 600;
+  cursor: pointer;
+}

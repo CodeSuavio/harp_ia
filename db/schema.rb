@@ -50,6 +50,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
     t.index ["party_id"], name: "index_candidates_on_party_id"
   end
 
+  create_table "chats", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "title"
+    t.datetime "updated_at", null: false
+    t.bigint "user_id", null: false
+    t.index ["user_id"], name: "index_chats_on_user_id"
+  end
+
   create_table "deputies", force: :cascade do |t|
     t.string "city_of_birth"
     t.string "cpf"
@@ -90,7 +98,40 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
     t.index ["deputy_id"], name: "index_expenses_on_deputy_id"
   end
 
+  create_table "messages", force: :cascade do |t|
+    t.bigint "chat_id", null: false
+    t.text "content", null: false
+    t.datetime "created_at", null: false
+    t.string "role", null: false
+    t.datetime "updated_at", null: false
+    t.index ["chat_id"], name: "index_messages_on_chat_id"
+  end
+
+  create_table "models", force: :cascade do |t|
+    t.jsonb "capabilities", default: []
+    t.integer "context_window"
+    t.datetime "created_at", null: false
+    t.string "family"
+    t.date "knowledge_cutoff"
+    t.integer "max_output_tokens"
+    t.jsonb "metadata", default: {}
+    t.jsonb "modalities", default: {}
+    t.datetime "model_created_at"
+    t.string "model_id", null: false
+    t.string "name", null: false
+    t.jsonb "pricing", default: {}
+    t.string "provider", null: false
+    t.datetime "updated_at", null: false
+    t.index ["capabilities"], name: "index_models_on_capabilities", using: :gin
+    t.index ["family"], name: "index_models_on_family"
+    t.index ["modalities"], name: "index_models_on_modalities", using: :gin
+    t.index ["provider", "model_id"], name: "index_models_on_provider_and_model_id", unique: true
+    t.index ["provider"], name: "index_models_on_provider"
+  end
+
   create_table "parties", force: :cascade do |t|
+    t.boolean "active"
+    t.integer "camara_id"
     t.datetime "created_at", null: false
     t.string "label"
     t.string "name"
@@ -110,10 +151,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
   end
 
   create_table "users", force: :cascade do |t|
-    t.bigint "bill_id", null: false
-    t.bigint "candidate_id", null: false
     t.datetime "created_at", null: false
-    t.bigint "deputy_id", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
     t.string "first_name"
@@ -123,11 +161,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
     t.datetime "updated_at", null: false
-    t.index ["bill_id"], name: "index_users_on_bill_id"
-    t.index ["candidate_id"], name: "index_users_on_candidate_id"
-    t.index ["deputy_id"], name: "index_users_on_deputy_id"
     t.index ["email"], name: "index_users_on_email", unique: true
-    t.index ["party_id"], name: "index_users_on_party_id"
     t.index ["reset_password_token"], name: "index_users_on_reset_password_token", unique: true
   end
 
@@ -145,13 +179,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
   add_foreign_key "bills", "parties"
   add_foreign_key "candidates", "deputies", column: "current_deputy_id", primary_key: "json_id"
   add_foreign_key "candidates", "parties"
+  add_foreign_key "chats", "users"
   add_foreign_key "deputies", "parties"
   add_foreign_key "expenses", "deputies"
+  add_foreign_key "messages", "chats"
   add_foreign_key "polls", "bills"
-  add_foreign_key "users", "bills"
-  add_foreign_key "users", "candidates"
-  add_foreign_key "users", "deputies"
-  add_foreign_key "users", "parties"
   add_foreign_key "votes", "deputies"
   add_foreign_key "votes", "polls"
 end

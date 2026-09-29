@@ -6,7 +6,7 @@ class Candidate < ApplicationRecord
               foreign_key: :current_deputy_id,
               primary_key: :json_id
 
-  has_many :users
+  has_many :users, dependent: :destroy
 
   validates :name, :ballot_name, :number, presence: true
   validates :number, numericality: { only_integer: true }

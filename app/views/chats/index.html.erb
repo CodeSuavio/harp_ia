@@ -1,0 +1,26 @@
+<h1>Meus Chats</h1>
+
+<%= button_to chats_path, method: :post, class: "new-chat-btn" do %>
+  <i class="fa-solid fa-plus"></i>
+  <span>Novo chat</span>
+<% end %>
+
+
+<% if @chats.any? %>
+  <ul>
+    <% @chats.each do |chat| %>
+      <li class="chat-item">
+        <%= link_to chat.title.presence || "Nova conversa", chat_path(chat) %>
+
+        <%= button_to chat_path(chat),
+            method: :delete,
+            class: "chat-delete",
+            data: { turbo_confirm: "Tem certeza que deseja excluir este chat?" } do %>
+          <i class="fa-solid fa-trash"></i>
+        <% end %>
+      </li>
+    <% end %>
+  </ul>
+<% else %>
+  <p>Você ainda não possui nenhuma conversa.</p>
+<% end %>
