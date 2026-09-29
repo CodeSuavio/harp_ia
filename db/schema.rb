@@ -10,39 +10,83 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_19_183654) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
   create_table "bills", force: :cascade do |t|
+    t.string "bill_number"
     t.datetime "created_at", null: false
     t.bigint "deputy_id", null: false
+    t.string "keywords"
     t.bigint "party_id", null: false
+    t.datetime "submission_date"
+    t.text "summary"
     t.datetime "updated_at", null: false
+    t.string "url"
+    t.integer "year"
     t.index ["deputy_id"], name: "index_bills_on_deputy_id"
     t.index ["party_id"], name: "index_bills_on_party_id"
   end
 
   create_table "candidates", force: :cascade do |t|
+    t.string "ballot_name"
+    t.string "candidacy_status"
     t.datetime "created_at", null: false
     t.bigint "current_deputy_id"
+    t.string "education_level"
+    t.string "electoral_id"
+    t.string "gender"
+    t.string "name"
+    t.integer "number"
+    t.string "occupation"
     t.bigint "party_id", null: false
+    t.string "photo_file"
+    t.string "race_color"
+    t.boolean "running_for_reelection"
+    t.string "state_label"
     t.datetime "updated_at", null: false
     t.index ["current_deputy_id"], name: "index_candidates_on_current_deputy_id"
     t.index ["party_id"], name: "index_candidates_on_party_id"
   end
 
   create_table "deputies", force: :cascade do |t|
+    t.string "city_of_birth"
+    t.string "cpf"
     t.datetime "created_at", null: false
+    t.date "date_of_birth"
+    t.string "education_level"
+    t.string "electoral_status"
+    t.string "email"
+    t.bigint "json_id"
+    t.string "name"
+    t.string "office_building"
+    t.string "office_phone"
+    t.string "office_room"
     t.bigint "party_id", null: false
+    t.string "photo_url"
+    t.string "social_media"
+    t.string "state_label"
+    t.string "state_of_birth"
+    t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["json_id"], name: "index_deputies_on_json_id", unique: true
     t.index ["party_id"], name: "index_deputies_on_party_id"
   end
 
   create_table "expenses", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.bigint "deputy_id", null: false
+    t.decimal "document_amount"
+    t.datetime "document_date"
+    t.string "document_url"
+    t.string "expense_type"
+    t.integer "month"
+    t.decimal "net_amount"
+    t.string "supplier"
+    t.string "supplier_cnpj_cpf"
     t.datetime "updated_at", null: false
+    t.integer "year"
     t.index ["deputy_id"], name: "index_expenses_on_deputy_id"
   end
 
@@ -55,8 +99,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_183654) do
   end
 
   create_table "polls", force: :cascade do |t|
+    t.boolean "approval"
     t.bigint "bill_id", null: false
     t.datetime "created_at", null: false
+    t.datetime "date"
+    t.text "description"
+    t.string "label_comission"
     t.datetime "updated_at", null: false
     t.index ["bill_id"], name: "index_polls_on_bill_id"
   end
@@ -68,6 +116,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_183654) do
     t.bigint "deputy_id", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
+    t.string "first_name"
+    t.string "last_name"
     t.bigint "party_id", null: false
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
@@ -86,13 +136,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_19_183654) do
     t.bigint "deputy_id", null: false
     t.bigint "poll_id", null: false
     t.datetime "updated_at", null: false
+    t.string "vote"
     t.index ["deputy_id"], name: "index_votes_on_deputy_id"
     t.index ["poll_id"], name: "index_votes_on_poll_id"
   end
 
   add_foreign_key "bills", "deputies"
   add_foreign_key "bills", "parties"
-  add_foreign_key "candidates", "deputies", column: "current_deputy_id"
+  add_foreign_key "candidates", "deputies", column: "current_deputy_id", primary_key: "json_id"
   add_foreign_key "candidates", "parties"
   add_foreign_key "deputies", "parties"
   add_foreign_key "expenses", "deputies"
