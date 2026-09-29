@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -20,7 +20,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
     t.bigint "deputy_id", null: false
     t.string "keywords"
     t.bigint "party_id", null: false
-    t.date "submission_date"
+    t.datetime "submission_date"
     t.text "summary"
     t.datetime "updated_at", null: false
     t.string "url"
@@ -66,6 +66,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
     t.string "education_level"
     t.string "electoral_status"
     t.string "email"
+    t.bigint "json_id"
     t.string "name"
     t.string "office_building"
     t.string "office_phone"
@@ -77,6 +78,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
     t.string "state_of_birth"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["json_id"], name: "index_deputies_on_json_id", unique: true
     t.index ["party_id"], name: "index_deputies_on_party_id"
   end
 
@@ -84,7 +86,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
     t.datetime "created_at", null: false
     t.bigint "deputy_id", null: false
     t.decimal "document_amount"
-    t.date "document_date"
+    t.datetime "document_date"
     t.string "document_url"
     t.string "expense_type"
     t.integer "month"
@@ -131,18 +133,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
     t.boolean "active"
     t.integer "camara_id"
     t.datetime "created_at", null: false
-    t.string "former_labels"
     t.string "label"
     t.string "name"
-    t.integer "number"
-    t.date "registered_on"
-    t.string "succeeded_by"
     t.datetime "updated_at", null: false
     t.string "url"
   end
 
   create_table "polls", force: :cascade do |t|
-    t.string "approval"
+    t.boolean "approval"
     t.bigint "bill_id", null: false
     t.datetime "created_at", null: false
     t.datetime "date"
@@ -158,6 +156,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
     t.string "encrypted_password", default: "", null: false
     t.string "first_name"
     t.string "last_name"
+    t.bigint "party_id", null: false
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
@@ -178,7 +177,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
 
   add_foreign_key "bills", "deputies"
   add_foreign_key "bills", "parties"
-  add_foreign_key "candidates", "deputies", column: "current_deputy_id"
+  add_foreign_key "candidates", "deputies", column: "current_deputy_id", primary_key: "json_id"
   add_foreign_key "candidates", "parties"
   add_foreign_key "chats", "users"
   add_foreign_key "deputies", "parties"
