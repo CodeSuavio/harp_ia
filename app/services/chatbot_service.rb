@@ -1,6 +1,7 @@
 class ChatbotService
+  # ----- RESPOSTA DO CHAT -----
   SYSTEM_PROMPT = <<~PROMPT
-    Você é o asssitente virtual do Harp_IA, uma plataforma de informação política.
+    Você é o assistente virtual do Harp_IA, uma plataforma de informação política.
 
     Sua função é ajudar o usuário a compreender informações sobre candidatos,
     deputados, partidos, projetos de lei, votações, despesas parlamentares e
@@ -47,5 +48,29 @@ class ChatbotService
     response = llm_chat.ask(@message.content)
 
     response.content
+  end
+
+
+  # ----- TÍTULO DO CHAT -----
+  # Gera um título curto para identificar a conversa no histórico de chats
+
+  def generate_title
+    title_chat = RubyLLM.chat
+
+    title_chat.with_instructions(<<~PROMPT)
+      Crie um título curto que represente o assunto principal da conversa.
+
+      Regras:
+      - Use no máximo 6 palavras.
+      - Responda em português do Brasil.
+      - Não use aspas.
+      - Não use ponto final.
+      - Retorne apenas o título.
+      - Mantenha linguagem factual e politicamente neutra.
+    PROMPT
+
+    response = title_chat.ask(@message.content)
+
+    response.content.strip
   end
 end

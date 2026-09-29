@@ -3,7 +3,7 @@ class ChatsController < ApplicationController
   before_action :set_chat, only: [:show, :destroy]
 
   def index
-    @chats = current_user.chats
+    @chats = policy_scope(Chat)
   end
 
   def show
@@ -14,6 +14,7 @@ class ChatsController < ApplicationController
 
   def create
     @chat = current_user.chats.new
+    authorize @chat
 
     if @chat.save
       redirect_to @chat
@@ -23,6 +24,7 @@ class ChatsController < ApplicationController
   end
 
   def destroy
+    authorize @chat
     @chat.destroy
     redirect_to chats_path
   end
