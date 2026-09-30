@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
+ActiveRecord::Schema[8.1].define(version: 2026_09_29_024209) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -133,8 +133,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
     t.boolean "active"
     t.integer "camara_id"
     t.datetime "created_at", null: false
+    t.string "former_labels"
     t.string "label"
     t.string "name"
+    t.integer "number"
+    t.date "registered_on"
+    t.string "succeeded_by"
     t.datetime "updated_at", null: false
     t.string "url"
   end
@@ -156,7 +160,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_25_002805) do
     t.string "encrypted_password", default: "", null: false
     t.string "first_name"
     t.string "last_name"
-    t.bigint "party_id", null: false
     t.datetime "remember_created_at"
     t.datetime "reset_password_sent_at"
     t.string "reset_password_token"
