@@ -139,15 +139,18 @@
             <div class="card inspiration-card h-100 bg-white">
               <div class="card-body p-4 d-flex align-items-center gap-4">
 
-                <!-- Foto (Esquerda) -->
-                <div class="inspiration-photo-wrapper flex-shrink-0">
-                  <% if candidate.photo_file.to_s.start_with?("http") %>
-                    <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name %>
-                  <% else %>
-                    <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="fa-solid fa-user text-gold"></i>
-                    </div>
-                  <% end %>
+                <!-- Foto e Partido (Esquerda) -->
+                <div class="d-flex flex-column align-items-center flex-shrink-0">
+                  <div class="inspiration-photo-wrapper">
+                    <% if candidate.photo_file.to_s.start_with?("http") %>
+                      <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
+                    <% else %>
+                      <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
+                        <i class="fa-solid fa-user text-gold"></i>
+                      </div>
+                    <% end %>
+                  </div>
+                  <span class="party-badge mt-2" title="<%= candidate.party.name %>"><%= candidate.party.label %></span>
                 </div>
 
                 <!-- Dados e Barras (Direita) -->
@@ -159,27 +162,40 @@
                   <div class="d-flex align-items-center text-muted small mb-3">
                     <i class="fa-solid fa-location-dot me-2 text-gold"></i>
                     <%= candidate.state_label %> (Brasil)
+                    <% if candidate.reelection? %>
+                      <span class="reelection-badge ms-2"><i class="fa-solid fa-rotate me-1"></i>Reeleição</span>
+                    <% end %>
                   </div>
 
-                  <!-- Barra 1: Situação (Simulando o "Skills" da imagem) -->
+                  <% deputy_id = candidate.current_deputy_id %>
+                  <% spent = @expenses_by_deputy[deputy_id] %>
+                  <% votes = @votes_by_deputy[deputy_id].to_i %>
+                  <% bills = @bills_by_deputy[deputy_id].to_i %>
+                  <% participation = deputy_id && @total_polls.positive? ? (votes * 100.0 / @total_polls).round : nil %>
+
+                  <!-- Barra 1: Gastos da cota parlamentar (proporcional ao maior gasto) -->
                   <div class="mb-2">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                      <span class="data-label text-muted">Situação</span>
-                      <span class="data-value text-navy"><%= candidate.candidacy_status.presence || "Aguardando" %></span>
+                      <span class="data-label text-muted">Gastos</span>
+                      <span class="data-value text-navy">
+                        <%= spent ? number_to_currency(spent, unit: "R$ ", separator: ",", delimiter: ".", precision: 0) : "Sem mandato" %>
+                      </span>
                     </div>
                     <div class="progress rounded-pill" style="height: 4px;">
-                      <div class="progress-bar bg-gold" style="width: 100%"></div>
+                      <div class="progress-bar bg-gold" style="width: <%= spent && @max_expense.positive? ? (spent / @max_expense * 100).round : 0 %>%"></div>
                     </div>
                   </div>
 
-                  <!-- Barra 2: Número (Simulando o "Experience" da imagem) -->
+                  <!-- Barra 2: Participação nas votações de leis e projetos de lei -->
                   <div>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                      <span class="data-label text-muted">Número</span>
-                      <span class="data-value text-navy"><%= candidate.number %></span>
+                      <span class="data-label text-muted" title="<%= votes %> votos em <%= @total_polls %> votações · <%= bills %> projetos apresentados">Participação</span>
+                      <span class="data-value text-navy">
+                        <%= participation ? "#{participation}% · #{bills} PL#{'s' unless bills == 1}" : "Sem mandato" %>
+                      </span>
                     </div>
                     <div class="progress rounded-pill" style="height: 4px;">
-                      <div class="progress-bar bg-navy" style="width: 100%"></div>
+                      <div class="progress-bar bg-navy" style="width: <%= participation.to_i %>%"></div>
                     </div>
                   </div>
 

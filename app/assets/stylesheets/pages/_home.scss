@@ -359,3 +359,32 @@ body {
     letter-spacing: 0.5px;
   }
 }
+
+// Sigla do partido abaixo da foto no cartão
+.party-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: $navy-blue;
+  background-color: rgba($gold, 0.15);
+  border-radius: 999px;
+  padding: 2px 8px;
+  max-width: 75px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+// Selo de candidato que tenta a reeleição
+.reelection-badge {
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
+  color: $navy-blue;
+  background-color: $gold;
+  border-radius: 999px;
+  padding: 2px 8px;
+}
