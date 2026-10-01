@@ -2,6 +2,8 @@ require 'net/http'
 require 'uri'
 require 'json'
 
+$stdout.sync = true
+
 Vote.destroy_all
 Poll.destroy_all
 Bill.destroy_all
@@ -93,9 +95,6 @@ data.each do |cara|
       state_label: cara["sigla_uf"],
 
     )
-    if cara["deputado_id_atual"]
-      cara.current_deputy_id = Deputy.find_by(json_id: cara["deputado_id_atual"].to_i)
-    end
     cara.save!
   else
     puts "partido #{cara["sigla_partido"]} não encontrado"
@@ -106,26 +105,27 @@ puts "importado #{Candidate.count} candidatos"
 
 URL_PRPOSICAO = "https://raw.githubusercontent.com/gabsgarcia/harpia-seed-data/refs/heads/main/db/seeds/proposicoes.json"
 
+deputies = Deputy.all.index_by(&:json_id)
+
 url = URI.parse(URL_PRPOSICAO)
 
 response = Net::HTTP.get(url)
 
 data = JSON.parse(response)
 
-data.each do |pl|
-  deputado = Deputy.find_by(json_id: pl["deputado_id"].to_i)
+data.uniq { |pl| pl["id"] }.each do |pl| # o json repete a proposição uma vez por coautor; fica o primeiro
+  deputado = deputies[pl["deputado_id"].to_i]
   if deputado
-  pl = Bill.new(
-    bill_number: pl["id"].to_i,
-    deputy_id: deputado,
-    keywords: pl["keywords"],
-    party_id: deputado.party_id,
-    submission_date: pl["data_apresentação"],
-    summary: pl["ementa"],
-    url: pl["url"],
-    year: pl["ano"].to_i
-
-  )
+    pl = Bill.new(
+      bill_number: pl["id"].to_i,
+      deputy: deputado,
+      keywords: pl["keywords"],
+      party_id: deputado.party_id,
+      submission_date: pl["data_apresentacao"],
+      summary: pl["ementa"],
+      url: pl["url"],
+      year: pl["ano"].to_i
+    )
     pl.save!
   else
     puts "deputado #{pl["deputado_id"]} não encontrado"
@@ -144,20 +144,20 @@ response = Net::HTTP.get(url)
 data = JSON.parse(response)
 
 data.each do |gasto|
-  deputado = Deputy.find_by(json_id: gasto["deputado_id"].to_i)
+  deputado = deputies[gasto["deputado_id"].to_i]
   if deputado
-  gasto = Expense.new(
-    deputy_id: deputado.party_id,
-    document_amount: gasto["valor_documento"].to_f,
-    document_date: gasto["data_documento"],
-    document_url: gasto["url_documento"],
-    expense_type: gasto["tipo_despesa"],
-    month: gasto["mes"].to_i,
-    net_amount: gasto["valor_liquido"].to_f,
-    supplier: gasto["fornecedor"],
-    supplier_cnpj_cpf: gasto["cnpj_cpf_fornecedor"],
-    year: gasto["ano"].to_i
-)
+    gasto = Expense.new(
+      deputy: deputado,
+      document_amount: gasto["valor_documento"].to_f,
+      document_date: gasto["data_documento"],
+      document_url: gasto["url_documento"],
+      expense_type: gasto["tipo_despesa"],
+      month: gasto["mes"].to_i,
+      net_amount: gasto["valor_liquido"].to_f,
+      supplier: gasto["fornecedor"],
+      supplier_cnpj_cpf: gasto["cnpj_cpf_fornecedor"],
+      year: gasto["ano"].to_i
+    )
     gasto.save!
   else
     puts "deputado #{gasto["deputado_id"]} não encontrado"
@@ -175,19 +175,23 @@ response = Net::HTTP.get(url)
 
 data = JSON.parse(response)
 
-data.each do |votacao|
+data.uniq { |votacao| votacao["id"] }.each do |votacao|
   votacao = Poll.new(
-    approval: votacao["aprovacao"],
-    bill_id: votacao["id"],
+    json_id: votacao["id"],
+    approval: votacao["aprovacao"] == 1,
+    bill: (Bill.find_by(bill_number: votacao["proposicao_id"].to_s) if votacao["proposicao_id"]),
     date: votacao["data"],
     description: votacao["descricao"],
     label_comission: votacao["sigla_orgao"]
-)
+  )
+  votacao.save!
 end
-puts "importado #{Poll.count} gastos"
+puts "importado #{Poll.count} votações"
 
 
 URL_VOTES = "https://raw.githubusercontent.com/gabsgarcia/harpia-seed-data/refs/heads/main/db/seeds/votos.json"
+
+polls = Poll.pluck(:json_id, :id).to_h
 
 url = URI.parse(URL_VOTES)
 
@@ -196,16 +200,17 @@ response = Net::HTTP.get(url)
 data = JSON.parse(response)
 
 data.each do |voto|
-  deputado = Deputy.find_by(json_id: voto["deputado_id"].to_i)
-  if deputado
-      voto = Vote.new(
-      deputy_id: deputado.party_id,
-      poll_id: voto["votacao_id"],
+  deputado = deputies[voto["deputado_id"].to_i]
+  poll_id = polls[voto["votacao_id"]]
+  if deputado && poll_id
+    voto = Vote.new(
+      deputy: deputado,
+      poll_id: poll_id,
       vote: voto["voto"]
-)
+    )
     voto.save!
   else
-    puts "deputado #{voto["deputado_id"]} não encontrado"
+    puts "deputado #{voto["deputado_id"]} ou votação #{voto["votacao_id"]} não encontrado"
   end
 end
 puts "importado #{Vote.count} votos"
