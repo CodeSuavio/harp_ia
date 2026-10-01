@@ -1,5 +1,5 @@
 class Poll < ApplicationRecord
-  belongs_to :bill
+  belongs_to :bill, optional: true
 
   has_many :votes, dependent: :destroy
 
