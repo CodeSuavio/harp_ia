@@ -1,26 +1,96 @@
-<h1>Meus Chats</h1>
+<div class="chats-wrapper">
 
-<%= button_to chats_path, method: :post, class: "new-chat-btn" do %>
-  <i class="fa-solid fa-plus"></i>
-  <span>Novo chat</span>
-<% end %>
+  <!-- ========================================== -->
+  <!-- HERO SECTION: CABEÇALHO DOS CHATS -->
+  <!-- ========================================== -->
+  <section class="hero-section position-relative overflow-hidden d-flex align-items-center" style="padding: 5rem 0 7rem 0;">
+    <div class="hero-glow"></div>
+    <div class="container hero-content position-relative z-1 text-center">
+      <div class="mb-3">
+        <i class="fa-solid fa-robot fa-2x text-gold"></i>
+      </div>
+      <h1 class="display-5 fw-bolder text-white mb-3 letter-spacing-tight">
+        Meus <span class="text-gold">Chats</span>
+      </h1>
+      <p class="lead text-white-50 mx-auto mb-4" style="max-width: 500px;">
+        O seu histórico de investigações e conversas com a inteligência artificial da Harpia.
+      </p>
 
+      <!-- Botão Novo Chat Principal -->
+      <%= button_to chats_path, method: :post, class: "btn btn-auth rounded-pill px-4 py-2 fw-bold text-uppercase d-inline-flex align-items-center shadow-sm" do %>
+        <i class="fa-solid fa-plus me-2"></i> Novo Chat
+      <% end %>
+    </div>
+  </section>
 
-<% if @chats.any? %>
-  <ul>
-    <% @chats.each do |chat| %>
-      <li class="chat-item">
-        <%= link_to chat.title.presence || "Nova conversa", chat_path(chat) %>
+  <!-- ========================================== -->
+  <!-- GRID DE CONVERSAS E ESTADO VAZIO -->
+  <!-- ========================================== -->
+  <section class="container position-relative" style="margin-top: -3.5rem; z-index: 10; margin-bottom: 5rem;">
 
-        <%= button_to chat_path(chat),
-            method: :delete,
-            class: "chat-delete",
-            data: { turbo_confirm: "Tem certeza que deseja excluir este chat?" } do %>
-          <i class="fa-solid fa-trash"></i>
+    <% if @chats.any? %>
+      <div class="row g-4">
+        <% @chats.each do |chat| %>
+          <div class="col-md-6 col-lg-4">
+
+            <!-- Cartão do Chat -->
+            <div class="card border-0 shadow-lg h-100 bg-white rounded-4 p-4 inspiration-card position-relative">
+
+              <!-- Botão Excluir (Canto Superior Direito) -->
+              <div class="position-absolute" style="top: 15px; right: 15px;">
+                <%= button_to chat_path(chat),
+                              method: :delete,
+                              class: "btn btn-sm text-muted border-0 bg-transparent p-2 transition",
+                              style: "transition: color 0.2s;",
+                              onmouseover: "this.style.color='#dc3545'",
+                              onmouseout: "this.style.color='#6c757d'",
+                              data: { turbo_confirm: "Tem certeza que deseja excluir este chat?" } do %>
+                  <i class="fa-solid fa-trash"></i>
+                <% end %>
+              </div>
+
+              <!-- Ícone e Título da Conversa -->
+              <div class="d-flex align-items-center mb-4 mt-2 pe-4">
+                <div class="bg-light rounded-circle d-flex align-items-center justify-content-center flex-shrink-0 me-3" style="width: 45px; height: 45px;">
+                  <i class="fa-solid fa-comments text-gold"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="h6 fw-bold text-navy mb-1 text-truncate">
+                    <%= chat.title.presence || "Nova conversa" %>
+                  </h3>
+                  <p class="text-muted small mb-0">
+                    <i class="fa-regular fa-clock me-1"></i>
+                    <%= chat.created_at.strftime("%d/%m/%Y às %H:%M") %>
+                  </p>
+                </div>
+              </div>
+
+              <!-- Botão Acessar Chat -->
+              <div class="mt-auto pt-3 border-top text-center">
+                <%= link_to chat_path(chat), class: "btn btn-sm bg-light text-navy fw-medium rounded-pill px-4 w-100 transition", style: "border: 1px solid rgba(0,0,0,0.05);" do %>
+                  Continuar Conversa <i class="fa-solid fa-arrow-right ms-2 text-gold"></i>
+                <% end %>
+              </div>
+
+            </div>
+          </div>
         <% end %>
-      </li>
+      </div>
+
+    <% else %>
+      <!-- Estado Vazio (Empty State) -->
+      <div class="text-center py-5 empty-state bg-white rounded-4 shadow-sm p-5 mx-auto" style="max-width: 600px;">
+        <div class="mb-4">
+          <i class="fa-solid fa-ghost fa-3x text-gold opacity-50"></i>
+        </div>
+        <h4 class="h4 text-navy fw-bold mb-3">Nenhuma conversa encontrada</h4>
+        <p class="text-muted mb-4">Você ainda não iniciou nenhuma análise política com a nossa inteligência. Comece agora mesmo!</p>
+
+        <%= button_to chats_path, method: :post, class: "btn btn-auth rounded-pill px-5 py-3 fw-bold text-uppercase d-inline-flex align-items-center shadow-sm" do %>
+          <i class="fa-solid fa-plus me-2"></i> Iniciar Primeira Conversa
+        <% end %>
+      </div>
     <% end %>
-  </ul>
-<% else %>
-  <p>Você ainda não possui nenhuma conversa.</p>
-<% end %>
+
+  </section>
+</div>
