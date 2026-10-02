@@ -173,7 +173,8 @@
                   <% spent = @expenses_by_deputy[deputy_id] %>
                   <% votes = @votes_by_deputy[deputy_id].to_i %>
                   <% bills = @bills_by_deputy[deputy_id].to_i %>
-                  <% participation = deputy_id && @total_polls.positive? ? (votes * 100.0 / @total_polls).round : nil %>
+                  <% term_polls = @polls_by_deputy[deputy_id].to_i %>
+                  <% participation = deputy_id && term_polls.positive? ? (votes * 100.0 / term_polls).round : nil %>
 
                   <!-- Barra 1: Gastos da cota parlamentar (proporcional ao maior gasto) -->
                   <div class="mb-2">
@@ -188,17 +189,23 @@
                     </div>
                   </div>
 
-                  <!-- Barra 2: Participação nas votações de leis e projetos de lei -->
-                  <div>
+                  <!-- Barra 2: Presença nas votações durante o período em exercício -->
+                  <div class="mb-2">
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                      <span class="data-label text-muted" title="<%= votes %> votos em <%= @total_polls %> votações · <%= bills %> projetos apresentados">Participação</span>
+                      <span class="data-label text-muted" title="<%= votes %> votos em <%= term_polls %> votações do período em exercício">Presença em votações</span>
                       <span class="data-value text-navy">
-                        <%= participation ? "#{participation}% · #{bills} PL#{'s' unless bills == 1}" : "Sem mandato" %>
+                        <%= participation ? "#{participation}%" : "Sem mandato" %>
                       </span>
                     </div>
                     <div class="progress rounded-pill" style="height: 4px;">
                       <div class="progress-bar bg-navy" style="width: <%= participation.to_i %>%"></div>
                     </div>
+                  </div>
+
+                  <!-- Projetos de lei apresentados -->
+                  <div class="d-flex justify-content-between align-items-center">
+                    <span class="data-label text-muted">PLs apresentados</span>
+                    <span class="data-value text-navy"><%= deputy_id ? bills : "Sem mandato" %></span>
                   </div>
 
                 </div>
