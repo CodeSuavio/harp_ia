@@ -99,7 +99,7 @@
             </span>
             <input type="text"
                    class="form-control border-0 shadow-none bg-transparent fw-medium"
-                   placeholder="Busque por nome ou nome de urna..."
+                   placeholder="Busque por nome, nome de urna ou partido..."
                    data-candidate-filter-target="search"
                    data-action="input->candidate-filter#filter">
           </div>
@@ -133,6 +133,8 @@
         <div class="col-md-6 col-xl-4"
              data-candidate-filter-target="card"
              data-filter-name="<%= [candidate.name, candidate.ballot_name].compact.join(' ').downcase %>"
+             data-filter-party-label="<%= [candidate.party.label, candidate.party.former_labels].compact.join(' ').downcase %>"
+             data-filter-party-name="<%= candidate.party.name.to_s.downcase %>"
              data-filter-state="<%= candidate.state_label %>">
 
           <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset" do %>
@@ -214,7 +216,7 @@
         <i class="fa-solid fa-ghost fa-3x text-pastel-yellow"></i>
       </div>
       <h4 class="h5 text-navy fw-bold">Nenhum registro encontrado</h4>
-      <p class="text-muted">Ajuste os filtros de estado ou tente outro nome.</p>
+      <p class="text-muted">Ajuste os filtros de estado ou tente outro nome ou partido.</p>
     </div>
   </section>
 </div>
