@@ -69,6 +69,15 @@
   color: white;
 }
 
+// Container geral (Turbo Frame) que agrupa as mensagens e o campo de envio.
+// Ocupa todo o espaço restante da janela do chatbot.
+#chat_widget_messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
 // Agrupa o logo e o nome "Estamos de Olho".
 .chat-widget-title {
   display: flex;
@@ -93,17 +102,57 @@
   cursor: pointer;
 }
 
-// Área onde futuramente aparecerão as mensagens.
+// Área interna onde aparecem as mensagens da conversa.
+// Diferente de #chat_widget_messages, esta classe controla apenas
+// a lista de mensagens e permite scroll quando o conteúdo ultrapassa
+// o espaço disponível.
 .chat-widget-messages {
   flex: 1;
+  min-height: 0;
   padding: 20px;
   overflow-y: auto;
 }
 
+// Mensagem enviada pelo usuário.
+// Fica alinhada à direita e usa o laranja do widget para diferenciar
+// visualmente a pergunta da resposta da Harpia.
+.chat-widget-user-message {
+  width: fit-content;
+  max-width: 72%;
+  margin-left: auto;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background-color: $orange;
+  color: white;
+  border-radius: 14px 14px 4px 14px;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+// Resposta da Harpia.
+// Permanece limpa sobre o fundo branco para facilitar a leitura.
+.chat-widget-assistant-message {
+  margin-right: 10px;
+  margin-bottom: 24px;
+  color: $navy-blue;
+  font-size: 15px;
+  line-height: 1.5;
+  // Evita espaço extra no início e no final do conteúdo Markdown.
+  p:first-child {
+    margin-top: 0;
+  }
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
 // Área inferior para digitar a pergunta.
+// Permanece visível enquanto as mensagens fazem scroll.
 .chat-widget-input {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   padding: 12px;
   border-top: 1px solid #e5e5e5;
 }
