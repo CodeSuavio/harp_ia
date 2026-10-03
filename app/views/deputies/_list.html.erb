@@ -68,8 +68,8 @@
           <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
             <div class="card candidate-card h-100 text-center border-0 shadow-sm">
               <div class="card-body compare-card-body">
-                <% if @deputy.photo.attached? %>
-                  <%= cl_image_tag @deputy.photo.key, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
+                <% if deputy.photo.attached? %>
+                  <%= cl_image_tag deputy.photo.key, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
                 <% else %>
                   <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
                     <i class="fa-solid fa-user text-muted"></i>
