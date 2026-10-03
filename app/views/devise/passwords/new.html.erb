@@ -1,18 +1,47 @@
-<h2>Forgot your password?</h2>
+<div class="hero-section d-flex align-items-center justify-content-center py-5" style="min-height: 100vh;">
+  <!-- Brilho dourado ao fundo imitando a identidade visual da Harpia -->
+  <div class="hero-glow"></div>
 
-<%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
-  <%= f.error_notification %>
+  <div class="container position-relative z-1">
+    <div class="row justify-content-center">
+      <div class="col-12 col-md-8 col-lg-5">
 
-  <div class="form-inputs">
-    <%= f.input :email,
-                required: true,
-                autofocus: true,
-                input_html: { autocomplete: "email" } %>
+        <!-- Cartão branco e elegante com sombras suaves -->
+        <div class="card inspiration-card border-0 shadow-lg p-4 p-md-5">
+
+          <div class="text-center mb-4">
+            <div class="mb-3">
+              <i class="fa-solid fa-key fa-2x text-gold"></i>
+            </div>
+            <h2 class="fw-bolder text-navy mb-2">Recuperar Senha</h2>
+            <p class="text-muted small">Insira o seu e-mail para receber as instruções de redefinição de senha.</p>
+          </div>
+
+          <%= simple_form_for(resource, as: resource_name, url: password_path(resource_name), html: { method: :post }) do |f| %>
+            <%= f.error_notification %>
+
+            <div class="form-inputs">
+              <div class="mb-3">
+                <%= f.input :email,
+                            required: true,
+                            autofocus: true,
+                            label: "E-mail",
+                            input_html: { autocomplete: "email", class: "bg-light border-0 py-2 rounded-3" } %>
+              </div>
+            </div>
+
+            <div class="form-actions d-grid mt-4">
+              <%= f.button :submit, "ENVIAR INSTRUÇÕES", class: "btn btn-auth rounded-pill py-3 fw-bold text-uppercase shadow-sm" %>
+            </div>
+          <% end %>
+
+          <!-- Links auxiliares (Login, Criar conta, etc) -->
+          <div class="mt-4 text-center pt-3 border-top">
+            <%= render "devise/shared/links" %>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
-
-  <div class="form-actions">
-    <%= f.button :submit, "Send me password reset instructions" %>
-  </div>
-<% end %>
-
-<%= render "devise/shared/links" %>
+</div>

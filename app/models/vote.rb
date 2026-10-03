@@ -3,6 +3,6 @@ class Vote < ApplicationRecord
   belongs_to :deputy
 
   validates :vote, presence: true
-  validates :vote, inclusion: { in: %w[Sim Não Abstenção Obstrução] }
+  validates :vote, inclusion: { in: ['Sim', 'Não', 'Abstenção', 'Obstrução', 'Artigo 17'] }
   validates :deputy_id, uniqueness: { scope: :poll_id, message: "só pode registrar um voto por votação" }
 end

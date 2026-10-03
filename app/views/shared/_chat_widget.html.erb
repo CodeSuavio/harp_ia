@@ -1,0 +1,59 @@
+<div class="chat-widget" data-controller="chat-widget">
+
+  <!-- Botão flutuante que abre o chatbot -->
+  <button
+    class="chat-widget-button"
+    type="button"
+    aria-label="Abrir assistente Estamos de Olho"
+    data-chat-widget-target="button"
+    data-action="click->chat-widget#open">
+
+    <%= image_tag "chatbot-logo.png",
+        class: "chat-widget-logo",
+        alt: "" %>
+  </button>
+
+  <!-- Janela do chatbot -->
+  <div
+     class="chat-widget-window"
+     data-chat-widget-target="window">
+
+    <!-- Cabeçalho -->
+    <div class="chat-widget-header">
+      <div class="chat-widget-title">
+        <%= image_tag "chatbot-logo.png",
+            class: "chat-widget-header-logo",
+            alt: "" %>
+
+        <span>Estamos de Olho</span>
+      </div>
+
+      <button
+        class="chat-widget-close"
+        type="button"
+        aria-label="Fechar assistente"
+        data-action="click->chat-widget#close">
+        ×
+      </button>
+    </div>
+
+    <!-- Área das mensagens -->
+    <div class="chat-widget-messages">
+      <p>Olá! O que você gostaria de saber?</p>
+    </div>
+
+    <!-- Campo de mensagem -->
+    <div class="chat-widget-input">
+      <input
+        type="text"
+        placeholder="Digite sua pergunta..."
+        disabled>
+
+      <button type="button" disabled>
+        ➤
+      </button>
+    </div>
+
+  </div>
+
+</div>

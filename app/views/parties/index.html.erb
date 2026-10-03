@@ -1,3 +1,46 @@
-<div class="container">
-  <h1>Partidos</h1>
+<div class="container py-5">
+  <h1 class="h3 mb-4">Partidos</h1>
+
+  <%= turbo_frame_tag "parties_list", data: { turbo_action: "advance" } do %>
+    <%= form_with url: parties_path, method: :get,
+                  data: {
+                    controller: "filter-form",
+                    action: "input->filter-form#submit change->filter-form#submit"
+                  },
+                  class: "row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-4" do %>
+      <div class="col-lg-6">
+        <div class="input-group">
+          <span class="input-group-text bg-white border-end-0">
+            <i class="fa-solid fa-magnifying-glass text-muted"></i>
+          </span>
+          <%= text_field_tag :q, params[:q],
+                id: "party-search",
+                placeholder: "Sigla ou nome (inclusive siglas antigas, tipo PMDB)...",
+                class: "form-control border-start-0",
+                data: { turbo_permanent: true } %>
+        </div>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <%= select_tag :sort,
+              options_for_select(
+                [["Maior bancada", "bench"],
+                 ["Sigla A-Z", "label"],
+                 ["Número de legenda", "number"],
+                 ["Mais antigos", "registered"]],
+                params[:sort]
+              ),
+              class: "form-select" %>
+      </div>
+
+      <div class="col-lg-3 col-md-6">
+        <div class="form-check">
+          <%= check_box_tag :bench, "1", params[:bench] == "1", class: "form-check-input" %>
+          <%= label_tag :bench, "Só com bancada na Câmara", class: "form-check-label small" %>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render "list" %>
+  <% end %>
 </div>
