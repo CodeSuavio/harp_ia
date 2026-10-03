@@ -4,6 +4,11 @@ require 'json'
 
 $stdout.sync = true
 
+# Propostas apontam para votações, partidos e deputados: saem antes
+ProposalPoll.delete_all
+Proposal.delete_all
+BillTheme.delete_all
+PollTheme.delete_all
 Vote.destroy_all
 Poll.destroy_all
 Bill.destroy_all
@@ -214,3 +219,10 @@ data.each do |voto|
   end
 end
 puts "importado #{Vote.count} votos"
+
+
+
+# Temas: catálogo + classificação automática de projetos e votações
+ThemeClassifier.sync_catalog!
+result = ThemeClassifier.new.classify_all!
+puts "classificados #{result[:bills]} vínculos de projetos e #{result[:polls]} de votações em #{Theme.count} temas"

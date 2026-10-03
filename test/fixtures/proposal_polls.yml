@@ -1,0 +1,10 @@
+# Ana votou Sim nas duas: coerente na primeira, contrária na segunda
+mdb_first:
+  proposal: mdb_transparencia
+  poll: first
+  favorable_vote: "Sim"
+
+mdb_second:
+  proposal: mdb_transparencia
+  poll: second
+  favorable_vote: "Não"

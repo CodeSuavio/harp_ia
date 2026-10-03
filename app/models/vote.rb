@@ -1,4 +1,6 @@
 class Vote < ApplicationRecord
+  DECISIVE = %w[Sim Não].freeze # votos que expressam posição (usados no alinhamento partidário)
+
   belongs_to :poll
   belongs_to :deputy
 

@@ -1,4 +1,9 @@
-<div class="container py-5">
+<% content_for :title, "Deputados · Harpia" %>
+
+<div class="container py-5"
+     data-controller="deputy-compare"
+     data-deputy-compare-url-value="<%= compare_deputies_path %>"
+     data-deputy-compare-limit-value="<%= DeputiesController::COMPARE_LIMIT %>">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h4 fw-bold text-navy mb-0">Deputados</h1>
     <span class="text-muted small">Diretório e monitoramento</span>
@@ -35,7 +40,7 @@
         <div class="row g-0 align-items-center">
 
           <!-- Filtro: Estado -->
-          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
+          <div class="col-lg col-md-6 border-end-lg px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
                 <i class="fa-solid fa-location-crosshairs text-gold"></i>
@@ -50,7 +55,7 @@
           </div>
 
           <!-- Filtro: Partido -->
-          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
+          <div class="col-lg col-md-6 border-end-lg px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
                 <i class="fa-solid fa-flag text-gold"></i>
@@ -65,8 +70,9 @@
             </div>
           </div>
 
+          <% if @statuses.any? %>
           <!-- Filtro: Situação Eleitoral -->
-          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
+          <div class="col-lg col-md-6 border-end-lg px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Situação Eleitoral">
                 <i class="fa-solid fa-chart-pie text-gold"></i>
@@ -80,16 +86,17 @@
                     class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
             </div>
           </div>
+          <% end %>
 
           <!-- Ordenação -->
-          <div class="col-lg-3 col-md-6 px-2 py-2">
+          <div class="col-lg col-md-6 px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Ordenar">
                 <i class="fa-solid fa-arrow-down-a-z text-gold"></i>
               </span>
               <%= select_tag :sort,
                     options_for_select(
-                      [["Ordenar por nome", "name"], ["Ordenar por estado", "state"]],
+                      DeputiesController::SORTS.map { |key, sort| [sort[:label], key] },
                       params[:sort]
                     ),
                     class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
@@ -97,7 +104,42 @@
           </div>
 
         </div>
+
+        <!-- LINHA 3: Eleições 2026 -->
+        <div class="border-top pt-2 mt-2 px-2">
+          <div class="form-check form-switch mb-0">
+            <%= check_box_tag :reelection, "1", @reelection, class: "form-check-input", role: "switch" %>
+            <%= label_tag :reelection, class: "form-check-label small fw-medium text-navy" do %>
+              <i class="fa-solid fa-check-to-slot text-gold me-1"></i>
+              Só candidatos à reeleição em 2026 (<%= @reelection_count %>)
+            <% end %>
+          </div>
+        </div>
       <% end %>
+
+      <!-- Modo de comparação -->
+      <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3 mt-3 px-1">
+        <button type="button" class="btn btn-sm btn-compare-mode rounded-pill px-3 fw-medium"
+                aria-pressed="false"
+                data-deputy-compare-target="modeButton"
+                data-action="deputy-compare#toggleMode">
+          <i class="fa-solid fa-scale-balanced me-1" aria-hidden="true"></i>
+          <span data-deputy-compare-target="modeLabel">Comparar deputados</span>
+        </button>
+        <span class="small text-muted">
+          <i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>
+          Compare até <%= DeputiesController::COMPARE_LIMIT %> deputados lado a lado<span class="compare-mode-hint">: marque "Comparar" nos cards</span>.
+        </span>
+
+        <!-- Seleção atual: aparece com o modo ativo e ao menos um deputado marcado -->
+        <div class="d-flex align-items-center gap-3 ms-md-auto" data-deputy-compare-target="bar" hidden>
+          <span class="small text-navy fw-medium"><span data-deputy-compare-target="count">0</span> de <%= DeputiesController::COMPARE_LIMIT %> selecionados</span>
+          <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0" data-action="deputy-compare#clear">Limpar</button>
+          <a href="#" class="btn btn-sm btn-auth rounded-pill px-3 fw-bold" data-deputy-compare-target="link">
+            <i class="fa-solid fa-scale-balanced me-1"></i> Comparar
+          </a>
+        </div>
+      </div>
     </section>
 
     <%= render "list" %>

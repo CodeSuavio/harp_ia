@@ -1,0 +1,8 @@
+ana_bill:
+  deputy: ana
+  party: mdb
+  bill_number: "1234"
+  year: 2025
+  summary: Dispõe sobre transparência nos gastos públicos.
+  keywords: "Transparência, gastos públicos."
+  submission_date: 2025-02-01
