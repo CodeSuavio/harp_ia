@@ -8,6 +8,9 @@ class Candidate < ApplicationRecord
 
   has_one_attached :photo
 
+  # Deputados em exercício candidatos em 2026 (o campo do TSE costuma vir vazio, ver #reelection?)
+  scope :reelection, -> { where.not(current_deputy_id: nil).where(running_for_reelection: [true, nil]) }
+
   validates :name, :ballot_name, :number, presence: true
   validates :number, numericality: { only_integer: true }
 

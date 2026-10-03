@@ -1,0 +1,16 @@
+first:
+  json_id: "p-1"
+  date: 2025-05-01
+  description: Votação do requerimento A
+  approval: true
+
+second:
+  json_id: "p-2"
+  date: 2025-05-02
+  description: Votação do requerimento B
+  approval: false
+
+third:
+  json_id: "p-3"
+  date: 2025-05-03
+  description: Votação do requerimento C

@@ -1,0 +1,11 @@
+transparencia:
+  name: Transparência e administração pública
+  slug: transparency
+  keywords: "transparencia, gastos publicos"
+  position: 0
+
+saude:
+  name: Saúde
+  slug: health
+  keywords: "saude, sus, hospita*"
+  position: 1

@@ -1,0 +1,22 @@
+<%# locals: (page:, total_pages:, path_for:, frame: nil) %>
+<% if total_pages > 1 %>
+  <% window = ([1, total_pages] + ((page - 2)..(page + 2)).to_a).select { |p| p.between?(1, total_pages) }.uniq.sort %>
+  <nav aria-label="Paginação" class="mt-4">
+    <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+      <li class="page-item <%= 'disabled' if page == 1 %>">
+        <%= link_to "Anterior", path_for.call(page - 1), class: "page-link", data: { turbo_frame: frame } %>
+      </li>
+      <% window.each_with_index do |p, i| %>
+        <% if i.positive? && p - window[i - 1] > 1 %>
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        <% end %>
+        <li class="page-item <%= 'active' if p == page %>">
+          <%= link_to p, path_for.call(p), class: "page-link", aria: { current: ("page" if p == page) }, data: { turbo_frame: frame } %>
+        </li>
+      <% end %>
+      <li class="page-item <%= 'disabled' if page == total_pages %>">
+        <%= link_to "Próxima", path_for.call(page + 1), class: "page-link", data: { turbo_frame: frame } %>
+      </li>
+    </ul>
+  </nav>
+<% end %>

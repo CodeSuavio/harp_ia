@@ -4,13 +4,18 @@ require 'json'
 
 $stdout.sync = true
 
-Vote.delete_all
-Poll.delete_all
-Bill.delete_all
-Expense.delete_all
-Candidate.delete_all
-Deputy.delete_all
-Party.delete_all
+# Propostas apontam para votações, partidos e deputados: saem antes
+ProposalPoll.destroy_all
+Proposal.destroy_all
+BillTheme.destroy_all
+PollTheme.destroy_all
+Vote.destroy_all
+Poll.destroy_all
+Bill.destroy_all
+Expense.destroy_all
+Candidate.destroy_all
+Deputy.destroy_all
+Party.destroy_all
 
 URL_PARTY = "https://raw.githubusercontent.com/gabsgarcia/harpia-seed-data/refs/heads/main/db/seeds/partidos.json"
 
@@ -218,3 +223,10 @@ data.each do |voto|
   end
 end
 puts "importado #{Vote.count} votos"
+
+
+
+# Temas: catálogo + classificação automática de projetos e votações
+ThemeClassifier.sync_catalog!
+result = ThemeClassifier.new.classify_all!
+puts "classificados #{result[:bills]} vínculos de projetos e #{result[:polls]} de votações em #{Theme.count} temas"

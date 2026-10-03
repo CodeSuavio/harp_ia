@@ -12,6 +12,7 @@ Rails.application.routes.draw do
   # ÁREA PÚBLICA (Apenas Leitura)
   # ==========================================
   resources :deputies, only: [:index, :show] do
+    get :compare, on: :collection
     resources :expenses, only: [:index]
   end
 
