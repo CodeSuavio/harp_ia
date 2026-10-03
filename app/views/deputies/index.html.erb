@@ -1,64 +1,104 @@
 <div class="container py-5">
-  <h1 class="h3 mb-4">Deputados</h1>
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h4 fw-bold text-navy mb-0">Deputados</h1>
+    <span class="text-muted small">Diretório e monitoramento</span>
+  </div>
 
   <%= turbo_frame_tag "deputies_list", data: { turbo_action: "advance" } do %>
-    <%= form_with url: deputies_path, method: :get,
-                  data: {
-                    controller: "filter-form",
-                    action: "input->filter-form#submit change->filter-form#submit"
-                  },
-                  class: "row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-4" do %>
-      <div class="col-lg-4">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="fa-solid fa-magnifying-glass text-muted"></i>
-          </span>
-          <%= text_field_tag :q, params[:q],
-                id: "deputy-search",
-                placeholder: "Nome do deputado ou sigla do partido...",
-                class: "form-control border-start-0",
-                data: { turbo_permanent: true } %>
+
+    <!-- Barra de Pesquisa e Filtros (Estilo HARPIA Dashboard) -->
+    <section class="search-container mb-5">
+      <%= form_with url: deputies_path, method: :get,
+                    data: {
+                      controller: "filter-form",
+                      action: "input->filter-form#submit change->filter-form#submit"
+                    },
+                    class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0" do %>
+
+        <!-- LINHA 1: Barra de Pesquisa -->
+        <div class="row g-0 border-bottom pb-2 mb-2">
+          <div class="col-12 px-2">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+                <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
+              </span>
+              <%= text_field_tag :q, params[:q],
+                    id: "deputy-search",
+                    placeholder: "Nome do deputado ou sigla do partido...",
+                    class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium",
+                    data: { turbo_permanent: true } %>
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div class="col-lg-2 col-md-6">
-        <%= select_tag :state,
-              options_for_select(
-                [["Todos os estados", ""]] + @states.map { |s| ["#{s} (#{@state_counts[s].to_i})", s] },
-                params[:state]
-              ),
-              class: "form-select" %>
-      </div>
+        <!-- LINHA 2: Filtros de Seleção -->
+        <div class="row g-0 align-items-center">
 
-      <div class="col-lg-2 col-md-6">
-        <% ordered_parties = @parties.sort_by { |p| [-@party_counts[p.id].to_i, p.label] } %>
-        <%= select_tag :party,
-              options_for_select(
-                [["Todos os partidos", ""]] + ordered_parties.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] },
-                params[:party]
-              ),
-              class: "form-select" %>
-      </div>
+          <!-- Filtro: Estado -->
+          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
+                <i class="fa-solid fa-location-crosshairs text-gold"></i>
+              </span>
+              <%= select_tag :state,
+                    options_for_select(
+                      [["Todos os estados", ""]] + @states.map { |s| ["#{s} (#{@state_counts[s].to_i})", s] },
+                      params[:state]
+                    ),
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
+            </div>
+          </div>
 
-      <div class="col-lg-2 col-md-6">
-        <% ordered_statuses = @statuses.sort_by { |s| [-@status_counts[s].to_i, s] } %>
-        <%= select_tag :electoral_status,
-              options_for_select(
-                [["Todas as situações", ""]] + ordered_statuses.map { |s| ["#{s} (#{@status_counts[s].to_i})", s] },
-                params[:electoral_status]
-              ),
-              class: "form-select" %>
-      </div>
+          <!-- Filtro: Partido -->
+          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
+                <i class="fa-solid fa-flag text-gold"></i>
+              </span>
+              <% ordered_parties = @parties.sort_by { |p| [-@party_counts[p.id].to_i, p.label] } %>
+              <%= select_tag :party,
+                    options_for_select(
+                      [["Todos os partidos", ""]] + ordered_parties.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] },
+                      params[:party]
+                    ),
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
+            </div>
+          </div>
 
-      <div class="col-lg-2 col-md-6">
-        <%= select_tag :sort,
-              options_for_select(
-                [["Ordenar por nome", "name"], ["Ordenar por estado", "state"]],
-                params[:sort]
-              ),
-              class: "form-select" %>
-      </div>
-    <% end %>
+          <!-- Filtro: Situação Eleitoral -->
+          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted" title="Situação Eleitoral">
+                <i class="fa-solid fa-chart-pie text-gold"></i>
+              </span>
+              <% ordered_statuses = @statuses.sort_by { |s| [-@status_counts[s].to_i, s] } %>
+              <%= select_tag :electoral_status,
+                    options_for_select(
+                      [["Todas as situações", ""]] + ordered_statuses.map { |s| ["#{s} (#{@status_counts[s].to_i})", s] },
+                      params[:electoral_status]
+                    ),
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
+            </div>
+          </div>
+
+          <!-- Ordenação -->
+          <div class="col-lg-3 col-md-6 px-2 py-2">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted" title="Ordenar">
+                <i class="fa-solid fa-arrow-down-a-z text-gold"></i>
+              </span>
+              <%= select_tag :sort,
+                    options_for_select(
+                      [["Ordenar por nome", "name"], ["Ordenar por estado", "state"]],
+                      params[:sort]
+                    ),
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
+            </div>
+          </div>
+
+        </div>
+      <% end %>
+    </section>
 
     <%= render "list" %>
   <% end %>
