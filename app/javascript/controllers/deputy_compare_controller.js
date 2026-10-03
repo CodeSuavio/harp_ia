@@ -54,7 +54,21 @@ export default class extends Controller {
     this.render()
   }
 
+  // A seleção (abaixo dos filtros) também é recriada a cada filtro
+  barTargetConnected() {
+    this.renderBar()
+  }
+
   render() {
+    this.renderBar()
+    this.renderMode()
+    this.syncDisabled()
+  }
+
+  renderBar() {
+    if (!this.hasBarTarget) return
+
+    this.selected ??= this.load()
     const count = this.selected.length
     this.barTarget.hidden = !this.active || count === 0
     this.countTarget.textContent = count
@@ -63,9 +77,6 @@ export default class extends Controller {
     this.selected.forEach((id) => params.append("ids[]", id))
     this.linkTarget.href = `${this.urlValue}?${params}`
     this.linkTarget.classList.toggle("disabled", count < 2)
-
-    this.renderMode()
-    this.syncDisabled()
   }
 
   renderMode() {
