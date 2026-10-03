@@ -1,4 +1,6 @@
-<div class="chat-widget" data-controller="chat-widget">
+<div
+  class="chat-widget"
+  data-controller="chat-widget">
 
   <!-- Botão flutuante que abre o chatbot -->
   <button
@@ -15,12 +17,13 @@
 
   <!-- Janela do chatbot -->
   <div
-     class="chat-widget-window"
-     data-chat-widget-target="window">
+    class="chat-widget-window"
+    data-chat-widget-target="window">
 
     <!-- Cabeçalho -->
     <div class="chat-widget-header">
       <div class="chat-widget-title">
+
         <%= image_tag "chatbot-logo.png",
             class: "chat-widget-header-logo",
             alt: "" %>
@@ -37,22 +40,37 @@
       </button>
     </div>
 
-    <!-- Área das mensagens -->
-    <div class="chat-widget-messages">
-      <p>Olá! O que você gostaria de saber?</p>
-    </div>
+    <!--
+      O Turbo Frame contém tanto as mensagens quanto o formulário.
 
-    <!-- Campo de mensagem -->
-    <div class="chat-widget-input">
-      <input
-        type="text"
-        placeholder="Digite sua pergunta..."
-        disabled>
+      Antes da primeira pergunta ainda não existe um Chat,
+      portanto o formulário envia para POST /chats.
+    -->
+    <%= turbo_frame_tag "chat_widget_messages" do %>
 
-      <button type="button" disabled>
-        ➤
-      </button>
-    </div>
+      <!-- Área das mensagens -->
+      <div class="chat-widget-messages">
+        <p>Olá! O que você gostaria de saber?</p>
+      </div>
+
+      <!-- Formulário da primeira pergunta -->
+      <%= form_with url: chats_path,
+                    method: :post,
+                    class: "chat-widget-input",
+                    data: { turbo_frame: "chat_widget_messages" } do %>
+
+        <%= text_field_tag "message[content]",
+            nil,
+            placeholder: "Pergunte à Harpia...",
+            autocomplete: "off" %>
+
+        <%= button_tag type: "submit" do %>
+          ➤
+        <% end %>
+
+      <% end %>
+
+    <% end %>
 
   </div>
 
