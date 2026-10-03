@@ -1,0 +1,30 @@
+<% spent = deputy ? metrics.spent(deputy) : nil %>
+<% participation = deputy ? metrics.participation(deputy) : nil %>
+<% bills = deputy ? metrics.bills(deputy) : 0 %>
+<% empty_label = deputy ? "Sem registro" : "Sem mandato" %>
+
+<div class="mb-2">
+  <div class="d-flex justify-content-between align-items-center mb-1">
+    <span class="data-label text-muted">Gastos</span>
+    <span class="data-value text-navy"><%= spent ? money(spent, 0) : empty_label %></span>
+  </div>
+  <div class="progress rounded-pill" style="height: 4px;">
+    <div class="progress-bar bg-gold" style="width: <%= spent ? metrics.expense_percent(spent) : 0 %>%"></div>
+  </div>
+</div>
+
+<div>
+  <div class="d-flex justify-content-between align-items-center mb-1">
+    <% if deputy %>
+      <span class="data-label text-muted" title="<%= metrics.votes(deputy) %> votos em <%= metrics.total_polls %> votações · <%= bills %> projetos apresentados">Participação</span>
+    <% else %>
+      <span class="data-label text-muted">Participação</span>
+    <% end %>
+    <span class="data-value text-navy">
+      <%= participation ? "#{participation}% · #{bills} #{bills == 1 ? 'PL' : 'PLs'}" : empty_label %>
+    </span>
+  </div>
+  <div class="progress rounded-pill" style="height: 4px;">
+    <div class="progress-bar bg-navy" style="width: <%= participation.to_i %>%"></div>
+  </div>
+</div>
