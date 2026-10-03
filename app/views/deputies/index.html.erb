@@ -13,26 +13,29 @@
                       controller: "filter-form",
                       action: "input->filter-form#submit change->filter-form#submit"
                     },
-                    class: "card search-card shadow-lg bg-white rounded-4 p-2 border-0" do %>
+                    class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0" do %>
 
-        <div class="row g-0 align-items-center">
-
-          <!-- Busca por Nome/Sigla -->
-          <div class="col-lg-4 border-end px-3 py-2 py-lg-0">
+        <!-- LINHA 1: Barra de Pesquisa -->
+        <div class="row g-0 border-bottom pb-2 mb-2">
+          <div class="col-12 px-2">
             <div class="input-group border-0">
-              <span class="input-group-text bg-transparent border-0 text-muted">
-                <i class="fa-solid fa-magnifying-glass text-gold"></i>
+              <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+                <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
               </span>
               <%= text_field_tag :q, params[:q],
                     id: "deputy-search",
                     placeholder: "Nome do deputado ou sigla do partido...",
-                    class: "form-control border-0 shadow-none bg-transparent fw-medium",
+                    class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium",
                     data: { turbo_permanent: true } %>
             </div>
           </div>
+        </div>
+
+        <!-- LINHA 2: Filtros de Seleção -->
+        <div class="row g-0 align-items-center">
 
           <!-- Filtro: Estado -->
-          <div class="col-lg-2 col-md-6 border-end px-3 py-2 py-lg-0">
+          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
                 <i class="fa-solid fa-location-crosshairs text-gold"></i>
@@ -42,12 +45,12 @@
                       [["Todos os estados", ""]] + @states.map { |s| ["#{s} (#{@state_counts[s].to_i})", s] },
                       params[:state]
                     ),
-                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
             </div>
           </div>
 
           <!-- Filtro: Partido -->
-          <div class="col-lg-2 col-md-6 border-end px-3 py-2 py-lg-0">
+          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
                 <i class="fa-solid fa-flag text-gold"></i>
@@ -58,12 +61,12 @@
                       [["Todos os partidos", ""]] + ordered_parties.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] },
                       params[:party]
                     ),
-                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
             </div>
           </div>
 
           <!-- Filtro: Situação Eleitoral -->
-          <div class="col-lg-2 col-md-6 border-end px-3 py-2 py-lg-0">
+          <div class="col-lg-3 col-md-6 border-end-lg px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Situação Eleitoral">
                 <i class="fa-solid fa-chart-pie text-gold"></i>
@@ -74,12 +77,12 @@
                       [["Todas as situações", ""]] + ordered_statuses.map { |s| ["#{s} (#{@status_counts[s].to_i})", s] },
                       params[:electoral_status]
                     ),
-                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
             </div>
           </div>
 
           <!-- Ordenação -->
-          <div class="col-lg-2 col-md-6 px-3 py-2 py-lg-0">
+          <div class="col-lg-3 col-md-6 px-2 py-2">
             <div class="input-group border-0">
               <span class="input-group-text bg-transparent border-0 text-muted" title="Ordenar">
                 <i class="fa-solid fa-arrow-down-a-z text-gold"></i>
@@ -89,7 +92,7 @@
                       [["Ordenar por nome", "name"], ["Ordenar por estado", "state"]],
                       params[:sort]
                     ),
-                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
             </div>
           </div>
 

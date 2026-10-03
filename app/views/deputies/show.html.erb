@@ -1,56 +1,144 @@
-<div class="container my-4">
-  <%= link_to "← Deputados", deputies_path %>
+<div class="container py-5">
+  <!-- Botão Voltar -->
+  <div class="mb-4">
+    <%= link_to deputies_path, class: "text-decoration-none text-muted fw-medium transition" do %>
+      <i class="fa-solid fa-arrow-left me-2"></i> Voltar para o Diretório
+    <% end %>
+  </div>
 
-  <div class="row mt-3">
-    <div class="col-md-4">
-      <% if @deputy.photo_url.present? %>
-        <%= image_tag @deputy.photo_url, class: "img-fluid rounded", alt: @deputy.name %>
-      <% end %>
-    </div>
+  <!-- Cartão Principal do Perfil -->
+  <div class="card inspiration-card shadow-sm border-0 rounded-4 p-4 p-lg-5 bg-white">
+    <div class="row g-5 align-items-start">
 
-    <div class="col-md-8">
-      <h1><%= @deputy.name %></h1>
-      <p class="text-muted">
-        <%= link_to @deputy.party.label, party_path(@deputy.party) if @deputy.party %>
-        · <%= @deputy.state_label %>
-      </p>
-
-      <dl class="row">
-        <dt class="col-sm-4">Situação</dt>
-        <dd class="col-sm-8"><%= @deputy.status %></dd>
-
-        <dt class="col-sm-4">Situação eleitoral</dt>
-        <dd class="col-sm-8"><%= @deputy.electoral_status %></dd>
-
-        <dt class="col-sm-4">Nascimento</dt>
-        <dd class="col-sm-8">
-          <%= @deputy.date_of_birth&.strftime("%d/%m/%Y") %>
-          <%= "— #{@deputy.city_of_birth}/#{@deputy.state_of_birth}" if @deputy.city_of_birth.present? %>
-        </dd>
-
-        <dt class="col-sm-4">Escolaridade</dt>
-        <dd class="col-sm-8"><%= @deputy.education_level %></dd>
-
-        <dt class="col-sm-4">Gabinete</dt>
-        <dd class="col-sm-8">
-          <%= "Prédio #{@deputy.office_building}, sala #{@deputy.office_room}" if @deputy.office_building.present? %>
-          <% if @deputy.office_phone.present? %>
-            <br><%= link_to "(61) #{@deputy.office_phone}", "tel:+5561#{@deputy.office_phone.gsub(/\D/, '')}" %>
+      <!-- Coluna da Esquerda: Foto e Acções -->
+      <div class="col-md-4 text-center text-md-start">
+        <div class="position-relative d-inline-block w-100 mb-4">
+          <% if @deputy.photo_url.present? %>
+            <%= image_tag @deputy.photo_url, class: "img-fluid rounded-4 shadow-sm w-100 object-fit-cover", alt: @deputy.name, style: "max-height: 450px;" %>
+          <% else %>
+            <div class="rounded-4 bg-light d-flex align-items-center justify-content-center shadow-sm w-100" style="height: 350px;">
+              <i class="fa-solid fa-user-tie fa-4x text-gold"></i>
+            </div>
           <% end %>
-        </dd>
+        </div>
 
-        <dt class="col-sm-4">E-mail</dt>
-        <dd class="col-sm-8"><%= mail_to @deputy.email if @deputy.email.present? %></dd>
+        <!-- Botão de Ver Gastos (btn-auth) -->
+        <%= link_to deputy_expenses_path(@deputy), class: "btn btn-auth w-100 rounded-pill py-3 fw-bold text-uppercase shadow-sm d-flex align-items-center justify-content-center" do %>
+          <i class="fa-solid fa-receipt me-2"></i> Monitorar Gastos
+        <% end %>
+      </div>
 
-        <dt class="col-sm-4">Redes sociais</dt>
-        <dd class="col-sm-8">
-          <% @deputy.social_media.to_s.split.each do |url| %>
-            <%= link_to URI.parse(url).host.to_s.sub(/\Awww\./, ""), url, target: "_blank", rel: "noopener", class: "me-2" %>
-          <% end %>
-        </dd>
-      </dl>
+      <!-- Coluna da Direita: Dados do Deputado -->
+      <div class="col-md-8">
 
-      <%= link_to "Ver gastos", deputy_expenses_path(@deputy), class: "btn btn-primary" %>
+        <!-- Cabeçalho (Nome, Partido e Estado) -->
+        <div class="mb-4 border-bottom pb-4">
+          <h1 class="display-6 fw-bold text-navy mb-3"><%= @deputy.name %></h1>
+
+          <div class="d-flex flex-wrap gap-2 align-items-center">
+            <% if @deputy.party %>
+              <div class="badge bg-navy text-white px-3 py-2 rounded-pill fw-medium tracking-wider">
+                <i class="fa-solid fa-flag me-1 text-gold"></i>
+                <%= link_to @deputy.party.label, party_path(@deputy.party), class: "text-white text-decoration-none" %>
+              </div>
+            <% end %>
+            <div class="badge bg-light text-navy border px-3 py-2 rounded-pill fw-medium tracking-wider">
+              <i class="fa-solid fa-location-dot me-1 text-gold"></i> <%= @deputy.state_label %>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grid de Informações Estruturadas -->
+        <div class="row g-3 mb-4">
+
+          <!-- Bloco: Situação -->
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100 border-start border-4 border-gold">
+              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">Situação</span>
+              <span class="text-navy fw-medium"><%= @deputy.status %></span>
+            </div>
+          </div>
+
+          <!-- Bloco: Situação Eleitoral -->
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100 border-start border-4 border-gold">
+              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">Situação Eleitoral</span>
+              <span class="text-navy fw-medium"><%= @deputy.electoral_status %></span>
+            </div>
+          </div>
+
+          <!-- Bloco: Nascimento -->
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+                <i class="fa-solid fa-cake-candles me-1 text-gold"></i> Nascimento
+              </span>
+              <span class="text-navy fw-medium">
+                <%= @deputy.date_of_birth&.strftime("%d/%m/%Y") %>
+                <% if @deputy.city_of_birth.present? %>
+                  <br><span class="small text-muted"><%= @deputy.city_of_birth %> / <%= @deputy.state_of_birth %></span>
+                <% end %>
+              </span>
+            </div>
+          </div>
+
+          <!-- Bloco: Escolaridade -->
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+                <i class="fa-solid fa-graduation-cap me-1 text-gold"></i> Escolaridade
+              </span>
+              <span class="text-navy fw-medium"><%= @deputy.education_level %></span>
+            </div>
+          </div>
+
+          <!-- Bloco: Gabinete -->
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+                <i class="fa-solid fa-building me-1 text-gold"></i> Gabinete
+              </span>
+              <span class="text-navy fw-medium">
+                <%= "Prédio #{@deputy.office_building}, sala #{@deputy.office_room}" if @deputy.office_building.present? %>
+                <% if @deputy.office_phone.present? %>
+                  <br><%= link_to "(61) #{@deputy.office_phone}", "tel:+5561#{@deputy.office_phone.gsub(/\D/, '')}", class: "text-decoration-none text-gold fw-bold hover-opacity" %>
+                <% end %>
+              </span>
+            </div>
+          </div>
+
+          <!-- Bloco: E-mail -->
+          <div class="col-sm-6">
+            <div class="p-3 bg-light rounded-3 h-100">
+              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+                <i class="fa-solid fa-envelope me-1 text-gold"></i> E-mail
+              </span>
+              <span class="text-navy fw-medium">
+                <%= mail_to @deputy.email, nil, class: "text-decoration-none text-navy hover-opacity text-break" if @deputy.email.present? %>
+              </span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Redes Sociais -->
+        <% if @deputy.social_media.present? %>
+          <div class="mt-4 pt-4 border-top">
+            <h3 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+              <i class="fa-solid fa-share-nodes me-2 text-gold"></i>Presença Digital
+            </h3>
+            <div class="d-flex flex-wrap gap-2">
+              <% @deputy.social_media.to_s.split.each do |url| %>
+                <% host = URI.parse(url).host.to_s.sub(/\Awww\./, "") %>
+                <%= link_to url, target: "_blank", rel: "noopener", class: "btn btn-light border btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center text-navy fw-medium shadow-sm transition" do %>
+                  <i class="fa-solid fa-link me-2 text-gold"></i> <%= host.capitalize %>
+                <% end %>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+
+      </div>
     </div>
   </div>
 </div>
