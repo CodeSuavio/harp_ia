@@ -1,0 +1,8 @@
+# Ana é deputada em exercício e candidata em 2026 (campo de reeleição vazio, como vem do TSE)
+ana_2026:
+  name: Ana Souza
+  ballot_name: Ana Souza
+  number: 1500
+  party: mdb
+  state_label: SP
+  current_deputy_id: 1001

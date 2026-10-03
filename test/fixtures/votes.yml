@@ -1,0 +1,12 @@
+# Votação 1: partido (Bruno, Carla) vota Sim; Ana acompanha
+ana_first:   { poll: first,  deputy: ana,   vote: "Sim" }
+bruno_first: { poll: first,  deputy: bruno, vote: "Sim" }
+carla_first: { poll: first,  deputy: carla, vote: "Sim" }
+
+# Votação 2: partido vota Não; Ana vota contra
+ana_second:   { poll: second, deputy: ana,   vote: "Sim" }
+bruno_second: { poll: second, deputy: bruno, vote: "Não" }
+carla_second: { poll: second, deputy: carla, vote: "Não" }
+
+# Votação 3: Ana não vota
+davi_third: { poll: third, deputy: davi, vote: "Sim" }

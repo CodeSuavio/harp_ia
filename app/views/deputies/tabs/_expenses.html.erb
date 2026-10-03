@@ -1,0 +1,268 @@
+<% if @years.empty? %>
+  <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
+    <i class="fa-solid fa-receipt fa-3x text-gold mb-3"></i>
+    <h2 class="h5 text-navy fw-bold mb-1">Nenhum gasto registrado</h2>
+    <p class="text-muted small mb-0">Ainda não existem despesas disponíveis para este deputado.</p>
+  </div>
+<% else %>
+  <% filter_params = { year: @year, expense_type: @expense_type, month: @month }.compact %>
+
+  <!-- Seleção de ano -->
+  <% if @years.size > 1 %>
+    <div class="d-flex flex-wrap gap-2 mb-3">
+      <% @years.each do |year| %>
+        <%= link_to year, deputy_tab_path(@deputy, "expenses", year: year),
+              class: "btn btn-sm rounded-pill #{year == @year ? 'btn-dark' : 'btn-outline-secondary'}" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Destaques do ano -->
+  <div class="row g-3 mb-3">
+    <div class="col-md-4">
+      <div class="p-4 bg-white rounded-4 shadow-sm border-start border-4 border-gold h-100">
+        <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
+          <i class="fa-solid fa-wallet text-gold me-1"></i> Total gasto em <%= @year %>
+          <%= info_tip("Soma do valor líquido das despesas da cota parlamentar (CEAP), já descontados estornos.") %>
+        </span>
+        <span class="h3 fw-bold text-navy d-block"><%= brl(@total_expenses) %></span>
+        <% if @year_over_year&.dig(:pct) %>
+          <% up = @year_over_year[:pct].positive? %>
+          <span class="small <%= up ? 'text-danger' : 'text-success' %>">
+            <i class="fa-solid <%= up ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %> me-1" aria-hidden="true"></i>
+            <%= "#{'+' if up}#{@year_over_year[:pct]}%" %> em relação a jan–<%= month_label(@year_over_year[:last_month]).downcase %> de <%= @year - 1 %>
+          </span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+        <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
+          <i class="fa-solid fa-gauge-high text-gold me-1"></i> Uso da cota
+          <%= info_tip("Gasto do ano dividido pela cota da UF (#{@quota ? brl(@quota[:monthly_quota]) : '—'} por mês) vezes os meses de exercício: do primeiro mês com despesa até o último mês com dados no ano. O saldo não usado de um mês passa para o seguinte dentro do ano.") %>
+        </span>
+        <% if @quota %>
+          <span class="h3 fw-bold text-navy d-block"><%= @quota[:pct] %>%</span>
+          <div class="progress my-2" style="height: 8px;" role="progressbar"
+               aria-label="Uso da cota" aria-valuenow="<%= @quota[:pct] %>" aria-valuemin="0" aria-valuemax="100">
+            <div class="progress-bar <%= @quota[:pct] >= 90 ? 'bg-danger' : 'bg-gold' %>" style="width: <%= [@quota[:pct], 100].min %>%"></div>
+          </div>
+          <span class="small text-muted">de <%= brl(@quota[:quota], precision: 0) %> disponíveis em <%= @quota[:months] %> <%= @quota[:months] == 1 ? "mês" : "meses" %></span>
+        <% else %>
+          <span class="text-muted small">Sem cota de referência para <%= @deputy.state_label %>.</span>
+        <% end %>
+      </div>
+    </div>
+
+    <div class="col-md-4">
+      <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+        <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
+          <i class="fa-solid fa-ranking-star text-gold me-1"></i> Ranking de gastos
+          <%= info_tip("Posição pelo gasto médio mensal em #{@year} (1º = quem mais gasta), entre os deputados com despesas no ano.") %>
+        </span>
+        <% if @rank %>
+          <span class="h3 fw-bold text-navy d-block"><%= @rank[:position] %>º <small class="fs-6 text-muted fw-normal">de <%= @rank[:total] %></small></span>
+          <span class="small text-muted"><%= @rank[:state_position] %>º de <%= @rank[:state_total] %> na bancada de <%= @deputy.state_label %></span>
+        <% else %>
+          <span class="text-muted small">Sem dados suficientes.</span>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Média mensal e comparação com as médias -->
+  <div class="row g-3 mb-4">
+    <div class="col-md-4">
+      <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+        <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
+          Gasto médio mensal
+          <%= info_tip("Total do ano dividido pelos meses em que houve despesa. É a base das comparações ao lado, para não penalizar quem assumiu no meio do ano.") %>
+        </span>
+        <span class="h5 fw-bold text-navy d-block mb-1"><%= brl(@monthly_average) %></span>
+      </div>
+    </div>
+    <% [["Média da bancada de #{@deputy.state_label}", @benchmarks[:state]],
+        ["Média do #{@deputy.party&.label || 'partido'}", @benchmarks[:party]]].each do |label, average| %>
+      <div class="col-md-4">
+        <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+          <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider"><%= label %></span>
+          <span class="h5 fw-bold text-navy d-block mb-1"><%= brl(average) %> <small class="fs-6 text-muted fw-normal">/mês</small></span>
+          <% if (comparison = compared_to_average(@monthly_average, average)) %>
+            <span class="small <%= @monthly_average > average ? 'text-danger' : 'text-success' %>">
+              <i class="fa-solid <%= @monthly_average > average ? 'fa-arrow-trend-up' : 'fa-arrow-trend-down' %> me-1" aria-hidden="true"></i><%= comparison %>
+            </span>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="row g-4 mb-4">
+    <!-- Gastos por mês -->
+    <div class="col-lg-7">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+        <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">Gastos por mês</h2>
+        <% max_month = [@monthly.values.max.to_f, 1].max %>
+        <div class="month-chart d-flex align-items-end gap-1">
+          <% (1..12).each do |month| %>
+            <% value = @monthly[month].to_f %>
+            <% description = "#{month_label(month)}: #{brl(value)}" %>
+            <%= link_to deputy_tab_path(@deputy, "expenses", filter_params.merge(month: (month unless @month == month))),
+                  class: "month-bar-wrap text-decoration-none flex-fill text-center #{'is-active' if @month == month}",
+                  title: description,
+                  aria: { label: "#{description}. #{@month == month ? 'Remover filtro' : 'Filtrar despesas deste mês'}", pressed: @month == month } do %>
+              <div class="month-bar rounded-top" style="height: <%= (value / max_month * 100).round %>%" aria-hidden="true"></div>
+              <div class="small text-muted mt-1" aria-hidden="true"><%= month_label(month) %></div>
+            <% end %>
+          <% end %>
+        </div>
+        <p class="small text-muted mt-2 mb-0">Clique em um mês para filtrar as despesas.</p>
+      </div>
+    </div>
+
+    <!-- Gastos por tipo -->
+    <div class="col-lg-5">
+      <div class="card border-0 shadow-sm rounded-4 p-4 bg-white h-100">
+        <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">
+          Por tipo de despesa
+          <%= info_tip("O destaque “× a média” aparece quando o gasto no tipo passa de #{DeputyStats::TYPE_ABOVE_AVERAGE.to_s.tr('.', ',')} vez a média da Câmara no mesmo tipo (total do tipo ÷ deputados com despesa no ano).") %>
+        </h2>
+        <% max_type = [@by_type.first&.dig(:value).to_f, 1].max %>
+        <ul class="list-unstyled mb-0 small">
+          <% @by_type.first(8).each do |row| %>
+            <% type = row[:type] %>
+            <li class="mb-2">
+              <%= link_to deputy_tab_path(@deputy, "expenses", filter_params.merge(expense_type: (type unless @expense_type == type))),
+                    class: "text-decoration-none d-block #{'fw-bold' if @expense_type == type}",
+                    aria: { pressed: @expense_type == type } do %>
+                <div class="d-flex justify-content-between gap-2">
+                  <span class="text-navy text-truncate"><%= expense_type_label(type) %></span>
+                  <span class="text-muted text-nowrap">
+                    <% if row[:ratio] && row[:ratio] >= DeputyStats::TYPE_ABOVE_AVERAGE %>
+                      <span class="badge rounded-pill text-bg-danger fw-normal me-1" title="Média da Câmara: <%= brl(row[:average], precision: 0) %>">
+                        <%= row[:ratio].to_s.tr(".", ",") %>× a média
+                      </span>
+                    <% end %>
+                    <%= brl(row[:value], precision: 0) %>
+                  </span>
+                </div>
+                <div class="progress mt-1" style="height: 6px;" aria-hidden="true">
+                  <div class="progress-bar bg-gold" style="width: <%= (row[:value].to_f / max_type * 100).round %>%"></div>
+                </div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- Principais fornecedores -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">Principais fornecedores</h2>
+
+    <% if @concentration %>
+      <% if @concentration[:alert] %>
+        <div class="alert alert-warning small d-flex gap-2 align-items-start">
+          <i class="fa-solid fa-triangle-exclamation mt-1" aria-hidden="true"></i>
+          <div>
+            <strong><%= @concentration[:pct] %>% dos gastos de <%= @year %></strong> foram para um único fornecedor:
+            <%= @concentration[:supplier] %> (<%= brl(@concentration[:value], precision: 0) %>).
+            Concentração alta não é irregularidade por si só, mas merece atenção.
+            <%= info_tip("Passagens aéreas e telefonia ficam fora do cálculo, porque se concentram em poucas empresas por natureza.") %>
+          </div>
+        </div>
+      <% else %>
+        <p class="small text-muted">
+          O maior fornecedor (<%= @concentration[:supplier] %>) concentra <%= @concentration[:pct] %>% dos gastos do ano
+          (sem contar passagens aéreas e telefonia).
+        </p>
+      <% end %>
+    <% end %>
+
+    <div class="table-responsive">
+      <table class="table table-sm align-middle mb-0 small">
+        <thead class="table-light">
+          <tr>
+            <th>Fornecedor</th>
+            <th>
+              CNPJ/CPF
+              <%= info_tip("CPFs de pessoas físicas aparecem parcialmente ocultos para proteger dados pessoais (LGPD).") %>
+            </th>
+            <th class="text-end">Notas</th>
+            <th class="text-end">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @top_suppliers.each do |supplier, document, total, count| %>
+            <tr>
+              <td class="text-navy fw-medium"><%= supplier.presence || "Não informado" %></td>
+              <td class="text-muted text-nowrap"><%= supplier_document(document) %></td>
+              <td class="text-end"><%= count %></td>
+              <td class="text-end fw-bold text-navy text-nowrap"><%= brl(total) %></td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Despesas detalhadas -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+      <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-0 me-2">Despesas</h2>
+      <span class="small text-muted"><%= @tab_total %> <%= "registro".pluralize(@tab_total) %></span>
+      <% if @month %>
+        <%= link_to "#{month_label(@month)} ×", deputy_tab_path(@deputy, "expenses", filter_params.except(:month)),
+              class: "badge rounded-pill text-bg-light border text-decoration-none",
+              aria: { label: "Remover filtro de mês #{month_label(@month)}" } %>
+      <% end %>
+      <% if @expense_type %>
+        <%= link_to "#{expense_type_label(@expense_type)} ×", deputy_tab_path(@deputy, "expenses", filter_params.except(:expense_type)),
+              class: "badge rounded-pill text-bg-light border text-decoration-none text-truncate", style: "max-width: 100%",
+              aria: { label: "Remover filtro de tipo #{expense_type_label(@expense_type)}" } %>
+      <% end %>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table table-hover align-middle mb-0">
+        <thead class="table-light">
+          <tr>
+            <th class="text-navy text-uppercase small tracking-wider border-0 py-3 ps-3">Data</th>
+            <th class="text-navy text-uppercase small tracking-wider border-0 py-3">Tipo de despesa</th>
+            <th class="text-navy text-uppercase small tracking-wider border-0 py-3">Fornecedor</th>
+            <th class="text-navy text-uppercase small tracking-wider border-0 py-3 text-end">Valor</th>
+            <th class="border-0 py-3 pe-3"><span class="visually-hidden">Nota fiscal</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @expenses.each do |expense| %>
+            <tr>
+              <td class="ps-3 fw-medium text-muted text-nowrap small">
+                <%= expense.document_date&.strftime("%d/%m/%Y") || "#{month_label(expense.month)}/#{expense.year}" %>
+              </td>
+              <td class="text-navy small"><%= expense_type_label(expense.expense_type) %></td>
+              <td class="text-muted small"><%= expense.supplier.presence || "Não informado" %></td>
+              <td class="text-end fw-bold text-nowrap <%= expense.net_amount.to_f.negative? ? 'text-success' : 'text-navy' %>">
+                <%= brl(expense.net_amount) %>
+                <% if expense.net_amount.to_f.negative? %><span class="d-block small fw-normal">estorno</span><% end %>
+              </td>
+              <td class="pe-3 text-end text-nowrap">
+                <% if expense.document_url.present? %>
+                  <%= link_to expense.document_url, target: "_blank", rel: "noopener", class: "text-gold text-decoration-none small",
+                        title: "Ver nota fiscal", aria: { label: "Ver nota fiscal (abre em nova aba)" } do %>
+                    <i class="fa-solid fa-file-invoice" aria-hidden="true"></i><span class="d-md-none ms-1">Nota</span>
+                  <% end %>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <%= render "shared/pagination", page: @tab_page, total_pages: @tab_total_pages,
+          path_for: ->(p) { deputy_tab_path(@deputy, "expenses", filter_params.merge(page: p)) } %>
+  </div>
+<% end %>

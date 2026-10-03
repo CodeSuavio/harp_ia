@@ -1,3 +1,18 @@
+<% page_title = "#{@deputy.name} (#{[@deputy.party&.label, @deputy.state_label].compact.join('-')})" %>
+<% page_description = "Gastos, projetos de lei e votações de #{@deputy.name} na Câmara dos Deputados." %>
+<% content_for :title, "#{page_title} · Harpia" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= page_description %>">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="<%= page_title %>">
+  <meta property="og:description" content="<%= page_description %>">
+  <meta property="og:url" content="<%= deputy_url(@deputy) %>">
+  <% if @deputy.photo_url.present? %>
+    <meta property="og:image" content="<%= @deputy.photo_url %>">
+  <% end %>
+  <meta name="twitter:card" content="summary">
+<% end %>
+
 <div class="container py-5">
   <!-- Botão Voltar -->
   <div class="mb-4">
@@ -6,139 +21,59 @@
     <% end %>
   </div>
 
-  <!-- Cartão Principal do Perfil -->
-  <div class="card inspiration-card shadow-sm border-0 rounded-4 p-4 p-lg-5 bg-white">
-    <div class="row g-5 align-items-start">
+  <!-- Cabeçalho do Perfil -->
+  <div class="card inspiration-card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4">
+      <% if @deputy.photo_url.present? %>
+        <%= image_tag @deputy.photo_url, class: "deputy-avatar rounded-4 shadow-sm object-fit-cover", alt: @deputy.name %>
+      <% else %>
+        <div class="deputy-avatar rounded-4 bg-light d-flex align-items-center justify-content-center shadow-sm">
+          <i class="fa-solid fa-user-tie fa-3x text-gold"></i>
+        </div>
+      <% end %>
 
-      <!-- Coluna da Esquerda: Foto e Acções -->
-      <div class="col-md-4 text-center text-md-start">
-        <div class="position-relative d-inline-block w-100 mb-4">
-          <% if @deputy.photo_url.present? %>
-            <%= image_tag @deputy.photo_url, class: "img-fluid rounded-4 shadow-sm w-100 object-fit-cover", alt: @deputy.name, style: "max-height: 450px;" %>
-          <% else %>
-            <div class="rounded-4 bg-light d-flex align-items-center justify-content-center shadow-sm w-100" style="height: 350px;">
-              <i class="fa-solid fa-user-tie fa-4x text-gold"></i>
+      <div class="flex-grow-1 text-center text-md-start">
+        <h1 class="h2 fw-bold text-navy mb-3"><%= @deputy.name %></h1>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
+          <% if @deputy.party %>
+            <%= link_to party_path(@deputy.party), class: "badge bg-navy text-white px-3 py-2 rounded-pill fw-medium tracking-wider text-decoration-none" do %>
+              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %>
+            <% end %>
+          <% end %>
+          <div class="badge bg-light text-navy border px-3 py-2 rounded-pill fw-medium tracking-wider">
+            <i class="fa-solid fa-location-dot me-1 text-gold"></i> <%= @deputy.state_label %>
+          </div>
+          <% if @candidate&.reelection? %>
+            <div class="badge bg-light text-navy border px-3 py-2 rounded-pill fw-medium tracking-wider">
+              <i class="fa-solid fa-check-to-slot me-1 text-gold"></i> Candidato à reeleição
             </div>
           <% end %>
         </div>
 
-        <!-- Botão de Ver Gastos (btn-auth) -->
-        <%= link_to deputy_expenses_path(@deputy), class: "btn btn-auth w-100 rounded-pill py-3 fw-bold text-uppercase shadow-sm d-flex align-items-center justify-content-center" do %>
-          <i class="fa-solid fa-receipt me-2"></i> Monitorar Gastos
-        <% end %>
-      </div>
-
-      <!-- Coluna da Direita: Dados do Deputado -->
-      <div class="col-md-8">
-
-        <!-- Cabeçalho (Nome, Partido e Estado) -->
-        <div class="mb-4 border-bottom pb-4">
-          <h1 class="display-6 fw-bold text-navy mb-3"><%= @deputy.name %></h1>
-
-          <div class="d-flex flex-wrap gap-2 align-items-center">
-            <% if @deputy.party %>
-              <div class="badge bg-navy text-white px-3 py-2 rounded-pill fw-medium tracking-wider">
-                <i class="fa-solid fa-flag me-1 text-gold"></i>
-                <%= link_to @deputy.party.label, party_path(@deputy.party), class: "text-white text-decoration-none" %>
-              </div>
-            <% end %>
-            <div class="badge bg-light text-navy border px-3 py-2 rounded-pill fw-medium tracking-wider">
-              <i class="fa-solid fa-location-dot me-1 text-gold"></i> <%= @deputy.state_label %>
-            </div>
-          </div>
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+          <%= link_to "https://www.camara.leg.br/deputados/#{@deputy.json_id}", target: "_blank", rel: "noopener",
+                class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
+            <i class="fa-solid fa-landmark me-2 text-gold"></i> Página na Câmara
+          <% end %>
         </div>
-
-        <!-- Grid de Informações Estruturadas -->
-        <div class="row g-3 mb-4">
-
-          <!-- Bloco: Situação -->
-          <div class="col-sm-6">
-            <div class="p-3 bg-light rounded-3 h-100 border-start border-4 border-gold">
-              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">Situação</span>
-              <span class="text-navy fw-medium"><%= @deputy.status %></span>
-            </div>
-          </div>
-
-          <!-- Bloco: Situação Eleitoral -->
-          <div class="col-sm-6">
-            <div class="p-3 bg-light rounded-3 h-100 border-start border-4 border-gold">
-              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">Situação Eleitoral</span>
-              <span class="text-navy fw-medium"><%= @deputy.electoral_status %></span>
-            </div>
-          </div>
-
-          <!-- Bloco: Nascimento -->
-          <div class="col-sm-6">
-            <div class="p-3 bg-light rounded-3 h-100">
-              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
-                <i class="fa-solid fa-cake-candles me-1 text-gold"></i> Nascimento
-              </span>
-              <span class="text-navy fw-medium">
-                <%= @deputy.date_of_birth&.strftime("%d/%m/%Y") %>
-                <% if @deputy.city_of_birth.present? %>
-                  <br><span class="small text-muted"><%= @deputy.city_of_birth %> / <%= @deputy.state_of_birth %></span>
-                <% end %>
-              </span>
-            </div>
-          </div>
-
-          <!-- Bloco: Escolaridade -->
-          <div class="col-sm-6">
-            <div class="p-3 bg-light rounded-3 h-100">
-              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
-                <i class="fa-solid fa-graduation-cap me-1 text-gold"></i> Escolaridade
-              </span>
-              <span class="text-navy fw-medium"><%= @deputy.education_level %></span>
-            </div>
-          </div>
-
-          <!-- Bloco: Gabinete -->
-          <div class="col-sm-6">
-            <div class="p-3 bg-light rounded-3 h-100">
-              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
-                <i class="fa-solid fa-building me-1 text-gold"></i> Gabinete
-              </span>
-              <span class="text-navy fw-medium">
-                <%= "Prédio #{@deputy.office_building}, sala #{@deputy.office_room}" if @deputy.office_building.present? %>
-                <% if @deputy.office_phone.present? %>
-                  <br><%= link_to "(61) #{@deputy.office_phone}", "tel:+5561#{@deputy.office_phone.gsub(/\D/, '')}", class: "text-decoration-none text-gold fw-bold hover-opacity" %>
-                <% end %>
-              </span>
-            </div>
-          </div>
-
-          <!-- Bloco: E-mail -->
-          <div class="col-sm-6">
-            <div class="p-3 bg-light rounded-3 h-100">
-              <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
-                <i class="fa-solid fa-envelope me-1 text-gold"></i> E-mail
-              </span>
-              <span class="text-navy fw-medium">
-                <%= mail_to @deputy.email, nil, class: "text-decoration-none text-navy hover-opacity text-break" if @deputy.email.present? %>
-              </span>
-            </div>
-          </div>
-
-        </div>
-
-        <!-- Redes Sociais -->
-        <% if @deputy.social_media.present? %>
-          <div class="mt-4 pt-4 border-top">
-            <h3 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
-              <i class="fa-solid fa-share-nodes me-2 text-gold"></i>Presença Digital
-            </h3>
-            <div class="d-flex flex-wrap gap-2">
-              <% @deputy.social_media.to_s.split.each do |url| %>
-                <% host = URI.parse(url).host.to_s.sub(/\Awww\./, "") %>
-                <%= link_to url, target: "_blank", rel: "noopener", class: "btn btn-light border btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center text-navy fw-medium shadow-sm transition" do %>
-                  <i class="fa-solid fa-link me-2 text-gold"></i> <%= host.capitalize %>
-                <% end %>
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-
       </div>
     </div>
   </div>
+
+  <%= turbo_frame_tag "deputy_tab", class: "d-block", data: { turbo_action: "advance" } do %>
+    <!-- Abas -->
+    <ul class="nav nav-pills deputy-tabs flex-nowrap overflow-auto mb-4 gap-2">
+      <% DeputiesController::TABS.each do |key, label| %>
+        <li class="nav-item">
+          <%= link_to label, deputy_tab_path(@deputy, key),
+                class: "nav-link rounded-pill text-nowrap #{'active' if key == @tab}",
+                aria: { current: ("page" if key == @tab) },
+                data: { turbo_frame: "deputy_tab" } %>
+        </li>
+      <% end %>
+    </ul>
+
+    <%= render "deputies/tabs/#{@tab}" %>
+  <% end %>
 </div>

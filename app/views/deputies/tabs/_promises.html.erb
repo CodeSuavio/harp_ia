@@ -1,0 +1,138 @@
+<!-- Como ler esta aba -->
+<div class="alert alert-light border small d-flex gap-2 align-items-start mb-4">
+  <i class="fa-solid fa-circle-info text-gold mt-1" aria-hidden="true"></i>
+  <div>
+    Deputados federais não registram plano de governo no TSE. Por isso, as propostas abaixo vêm de
+    <strong>propostas de campanha do próprio deputado</strong>, do <strong>programa do partido</strong> ou do
+    <strong>plano de governo do candidato do partido</strong> ao Executivo, sempre com link para a fonte.
+    Os temas de projetos e votações são <strong>classificados automaticamente por palavras-chave</strong> e podem conter erros.
+    Confira a votação ou o projeto original antes de tirar conclusões.
+  </div>
+</div>
+
+<!-- Coerência -->
+<div class="row g-3 mb-4">
+  <div class="col-md-5">
+    <div class="p-4 bg-white rounded-4 shadow-sm border-start border-4 border-gold h-100">
+      <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
+        Coerência com as propostas
+        <%= info_tip("Nas votações ligadas a uma proposta, quantos votos Sim/Não do deputado foram no sentido que cumpre a proposta. Abstenções e ausências não entram.") %>
+      </span>
+      <% if @coherence[:pct] %>
+        <span class="h3 fw-bold text-navy d-block"><%= @coherence[:pct] %>%</span>
+        <span class="small text-muted">
+          <%= @coherence[:coherent] %> de <%= @coherence[:total] %> <%= "voto".pluralize(@coherence[:total]) %> no sentido das propostas
+        </span>
+        <% unless @coherence[:conclusive] %>
+          <div class="small text-warning-emphasis mt-2">
+            <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
+            Poucas votações (menos de <%= DeputyThemeProfile::MIN_EVIDENCE %>): indicador pouco conclusivo.
+          </div>
+        <% end %>
+      <% else %>
+        <span class="h3 fw-bold text-navy d-block">—</span>
+        <span class="small text-muted">Ainda não há votações ligadas às propostas deste deputado ou do partido.</span>
+      <% end %>
+    </div>
+  </div>
+  <div class="col-md-7">
+    <div class="p-4 bg-white rounded-4 shadow-sm h-100">
+      <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">Propostas cadastradas</span>
+      <% if @profile.proposals.any? %>
+        <span class="h3 fw-bold text-navy d-block"><%= @profile.proposals.size %></span>
+        <div class="d-flex flex-wrap gap-1">
+          <% @profile.proposals.group_by(&:source_label).each do |label, items| %>
+            <span class="badge rounded-pill text-bg-light border fw-normal"><%= label %>: <%= items.size %></span>
+          <% end %>
+        </div>
+      <% else %>
+        <span class="small text-muted">
+          Nenhuma proposta cadastrada para <%= @deputy.name %> ou para o <%= @deputy.party&.label || "partido" %>.
+          Abaixo está a atuação do deputado por tema.
+        </span>
+      <% end %>
+    </div>
+  </div>
+</div>
+
+<!-- Tema a tema -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+  <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">Promessas × atuação por tema</h2>
+
+  <% if @theme_rows.empty? %>
+    <p class="text-muted text-center py-4 mb-0">Sem propostas, projetos ou votações classificados por tema.</p>
+  <% else %>
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 small promises-table">
+        <thead class="table-light">
+          <tr>
+            <th class="ps-3">Tema</th>
+            <th>Proposta</th>
+            <th class="text-center">Projetos de lei</th>
+            <th class="text-center">Votações</th>
+            <th class="text-center pe-3">
+              Votos coerentes
+              <%= info_tip("Votos no sentido da proposta ÷ votos Sim/Não nas votações ligadas às propostas do tema.") %>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @theme_rows.each do |row| %>
+            <tr>
+              <th scope="row" class="ps-3 text-navy fw-bold"><%= row.theme.name %></th>
+              <td>
+                <% if row.proposals.any? %>
+                  <ul class="list-unstyled mb-0">
+                    <% row.proposals.each do |proposal| %>
+                      <li class="mb-2">
+                        <span class="badge rounded-pill text-bg-light border fw-normal me-1"><%= proposal.source_label %></span>
+                        <span class="fw-medium text-navy"><%= proposal.title %></span>
+                        <% if proposal.excerpt.present? %>
+                          <blockquote class="text-muted fst-italic mb-0 mt-1">“<%= proposal.excerpt.truncate(200) %>”</blockquote>
+                        <% end %>
+                        <span class="text-muted">
+                          <%= proposal.author.presence || proposal.deputy&.name || proposal.party&.label %>
+                          <% if proposal.source_url.present? %>
+                            · <%= link_to "fonte", proposal.source_url, target: "_blank", rel: "noopener", class: "text-gold",
+                                    aria: { label: "Fonte da proposta #{proposal.title} (abre em nova aba)" } %>
+                          <% end %>
+                        </span>
+                      </li>
+                    <% end %>
+                  </ul>
+                <% else %>
+                  <span class="text-muted">Sem proposta cadastrada</span>
+                <% end %>
+              </td>
+              <td class="text-center">
+                <% if row.bills_count.positive? %>
+                  <%= link_to row.bills_count, deputy_tab_path(@deputy, "bills", theme: row.theme.slug),
+                        class: "fw-bold text-navy", aria: { label: "#{row.bills_count} projetos de lei sobre #{row.theme.name}" } %>
+                <% else %>
+                  <span class="text-muted">0</span>
+                <% end %>
+              </td>
+              <td class="text-center">
+                <% if row.votes_count.positive? %>
+                  <%= link_to row.votes_count, deputy_tab_path(@deputy, "votes", theme: row.theme.slug),
+                        class: "fw-bold text-navy", aria: { label: "#{row.votes_count} votações sobre #{row.theme.name}" } %>
+                <% else %>
+                  <span class="text-muted">0</span>
+                <% end %>
+              </td>
+              <td class="text-center pe-3">
+                <% if row.evaluated.positive? %>
+                  <span class="fw-bold <%= row.coherent >= row.contrary ? 'text-success' : 'text-danger' %>">
+                    <%= row.coherent %>/<%= row.evaluated %>
+                  </span>
+                <% else %>
+                  <span class="text-muted">—</span>
+                <% end %>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% end %>
+</div>

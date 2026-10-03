@@ -2,8 +2,30 @@
      "q"                => params[:q].presence,
      "state"            => params[:state].presence,
      "party"            => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?),
-     "electoral_status" => params[:electoral_status].presence
+     "electoral_status" => params[:electoral_status].presence,
+     "reelection"       => ("Candidatos à reeleição" if @reelection)
    }.compact %>
+
+<!-- Resumo do recorte filtrado -->
+<% if @total.positive? %>
+  <div class="row g-3 mb-4">
+    <% [
+         ["fa-wallet",        @summary[:monthly_expense] ? brl(@summary[:monthly_expense], precision: 0) : "—",
+                              "gasto médio mensal em #{@expense_year}",            "Média, entre os deputados do recorte, do gasto do ano dividido pelos meses com despesa."],
+         ["fa-check-to-slot", percent(@summary[:participation]),                   "participação média nas votações",
+                              "Média da participação de cada deputado, contando só as votações do período em que ele registrou votos."],
+         ["fa-rotate",        @summary[:reelection],                               "candidatos à reeleição no recorte", nil]
+       ].each do |icon, value, label, info| %>
+      <div class="col-sm-4">
+        <div class="p-3 bg-white rounded-4 shadow-sm h-100">
+          <i class="fa-solid <%= icon %> text-gold mb-1"></i>
+          <div class="h5 fw-bold text-navy mb-0"><%= value %></div>
+          <div class="small text-muted"><%= label %><%= info_tip(info) if info %></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+<% end %>
 
 <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
   <span class="text-muted small me-2">
@@ -33,43 +55,64 @@
   <div class="row g-4">
     <% @deputies.each do |deputy| %>
       <div class="col-sm-6 col-lg-3">
-        <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
-          <div class="card candidate-card h-100 text-center border-0 shadow-sm">
-            <div class="card-body">
-              <% if deputy.photo_url.present? %>
-                <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
-              <% else %>
-                <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
-                  <i class="fa-solid fa-user text-muted"></i>
+        <div class="position-relative h-100">
+          <label class="compare-toggle position-absolute top-0 end-0 m-2 small" title="Selecionar para comparar">
+            <input type="checkbox" class="form-check-input me-1"
+                   value="<%= deputy.id %>"
+                   data-name="<%= deputy.name %>"
+                   data-deputy-compare-target="checkbox"
+                   data-action="deputy-compare#toggle">
+            Comparar
+          </label>
+
+          <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
+            <div class="card candidate-card h-100 text-center border-0 shadow-sm">
+              <div class="card-body pt-5">
+                <% if deputy.photo_url.present? %>
+                  <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
+                <% else %>
+                  <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
+                    <i class="fa-solid fa-user text-muted"></i>
+                  </div>
+                <% end %>
+
+                <h3 class="h6 mb-1"><%= deputy.name %></h3>
+                <p class="text-brand small fw-bold text-uppercase mb-2">
+                  <%= deputy.party&.label %> &middot; <%= deputy.state_label %>
+                </p>
+
+                <% if @reelection_ids.include?(deputy.id) %>
+                  <span class="badge rounded-pill text-bg-light border text-navy fw-medium mb-2">
+                    <i class="fa-solid fa-check-to-slot text-gold me-1"></i>Candidato à reeleição
+                  </span>
+                <% end %>
+
+                <div class="row g-0 border-top pt-2 mt-2 small">
+                  <div class="col-4 border-end">
+                    <div class="fw-bold text-navy"><%= @expenses.dig(deputy.id, :monthly) ? brl(@expenses.dig(deputy.id, :monthly), precision: 0) : "—" %></div>
+                    <div class="text-muted">por mês<span class="visually-hidden"> em gastos em <%= @expense_year %></span></div>
+                  </div>
+                  <div class="col-4 border-end">
+                    <div class="fw-bold text-navy"><%= @bill_counts[deputy.id].to_i %></div>
+                    <div class="text-muted"><%= "projeto".pluralize(@bill_counts[deputy.id].to_i) %></div>
+                  </div>
+                  <div class="col-4">
+                    <div class="fw-bold text-navy"><%= percent(@participation.dig(deputy.id, :pct)) %></div>
+                    <div class="text-muted">presença<span class="visually-hidden"> nas votações</span></div>
+                  </div>
                 </div>
-              <% end %>
 
-              <h3 class="h6 mb-1"><%= deputy.name %></h3>
-              <p class="text-brand small fw-bold text-uppercase mb-2">
-                <%= deputy.party&.label %> &middot; <%= deputy.state_label %>
-              </p>
-
-              <div class="border-top pt-2 mt-2 small text-muted">
-                <%= deputy.electoral_status %>
+                <% if deputy.electoral_status.present? %>
+                  <div class="small text-muted mt-2"><%= deputy.electoral_status %></div>
+                <% end %>
               </div>
             </div>
-          </div>
-        <% end %>
+          <% end %>
+        </div>
       </div>
     <% end %>
   </div>
 
-  <% if @total_pages > 1 %>
-    <nav class="d-flex justify-content-center align-items-center gap-3 mt-5">
-      <% if @page > 1 %>
-        <%= link_to "Anterior", deputies_path(request.query_parameters.merge(page: @page - 1)), class: "btn btn-outline-secondary btn-sm" %>
-      <% end %>
-
-      <span class="small text-muted">Página <%= @page %> de <%= @total_pages %></span>
-
-      <% if @page < @total_pages %>
-        <%= link_to "Próxima", deputies_path(request.query_parameters.merge(page: @page + 1)), class: "btn btn-outline-secondary btn-sm" %>
-      <% end %>
-    </nav>
-  <% end %>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+        path_for: ->(p) { deputies_path(request.query_parameters.merge(page: p)) } %>
 <% end %>

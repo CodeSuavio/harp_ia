@@ -1,0 +1,96 @@
+<!-- Indicadores principais -->
+<div class="row g-3 mb-4">
+  <% [
+       ["fa-wallet",        brl(@total_expenses, precision: 0), (@expense_year ? "em gastos em #{@expense_year}" : "em gastos declarados"), "expenses",
+                            "Soma do valor líquido das despesas da cota parlamentar (CEAP) no ano, já descontados estornos."],
+       ["fa-file-lines",    @bills_count,                       "projetos de lei", "bills",
+                            "Proposições apresentadas pelo deputado como autor principal."],
+       ["fa-check-to-slot", percent(@participation[:pct]),      "de participação nas votações", "votes",
+                            "Votações em que votou, entre as registradas no período do seu primeiro ao último voto (não penaliza suplentes nem licenciados)."],
+       ["fa-people-group",  percent(@alignment[:pct]),          "de alinhamento com o partido", "votes",
+                            "Votos Sim/Não iguais aos da maioria do partido, sem contar o próprio deputado. Empates e abstenções não entram."]
+     ].each do |icon, value, label, tab, info| %>
+    <div class="col-6 col-lg-3">
+      <div class="p-3 bg-white rounded-4 shadow-sm h-100 border-start border-4 border-gold kpi-card position-relative">
+        <i class="fa-solid <%= icon %> text-gold mb-2"></i>
+        <div class="h4 fw-bold text-navy mb-0">
+          <%= link_to value, deputy_tab_path(@deputy, tab), class: "text-reset text-decoration-none stretched-link" %>
+        </div>
+        <div class="small text-muted">
+          <%= label %><span class="position-relative" style="z-index: 2"><%= info_tip(info) %></span>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Dados pessoais e de contato (apenas os disponíveis) -->
+<% info = [
+     ["Situação", nil, @deputy.status],
+     ["Situação eleitoral", nil, @deputy.electoral_status],
+     ["Nascimento", "fa-cake-candles", [@deputy.date_of_birth&.strftime("%d/%m/%Y"), [@deputy.city_of_birth, @deputy.state_of_birth].compact_blank.join(" / ").presence].compact.join(" · ").presence],
+     ["Escolaridade", "fa-graduation-cap", @deputy.education_level]
+   ].select { |_, _, value| value.present? } %>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+  <div class="row g-3">
+    <% info.each do |label, icon, value| %>
+      <div class="col-sm-6">
+        <div class="p-3 bg-light rounded-3 h-100">
+          <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+            <% if icon %><i class="fa-solid <%= icon %> me-1 text-gold"></i><% end %> <%= label %>
+          </span>
+          <span class="text-navy fw-medium"><%= value %></span>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @deputy.office_building.present? || @deputy.office_phone.present? %>
+      <div class="col-sm-6">
+        <div class="p-3 bg-light rounded-3 h-100">
+          <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+            <i class="fa-solid fa-building me-1 text-gold"></i> Gabinete
+          </span>
+          <span class="text-navy fw-medium">
+            <%= "Prédio #{@deputy.office_building}, sala #{@deputy.office_room}" if @deputy.office_building.present? %>
+            <% if @deputy.office_phone.present? %>
+              <br><%= link_to "(61) #{@deputy.office_phone}", "tel:+5561#{@deputy.office_phone.gsub(/\D/, '')}", class: "text-decoration-none text-gold fw-bold hover-opacity" %>
+            <% end %>
+          </span>
+        </div>
+      </div>
+    <% end %>
+
+    <% if @deputy.email.present? %>
+      <div class="col-sm-6">
+        <div class="p-3 bg-light rounded-3 h-100">
+          <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+            <i class="fa-solid fa-envelope me-1 text-gold"></i> E-mail
+          </span>
+          <%= mail_to @deputy.email, nil, class: "text-decoration-none text-navy fw-medium hover-opacity text-break" %>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if info.empty? && @deputy.email.blank? && @deputy.office_building.blank? %>
+    <p class="text-muted small mb-0">Não há dados pessoais ou de contato disponíveis para este deputado.</p>
+  <% end %>
+
+  <!-- Redes Sociais -->
+  <% links = social_links(@deputy) %>
+  <% if links.any? %>
+    <div class="mt-4 pt-4 border-top">
+      <h3 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+        <i class="fa-solid fa-share-nodes me-2 text-gold"></i>Presença Digital
+      </h3>
+      <div class="d-flex flex-wrap gap-2">
+        <% links.each do |url, host| %>
+          <%= link_to url, target: "_blank", rel: "noopener", class: "btn btn-light border btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center text-navy fw-medium shadow-sm transition" do %>
+            <i class="fa-solid fa-link me-2 text-gold"></i> <%= host.capitalize %>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

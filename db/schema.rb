@@ -10,9 +10,17 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_03_140000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "bill_themes", force: :cascade do |t|
+    t.bigint "bill_id", null: false
+    t.bigint "theme_id", null: false
+    t.index ["bill_id", "theme_id"], name: "index_bill_themes_on_bill_id_and_theme_id", unique: true
+    t.index ["bill_id"], name: "index_bill_themes_on_bill_id"
+    t.index ["theme_id"], name: "index_bill_themes_on_theme_id"
+  end
 
   create_table "bills", force: :cascade do |t|
     t.string "bill_number"
@@ -78,8 +86,10 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
     t.string "state_of_birth"
     t.string "status"
     t.datetime "updated_at", null: false
+    t.index ["electoral_status"], name: "index_deputies_on_electoral_status"
     t.index ["json_id"], name: "index_deputies_on_json_id", unique: true
     t.index ["party_id"], name: "index_deputies_on_party_id"
+    t.index ["state_label"], name: "index_deputies_on_state_label"
   end
 
   create_table "expenses", force: :cascade do |t|
@@ -95,6 +105,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
     t.string "supplier_cnpj_cpf"
     t.datetime "updated_at", null: false
     t.integer "year"
+    t.index ["deputy_id", "year", "month"], name: "index_expenses_on_deputy_id_and_year_and_month"
     t.index ["deputy_id"], name: "index_expenses_on_deputy_id"
   end
 
@@ -143,6 +154,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
     t.string "url"
   end
 
+  create_table "poll_themes", force: :cascade do |t|
+    t.bigint "poll_id", null: false
+    t.bigint "theme_id", null: false
+    t.index ["poll_id", "theme_id"], name: "index_poll_themes_on_poll_id_and_theme_id", unique: true
+    t.index ["poll_id"], name: "index_poll_themes_on_poll_id"
+    t.index ["theme_id"], name: "index_poll_themes_on_theme_id"
+  end
+
   create_table "polls", force: :cascade do |t|
     t.boolean "approval"
     t.bigint "bill_id"
@@ -154,6 +173,42 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
     t.datetime "updated_at", null: false
     t.index ["bill_id"], name: "index_polls_on_bill_id"
     t.index ["json_id"], name: "index_polls_on_json_id", unique: true
+  end
+
+  create_table "proposal_polls", force: :cascade do |t|
+    t.string "favorable_vote", null: false
+    t.bigint "poll_id", null: false
+    t.bigint "proposal_id", null: false
+    t.index ["poll_id"], name: "index_proposal_polls_on_poll_id"
+    t.index ["proposal_id", "poll_id"], name: "index_proposal_polls_on_proposal_id_and_poll_id", unique: true
+    t.index ["proposal_id"], name: "index_proposal_polls_on_proposal_id"
+  end
+
+  create_table "proposals", force: :cascade do |t|
+    t.string "author"
+    t.datetime "created_at", null: false
+    t.bigint "deputy_id"
+    t.text "excerpt"
+    t.bigint "party_id"
+    t.string "source_kind", null: false
+    t.string "source_url"
+    t.string "state_label"
+    t.bigint "theme_id", null: false
+    t.string "title", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deputy_id"], name: "index_proposals_on_deputy_id"
+    t.index ["party_id"], name: "index_proposals_on_party_id"
+    t.index ["theme_id"], name: "index_proposals_on_theme_id"
+  end
+
+  create_table "themes", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.text "keywords"
+    t.string "name", null: false
+    t.integer "position", default: 0, null: false
+    t.string "slug", null: false
+    t.datetime "updated_at", null: false
+    t.index ["slug"], name: "index_themes_on_slug", unique: true
   end
 
   create_table "users", force: :cascade do |t|
@@ -177,9 +232,12 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
     t.datetime "updated_at", null: false
     t.string "vote"
     t.index ["deputy_id"], name: "index_votes_on_deputy_id"
+    t.index ["poll_id", "deputy_id"], name: "index_votes_on_poll_id_and_deputy_id", unique: true
     t.index ["poll_id"], name: "index_votes_on_poll_id"
   end
 
+  add_foreign_key "bill_themes", "bills"
+  add_foreign_key "bill_themes", "themes"
   add_foreign_key "bills", "deputies"
   add_foreign_key "bills", "parties"
   add_foreign_key "candidates", "deputies", column: "current_deputy_id", primary_key: "json_id"
@@ -188,7 +246,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_09_30_005033) do
   add_foreign_key "deputies", "parties"
   add_foreign_key "expenses", "deputies"
   add_foreign_key "messages", "chats"
+  add_foreign_key "poll_themes", "polls"
+  add_foreign_key "poll_themes", "themes"
   add_foreign_key "polls", "bills"
+  add_foreign_key "proposal_polls", "polls"
+  add_foreign_key "proposal_polls", "proposals"
+  add_foreign_key "proposals", "deputies"
+  add_foreign_key "proposals", "parties"
+  add_foreign_key "proposals", "themes"
   add_foreign_key "votes", "deputies"
   add_foreign_key "votes", "polls"
 end
