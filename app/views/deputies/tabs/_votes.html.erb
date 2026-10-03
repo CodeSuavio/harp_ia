@@ -58,10 +58,10 @@
       </div>
       <div class="d-flex flex-wrap gap-1">
         <%= link_to "Todos", deputy_tab_path(@deputy, "votes", filter_params.except(:vote)),
-              class: "badge rounded-pill text-decoration-none #{@vote_filter ? 'text-bg-light border' : 'text-bg-dark'}" %>
+              class: "badge badge-wrap text-decoration-none #{@vote_filter ? 'text-bg-light border' : 'text-bg-dark'}" %>
         <% distribution.each do |vote, n| %>
           <%= link_to "#{vote} (#{n})", deputy_tab_path(@deputy, "votes", filter_params.merge(vote: vote)),
-                class: "badge rounded-pill text-decoration-none #{vote_badge_class(vote)} #{'opacity-50' if @vote_filter && @vote_filter != vote}",
+                class: "badge badge-wrap text-decoration-none #{vote_badge_class(vote)} #{'opacity-50' if @vote_filter && @vote_filter != vote}",
                 title: vote_explanation(vote), data: ({ controller: "tooltip" } if vote_explanation(vote)) %>
         <% end %>
       </div>
@@ -80,7 +80,7 @@
       <% @themes.sort_by { |_, count| -count }.each do |theme, count| %>
         <%= link_to "#{theme.name} (#{count})",
               deputy_tab_path(@deputy, "votes", filter_params.merge(theme: (theme.slug unless @theme == theme))),
-              class: "badge rounded-pill text-decoration-none fw-medium #{@theme == theme ? 'text-bg-dark' : 'text-bg-light border text-navy'}",
+              class: "badge badge-wrap text-decoration-none fw-medium #{@theme == theme ? 'text-bg-dark' : 'text-bg-light border text-navy'}",
               aria: { pressed: @theme == theme } %>
       <% end %>
     </div>
@@ -94,11 +94,11 @@
     <span class="small text-muted"><%= @tab_total %> <%= "voto".pluralize(@tab_total) %></span>
     <% if @vote_filter %>
       <%= link_to "#{@vote_filter == against ? 'Contra o partido' : @vote_filter} ×", deputy_tab_path(@deputy, "votes", filter_params.except(:vote)),
-            class: "badge rounded-pill text-bg-light border text-decoration-none" %>
+            class: "badge badge-wrap text-bg-light border text-decoration-none" %>
     <% end %>
     <% if @theme %>
       <%= link_to "#{@theme.name} ×", deputy_tab_path(@deputy, "votes", filter_params.except(:theme)),
-            class: "badge rounded-pill text-bg-light border text-decoration-none" %>
+            class: "badge badge-wrap text-bg-light border text-decoration-none" %>
     <% end %>
   </div>
 
@@ -132,11 +132,11 @@
                 </div>
               </td>
               <td class="text-center">
-                <span class="badge rounded-pill <%= vote_badge_class(vote.vote) %>" title="<%= vote_explanation(vote.vote) %>"><%= vote.vote %></span>
+                <span class="badge badge-wrap <%= vote_badge_class(vote.vote) %>" title="<%= vote_explanation(vote.vote) %>"><%= vote.vote %></span>
               </td>
               <td class="text-center">
                 <% if majority %>
-                  <span class="badge rounded-pill <%= vote_badge_class(majority) %>"><%= majority %></span>
+                  <span class="badge badge-wrap <%= vote_badge_class(majority) %>"><%= majority %></span>
                   <% if Vote::DECISIVE.include?(vote.vote) %>
                     <% with_party = majority == vote.vote %>
                     <i class="fa-solid <%= with_party ? 'fa-check text-success' : 'fa-xmark text-danger' %> ms-1"

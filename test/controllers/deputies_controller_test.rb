@@ -8,6 +8,12 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-deputy-compare-target=checkbox]", 4
   end
 
+  test "botão abaixo dos filtros ativa a comparação e avisa o limite" do
+    get deputies_path
+    assert_select "button[data-action='deputy-compare#toggleMode']", text: /Comparar deputados/
+    assert_select "span", text: /Compare até 3 deputados/
+  end
+
   test "busca por sigla do partido" do
     get deputies_path(q: "pt")
     assert_select "h3", count: 1, text: "Davi Rocha"

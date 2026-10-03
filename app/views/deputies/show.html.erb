@@ -37,15 +37,15 @@
 
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
           <% if @deputy.party %>
-            <%= link_to party_path(@deputy.party), class: "badge bg-navy text-white px-3 py-2 rounded-pill fw-medium tracking-wider text-decoration-none" do %>
+            <%= link_to party_path(@deputy.party), class: "badge badge-wrap bg-navy text-white px-3 py-2 fw-medium tracking-wider text-decoration-none" do %>
               <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %>
             <% end %>
           <% end %>
-          <div class="badge bg-light text-navy border px-3 py-2 rounded-pill fw-medium tracking-wider">
+          <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
             <i class="fa-solid fa-location-dot me-1 text-gold"></i> <%= @deputy.state_label %>
           </div>
           <% if @candidate&.reelection? %>
-            <div class="badge bg-light text-navy border px-3 py-2 rounded-pill fw-medium tracking-wider">
+            <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
               <i class="fa-solid fa-check-to-slot me-1 text-gold"></i> Candidato à reeleição
             </div>
           <% end %>

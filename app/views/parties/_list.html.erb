@@ -6,7 +6,7 @@
   <% if params[:q].present? %>
     <%= link_to parties_path(request.query_parameters.except("q")),
           data: { turbo_frame: "_top" },
-          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+          class: "badge badge-wrap text-bg-light border text-decoration-none" do %>
       <%= params[:q] %> &times;
     <% end %>
   <% end %>
@@ -14,7 +14,7 @@
   <% if params[:bench] == "1" %>
     <%= link_to parties_path(request.query_parameters.except("bench")),
           data: { turbo_frame: "_top" },
-          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+          class: "badge badge-wrap text-bg-light border text-decoration-none" do %>
       Com bancada &times;
     <% end %>
   <% end %>
@@ -41,10 +41,10 @@
           <div class="text-end small text-muted flex-shrink-0">
             <div>
               <% if bench.positive? %>
-                <span class="badge text-bg-primary rounded-pill"><%= bench %></span>
+                <span class="badge badge-wrap text-bg-primary"><%= bench %></span>
                 <%= "deputado".pluralize(bench) %>
               <% else %>
-                <span class="badge text-bg-light border">sem bancada</span>
+                <span class="badge badge-wrap text-bg-light border">sem bancada</span>
               <% end %>
             </div>
             <div class="mt-1">

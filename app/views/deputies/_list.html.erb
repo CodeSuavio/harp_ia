@@ -35,7 +35,7 @@
   <% chips.each do |key, label| %>
     <%= link_to deputies_path(request.query_parameters.except(key, "page")),
           data: { turbo_frame: "_top" },
-          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+          class: "badge badge-wrap text-bg-light border text-decoration-none" do %>
       <%= label %> &times;
     <% end %>
   <% end %>
@@ -67,7 +67,7 @@
 
           <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
             <div class="card candidate-card h-100 text-center border-0 shadow-sm">
-              <div class="card-body pt-5">
+              <div class="card-body compare-card-body">
                 <% if deputy.photo_url.present? %>
                   <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
                 <% else %>
@@ -82,7 +82,7 @@
                 </p>
 
                 <% if @reelection_ids.include?(deputy.id) %>
-                  <span class="badge rounded-pill text-bg-light border text-navy fw-medium mb-2">
+                  <span class="badge badge-wrap text-bg-light border text-navy fw-medium mb-2">
                     <i class="fa-solid fa-check-to-slot text-gold me-1"></i>Candidato à reeleição
                   </span>
                 <% end %>

@@ -1,15 +1,18 @@
 import { Controller } from "@hotwired/stimulus"
 
 // Seleciona deputados na listagem para compará-los lado a lado.
-// A seleção fica no sessionStorage para sobreviver à troca de página/filtros.
+// As caixas "Comparar" só aparecem com o modo de comparação ativo (botão abaixo dos filtros).
+// Modo e seleção ficam no sessionStorage para sobreviver à troca de página/filtros.
 const STORAGE_KEY = "deputy-compare"
+const MODE_KEY = "deputy-compare-mode"
 
 export default class extends Controller {
-  static targets = ["checkbox", "bar", "count", "link"]
+  static targets = ["checkbox", "bar", "count", "link", "modeButton", "modeLabel"]
   static values = { url: String, limit: { type: Number, default: 3 } }
 
   connect() {
     this.selected ??= this.load()
+    this.active ??= this.selected.length > 0 || this.read(MODE_KEY) === true
     this.render()
   }
 
@@ -18,6 +21,19 @@ export default class extends Controller {
     this.selected ??= this.load()
     checkbox.checked = this.selected.includes(checkbox.value)
     this.syncDisabled()
+  }
+
+  // O botão fica dentro do turbo frame e é recriado a cada filtro
+  modeButtonTargetConnected() {
+    this.renderMode()
+  }
+
+  toggleMode() {
+    this.active = !this.active
+    // Sair do modo cancela a comparação
+    if (!this.active) this.clear()
+    this.write(MODE_KEY, this.active)
+    this.render()
   }
 
   toggle(event) {
@@ -40,7 +56,7 @@ export default class extends Controller {
 
   render() {
     const count = this.selected.length
-    this.barTarget.hidden = count === 0
+    this.barTarget.hidden = !this.active || count === 0
     this.countTarget.textContent = count
 
     const params = new URLSearchParams()
@@ -48,7 +64,16 @@ export default class extends Controller {
     this.linkTarget.href = `${this.urlValue}?${params}`
     this.linkTarget.classList.toggle("disabled", count < 2)
 
+    this.renderMode()
     this.syncDisabled()
+  }
+
+  renderMode() {
+    this.element.classList.toggle("is-comparing", !!this.active)
+    if (!this.hasModeButtonTarget) return
+
+    this.modeButtonTarget.setAttribute("aria-pressed", String(!!this.active))
+    this.modeLabelTarget.textContent = this.active ? "Cancelar comparação" : "Comparar deputados"
   }
 
   syncDisabled() {
@@ -59,18 +84,26 @@ export default class extends Controller {
   }
 
   load() {
-    try {
-      return JSON.parse(sessionStorage.getItem(STORAGE_KEY)) || []
-    } catch {
-      return []
-    }
+    return this.read(STORAGE_KEY) || []
   }
 
   save() {
+    this.write(STORAGE_KEY, this.selected)
+  }
+
+  read(key) {
     try {
-      sessionStorage.setItem(STORAGE_KEY, JSON.stringify(this.selected))
+      return JSON.parse(sessionStorage.getItem(key))
     } catch {
-      // Sem storage disponível: a seleção vale só nesta página
+      return null
+    }
+  }
+
+  write(key, value) {
+    try {
+      sessionStorage.setItem(key, JSON.stringify(value))
+    } catch {
+      // Sem storage disponível: modo e seleção valem só nesta página
     }
   }
 }

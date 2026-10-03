@@ -13,7 +13,7 @@
   <% chips.each do |key, label| %>
     <%= link_to candidates_path(request.query_parameters.except(key, "page")),
           data: { turbo_frame: "_top" },
-          class: "badge rounded-pill text-bg-light border text-decoration-none" do %>
+          class: "badge badge-wrap text-bg-light border text-decoration-none" do %>
       <%= label %> &times;
     <% end %>
   <% end %>

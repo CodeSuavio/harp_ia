@@ -140,7 +140,7 @@
                   <span class="text-navy text-truncate"><%= expense_type_label(type) %></span>
                   <span class="text-muted text-nowrap">
                     <% if row[:ratio] && row[:ratio] >= DeputyStats::TYPE_ABOVE_AVERAGE %>
-                      <span class="badge rounded-pill text-bg-danger fw-normal me-1" title="Média da Câmara: <%= brl(row[:average], precision: 0) %>">
+                      <span class="badge badge-wrap text-bg-danger fw-normal me-1" title="Média da Câmara: <%= brl(row[:average], precision: 0) %>">
                         <%= row[:ratio].to_s.tr(".", ",") %>× a média
                       </span>
                     <% end %>
@@ -215,12 +215,12 @@
       <span class="small text-muted"><%= @tab_total %> <%= "registro".pluralize(@tab_total) %></span>
       <% if @month %>
         <%= link_to "#{month_label(@month)} ×", deputy_tab_path(@deputy, "expenses", filter_params.except(:month)),
-              class: "badge rounded-pill text-bg-light border text-decoration-none",
+              class: "badge badge-wrap text-bg-light border text-decoration-none",
               aria: { label: "Remover filtro de mês #{month_label(@month)}" } %>
       <% end %>
       <% if @expense_type %>
         <%= link_to "#{expense_type_label(@expense_type)} ×", deputy_tab_path(@deputy, "expenses", filter_params.except(:expense_type)),
-              class: "badge rounded-pill text-bg-light border text-decoration-none text-truncate", style: "max-width: 100%",
+              class: "badge badge-wrap text-bg-light border text-decoration-none",
               aria: { label: "Remover filtro de tipo #{expense_type_label(@expense_type)}" } %>
       <% end %>
     </div>

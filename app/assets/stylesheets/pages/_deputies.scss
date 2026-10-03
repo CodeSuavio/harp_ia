@@ -99,3 +99,27 @@ $compare-worst: #dc3545;
   border-left: 3px solid rgba($gold, 0.6);
   padding-left: 0.5rem;
 }
+
+// Modo de comparação: as caixas "Comparar" dos cards só aparecem depois de ativá-lo
+.btn-compare-mode {
+  color: $navy-blue;
+  border: 1px solid rgba($navy-blue, 0.3);
+  background-color: #fff;
+
+  &:hover, &:focus-visible { border-color: $navy-blue; color: $navy-blue; }
+
+  &[aria-pressed="true"] {
+    background-color: $navy-blue;
+    border-color: $navy-blue;
+    color: #fff;
+  }
+}
+
+.compare-toggle,
+.compare-mode-hint { display: none; }
+
+.is-comparing {
+  .compare-toggle { display: inline-flex; align-items: center; }
+  .compare-card-body { padding-top: 3rem; }
+  .compare-mode-hint { display: inline; }
+}

@@ -26,7 +26,7 @@
           <% @themes.sort_by { |_, count| -count }.first(6).each do |theme, count| %>
             <%= link_to "#{theme.name} (#{count})",
                   deputy_tab_path(@deputy, "bills", filter_params.merge(theme: (theme.slug unless @theme == theme), page: nil)),
-                  class: "badge rounded-pill text-decoration-none fw-medium #{@theme == theme ? 'text-bg-dark' : 'text-bg-light border text-navy'}",
+                  class: "badge badge-wrap text-decoration-none fw-medium #{@theme == theme ? 'text-bg-dark' : 'text-bg-light border text-navy'}",
                   aria: { pressed: @theme == theme } %>
           <% end %>
         </div>
@@ -40,7 +40,7 @@
           <% @top_keywords.each do |keyword, count| %>
             <%= link_to "#{keyword} (#{count})",
                   deputy_tab_path(@deputy, "bills", filter_params.merge(keyword: (keyword unless @keyword == keyword), page: nil)),
-                  class: "badge rounded-pill text-decoration-none fw-normal #{@keyword == keyword ? 'text-bg-dark' : 'text-bg-light border'}",
+                  class: "badge badge-wrap text-decoration-none fw-normal #{@keyword == keyword ? 'text-bg-dark' : 'text-bg-light border'}",
                   aria: { pressed: @keyword == keyword } %>
           <% end %>
         </div>
@@ -55,11 +55,11 @@
     <span class="small text-muted"><%= @tab_total %> <%= "projeto".pluralize(@tab_total) %></span>
     <% if @theme %>
       <%= link_to "#{@theme.name} ×", deputy_tab_path(@deputy, "bills", filter_params.except(:theme)),
-            class: "badge rounded-pill text-bg-light border text-decoration-none", aria: { label: "Remover filtro de tema #{@theme.name}" } %>
+            class: "badge badge-wrap text-bg-light border text-decoration-none", aria: { label: "Remover filtro de tema #{@theme.name}" } %>
     <% end %>
     <% if @keyword %>
       <%= link_to "#{@keyword} ×", deputy_tab_path(@deputy, "bills", filter_params.except(:keyword)),
-            class: "badge rounded-pill text-bg-light border text-decoration-none", aria: { label: "Remover filtro de palavra-chave #{@keyword}" } %>
+            class: "badge badge-wrap text-bg-light border text-decoration-none", aria: { label: "Remover filtro de palavra-chave #{@keyword}" } %>
     <% end %>
   </div>
 
@@ -93,7 +93,7 @@
           <p class="mb-2 text-muted small"><%= bill.summary %></p>
           <div class="d-flex flex-wrap align-items-center gap-1">
             <% bill.keywords.to_s.split(",").map { |k| k.strip.delete_suffix(".") }.compact_blank.first(6).each do |keyword| %>
-              <span class="badge rounded-pill text-bg-light border fw-normal"><%= keyword %></span>
+              <span class="badge badge-wrap text-bg-light border fw-normal"><%= keyword %></span>
             <% end %>
             <% if bill.url.present? %>
               <%= link_to bill.url, target: "_blank", rel: "noopener", class: "small text-gold text-decoration-none ms-auto" do %>

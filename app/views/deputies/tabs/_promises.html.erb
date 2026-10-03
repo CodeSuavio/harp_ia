@@ -42,7 +42,7 @@
         <span class="h3 fw-bold text-navy d-block"><%= @profile.proposals.size %></span>
         <div class="d-flex flex-wrap gap-1">
           <% @profile.proposals.group_by(&:source_label).each do |label, items| %>
-            <span class="badge rounded-pill text-bg-light border fw-normal"><%= label %>: <%= items.size %></span>
+            <span class="badge badge-wrap text-bg-light border fw-normal"><%= label %>: <%= items.size %></span>
           <% end %>
         </div>
       <% else %>
@@ -85,7 +85,7 @@
                   <ul class="list-unstyled mb-0">
                     <% row.proposals.each do |proposal| %>
                       <li class="mb-2">
-                        <span class="badge rounded-pill text-bg-light border fw-normal me-1"><%= proposal.source_label %></span>
+                        <span class="badge badge-wrap text-bg-light border fw-normal me-1"><%= proposal.source_label %></span>
                         <span class="fw-medium text-navy"><%= proposal.title %></span>
                         <% if proposal.excerpt.present? %>
                           <blockquote class="text-muted fst-italic mb-0 mt-1">“<%= proposal.excerpt.truncate(200) %>”</blockquote>
