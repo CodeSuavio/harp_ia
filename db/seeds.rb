@@ -5,10 +5,10 @@ require 'json'
 $stdout.sync = true
 
 # Propostas apontam para votações, partidos e deputados: saem antes
-ProposalPoll.delete_all
-Proposal.delete_all
-BillTheme.delete_all
-PollTheme.delete_all
+ProposalPoll.destroy_all
+Proposal.destroy_all
+BillTheme.destroy_all
+PollTheme.destroy_all
 Vote.destroy_all
 Poll.destroy_all
 Bill.destroy_all
@@ -49,7 +49,7 @@ data = JSON.parse(response)
 data.each do |dep|
   party = Party.find_by(label: dep["sigla_partido"])
   if party
-  dep = Deputy.new(
+  deputy = Deputy.new(
     party: Party.find_by(label: dep["sigla_partido"]),
     name: dep["nome"],
     cpf: dep["cpf"],
@@ -57,13 +57,18 @@ data.each do |dep|
     education_level: dep["escolaridade"],
     city_of_birth: dep["municipio_nascimento"],
     email: dep["email"],
-    # date_of_birth
-    state_label: dep["sigla_uf"],
+    date_of_birth: dep["data_nascimento"],
+    state_label: dep["sigla_uf"]
     # photo_url
     # office_room: dep[""],
     # office_
   )
-  dep.save!
+  if dep["url_foto"].present?
+    file = URI.parse(dep["url_foto"]).open
+    deputy.photo.attach(io: file, filename: "#{dep["nome"].split.first}.jpg", content_type: "image/jpg")
+    puts "foto adicionada"
+  end
+  deputy.save!
   else
     puts "partido #{dep["sigla_partido"]} não encontrado"
   end
@@ -98,7 +103,6 @@ data.each do |cara|
       race_color: cara["raca_cor"],
       #running_for_reelection: cara["concorre_a_reeleicao"] <= campo inteiro veio vazio
       state_label: cara["sigla_uf"],
-
     )
     cara.save!
   else

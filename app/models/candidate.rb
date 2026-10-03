@@ -6,6 +6,7 @@ class Candidate < ApplicationRecord
               foreign_key: :current_deputy_id,
               primary_key: :json_id
 
+  has_one_attached :photo
 
   # Deputados em exercício candidatos em 2026 (o campo do TSE costuma vir vazio, ver #reelection?)
   scope :reelection, -> { where.not(current_deputy_id: nil).where(running_for_reelection: [true, nil]) }
