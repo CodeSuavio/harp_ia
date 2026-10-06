@@ -1,25 +1,29 @@
-<% spent = deputy ? metrics.spent(deputy) : nil %>
+<% monthly = deputy ? metrics.monthly_expense(deputy) : nil %>
 <% participation = deputy ? metrics.participation(deputy) : nil %>
 <% bills = deputy ? metrics.bills(deputy) : 0 %>
 <% empty_label = deputy ? "Sem registro" : "Sem mandato" %>
 
 <div class="mb-2">
   <div class="d-flex justify-content-between align-items-center mb-1">
-    <span class="data-label text-muted">Gastos</span>
-    <span class="data-value text-navy"><%= spent ? money(spent, 0) : empty_label %></span>
+    <span class="data-label text-muted">
+      Gasto médio/mês<%= " (#{metrics.year})" if metrics.year %>
+      <%= info_tip("Média dos meses com despesa no ano de referência, a mesma usada no painel do deputado.") %>
+    </span>
+    <span class="data-value text-navy"><%= monthly ? brl(monthly, precision: 0) : empty_label %></span>
   </div>
   <div class="progress rounded-pill" style="height: 4px;">
-    <div class="progress-bar bg-gold" style="width: <%= spent ? metrics.expense_percent(spent) : 0 %>%"></div>
+    <div class="progress-bar bg-gold" style="width: <%= monthly ? metrics.expense_percent(monthly) : 0 %>%"></div>
   </div>
 </div>
 
 <div>
   <div class="d-flex justify-content-between align-items-center mb-1">
-    <% if deputy %>
-      <span class="data-label text-muted" title="<%= metrics.votes(deputy) %> votos em <%= metrics.total_polls %> votações · <%= bills %> projetos apresentados">Participação</span>
-    <% else %>
-      <span class="data-label text-muted">Participação</span>
-    <% end %>
+    <span class="data-label text-muted">
+      Participação
+      <% if deputy && participation %>
+        <%= info_tip("#{metrics.votes(deputy)} votos em #{metrics.polls(deputy)} votações entre o primeiro e o último voto do deputado. #{bills} #{bills == 1 ? 'projeto apresentado' : 'projetos apresentados'}.") %>
+      <% end %>
+    </span>
     <span class="data-value text-navy">
       <%= participation ? "#{participation}% · #{bills} #{bills == 1 ? 'PL' : 'PLs'}" : empty_label %>
     </span>

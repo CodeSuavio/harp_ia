@@ -7,10 +7,6 @@ module PainelHelper
     "Artigo 17" => "bg-info"
   }.freeze
 
-  def money(value, precision = 2)
-    number_to_currency(value, unit: "R$ ", separator: ",", delimiter: ".", precision: precision)
-  end
-
   def bar_percent(value, max)
     return 0 unless max.to_f.positive?
 
