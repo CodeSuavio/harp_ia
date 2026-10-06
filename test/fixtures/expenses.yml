@@ -1,0 +1,41 @@
+ana_fuel:
+  deputy: ana
+  year: 2025
+  month: 3
+  expense_type: COMBUSTÍVEIS E LUBRIFICANTES.
+  supplier: Posto Central
+  supplier_cnpj_cpf: 00.000.000/0001-00
+  document_amount: 300
+  net_amount: 300
+  document_date: 2025-03-10
+
+ana_office:
+  deputy: ana
+  year: 2025
+  month: 4
+  expense_type: MANUTENÇÃO DE ESCRITÓRIO DE APOIO À ATIVIDADE PARLAMENTAR
+  supplier: Imobiliária X
+  supplier_cnpj_cpf: 123.456.789-01
+  document_amount: 700
+  net_amount: 700
+  document_date: 2025-04-05
+
+bruno_fuel:
+  deputy: bruno
+  year: 2025
+  month: 3
+  expense_type: COMBUSTÍVEIS E LUBRIFICANTES.
+  supplier: Posto Central
+  document_amount: 3000
+  net_amount: 3000
+
+# Ano anterior, para a variação anual (jan–abr de 2024 × jan–abr de 2025)
+ana_fuel_2024:
+  deputy: ana
+  year: 2024
+  month: 3
+  expense_type: COMBUSTÍVEIS E LUBRIFICANTES.
+  supplier: Posto Central
+  document_amount: 500
+  net_amount: 500
+  document_date: 2024-03-10

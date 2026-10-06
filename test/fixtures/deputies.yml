@@ -1,0 +1,29 @@
+ana:
+  name: Ana Souza
+  cpf: "11111111111"
+  json_id: 1001
+  state_label: SP
+  party: mdb
+  email: dep.ana@camara.leg.br
+  social_media: "https://www.instagram.com/ana not-a-url http://[malformada"
+
+bruno:
+  name: Bruno Lima
+  cpf: "22222222222"
+  json_id: 1002
+  state_label: SP
+  party: mdb
+
+carla:
+  name: Carla Dias
+  cpf: "33333333333"
+  json_id: 1003
+  state_label: RJ
+  party: mdb
+
+davi:
+  name: Davi Rocha
+  cpf: "44444444444"
+  json_id: 1004
+  state_label: RJ
+  party: pt
