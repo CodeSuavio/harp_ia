@@ -60,6 +60,15 @@
         <dt class="col-sm-4">Ocupação</dt>
         <dd class="col-sm-8"><%= @candidate.occupation %></dd>
       </dl>
+
+      <div class="d-flex flex-wrap gap-2">
+        <%= render "painel/ask_harpia", question: harpia_question(@candidate, @overview) %>
+        <% if deputy %>
+          <%= link_to deputy_path(deputy), class: "btn btn-outline-secondary rounded-pill px-4" do %>
+            <i class="fa-solid fa-chart-line me-2"></i>Painel do deputado
+          <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
 
