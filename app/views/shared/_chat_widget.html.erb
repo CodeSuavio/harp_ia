@@ -55,9 +55,12 @@
 
       <!-- Formulário da primeira pergunta -->
       <%= form_with url: chats_path,
-                    method: :post,
-                    class: "chat-widget-input",
-                    data: { turbo_frame: "chat_widget_messages" } do %>
+              method: :post,
+              class: "chat-widget-input",
+              data: {
+                turbo_frame: "chat_widget_messages",
+                action: "submit->chat-widget#showLoading turbo:submit-start->chat-widget#clearInput"
+              } do %>
 
         <%= text_field_tag "message[content]",
             nil,

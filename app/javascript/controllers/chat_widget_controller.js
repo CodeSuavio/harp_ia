@@ -2,7 +2,12 @@ import { Controller } from "@hotwired/stimulus"
 
 // Connects to data-controller="chat-widget"
 export default class extends Controller {
-  static targets = ["button", "window", "messages", "userMessage"]
+  static targets = [
+    "button",
+    "window",
+    "messages",
+    "userMessage",
+  ]
 
   connect() {
     // Mantém o widget fechado quando a página é carregada.
@@ -23,6 +28,50 @@ export default class extends Controller {
     // Fecha a janela do chatbot e exibe novamente o botão flutuante.
     this.windowTarget.hidden = true
     this.buttonTarget.hidden = false
+  }
+
+  showLoading(event) {
+    // Localiza o campo de texto do formulário que acabou de ser enviado.
+    const input = event.currentTarget.querySelector('input[name="message[content]"]')
+
+    // Interrompe o comportamento caso o campo não seja encontrado
+    // ou a pergunta esteja vazia.
+    if (!input || !input.value.trim()) return
+
+    // Guarda a pergunta antes de limpar o campo.
+    const question = input.value.trim()
+
+    // Localiza a área onde as mensagens da conversa são exibidas.
+    const messages = this.windowTarget.querySelector(".chat-widget-messages")
+
+    if (messages) {
+    // Exibe imediatamente a pergunta enviada pelo usuário.
+    const userMessage = document.createElement("div")
+    userMessage.classList.add("chat-widget-user-message")
+    userMessage.dataset.chatWidgetTarget = "userMessage"
+    userMessage.textContent = question
+
+    messages.appendChild(userMessage)
+    // Exibe o feedback enquanto a IA processa a resposta.
+    const loading = document.createElement("div")
+    loading.classList.add("chat-widget-loading")
+    loading.textContent = "Estamos de olho..."
+
+    messages.appendChild(loading)
+    // Posiciona imediatamente a nova pergunta no início da área
+    // visível, sem precisar aguardar a resposta da IA.
+    this.scrollToLatestInteraction()
+    }
+  }
+
+  clearInput(event) {
+    // O Turbo já capturou os dados do formulário neste momento,
+   // portanto o campo pode ser limpo sem alterar a mensagem enviada ao Rails.
+    const input = event.currentTarget.querySelector('input[name="message[content]"]')
+
+    if (input) {
+    input.value = ""
+    }
   }
 
   messagesTargetConnected() {

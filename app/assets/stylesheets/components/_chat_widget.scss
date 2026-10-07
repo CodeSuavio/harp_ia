@@ -172,3 +172,39 @@
   color: $orange;
   font-size: 20px;
 }
+
+.chat-widget-loading {
+  // Cria um degradê que será visível somente dentro das letras.
+  background: linear-gradient(
+    90deg,
+    rgba($navy-blue, 0.35) 0%,
+    rgba($navy-blue, 0.35) 35%,
+    $navy-blue 50%,
+    rgba($navy-blue, 0.35) 65%,
+    rgba($navy-blue, 0.35) 100%
+  );
+
+  // Aumenta o fundo para que o degradê possa percorrer o texto.
+  background-size: 200% 100%;
+
+  // Faz o fundo aparecer apenas no formato das letras.
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  font-style: italic;
+  font-size: 0.95rem;
+
+  // Mantém a animação rodando enquanto aguardamos a resposta.
+  animation: chat-widget-shimmer 2.0s linear infinite;
+}
+
+@keyframes chat-widget-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
