@@ -16,4 +16,8 @@ module PainelHelper
   def vote_color(label)
     VOTE_COLORS.fetch(label, "bg-secondary")
   end
+
+  def poll_summary(poll)
+    poll.description.to_s.sub(/\s*Sim: \d+.*\z/m, "").strip
+  end
 end

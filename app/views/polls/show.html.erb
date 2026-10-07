@@ -1,3 +1,80 @@
-<div class="container">
-  <h1>Votação</h1>
-</div>
+<section class="container py-5">
+  <%= link_to "← Votações", polls_path, class: "small text-gold text-decoration-none fw-semibold" %>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-2">
+    <span class="data-label text-muted"><%= @poll.date&.strftime("%d/%m/%Y") %></span>
+    <% if @poll.label_comission.present? %>
+      <span class="panel-chip"><%= @poll.label_comission %></span>
+    <% end %>
+    <% if @poll.approval == true %>
+      <span class="badge text-bg-success">Aprovada</span>
+    <% elsif @poll.approval == false %>
+      <span class="badge text-bg-danger">Rejeitada</span>
+    <% end %>
+  </div>
+
+  <h1 class="h4 fw-bold text-navy mb-3"><%= poll_summary(@poll) %></h1>
+
+  <% if @poll.themes.any? %>
+    <div class="d-flex flex-wrap gap-2 mb-4">
+      <% @poll.themes.each do |theme| %>
+        <%= link_to theme.name, polls_path(theme: theme.id), class: "panel-chip" %>
+      <% end %>
+    </div>
+  <% end %>
+
+  <% if @breakdown.total.zero? %>
+    <p class="text-muted">Esta votação não tem votos nominais carregados.</p>
+  <% else %>
+    <div class="card inspiration-card bg-white mb-5">
+      <div class="card-body p-4">
+        <h2 class="h6 fw-bold text-navy mb-3">Resultado geral</h2>
+        <div class="progress rounded-pill mb-3" style="height: 12px;">
+          <% @breakdown.tally.each do |label, count| %>
+            <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
+                 style="width: <%= bar_percent(count, @breakdown.total) %>%"
+                 title="<%= label %>: <%= count %>"></div>
+          <% end %>
+        </div>
+        <div class="d-flex flex-wrap gap-3 small text-muted">
+          <% @breakdown.tally.each do |label, count| %>
+            <span><span class="badge <%= vote_color(label) %> me-1">&nbsp;&nbsp;</span><%= label %>: <%= count %></span>
+          <% end %>
+          <span class="fw-semibold text-navy">Total: <%= @breakdown.total %></span>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="h5 fw-bold text-navy mb-3">Como cada partido votou</h2>
+
+    <div class="card inspiration-card bg-white">
+      <div class="card-body p-4">
+        <% @breakdown.by_party.each do |row| %>
+          <div class="mb-3">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
+              <%= link_to row[:label], party_path(row[:party_id]), class: "fw-bold text-navy text-decoration-none" %>
+              <span class="small text-muted">
+                <%= row[:total] %> <%= row[:total] == 1 ? "deputado" : "deputados" %>
+                <% if row[:majority] %>
+                  <span class="badge <%= vote_color(row[:majority]) %> ms-1">Maioria: <%= row[:majority] %></span>
+                <% else %>
+                  <span class="badge text-bg-light border ms-1">Sem maioria</span>
+                <% end %>
+              </span>
+            </div>
+            <div class="progress rounded-pill" style="height: 8px;">
+              <% row[:votes].each do |label, count| %>
+                <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
+                     style="width: <%= bar_percent(count, row[:total]) %>%"
+                     title="<%= label %>: <%= count %>"></div>
+              <% end %>
+            </div>
+            <div class="small text-muted mt-1">
+              <%= row[:votes].map { |label, count| "#{label}: #{count}" }.join(" · ") %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</section>
