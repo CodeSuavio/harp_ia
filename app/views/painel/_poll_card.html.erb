@@ -1,5 +1,6 @@
 <% counts = DeputyOverview::VOTE_ORDER.filter_map { |label| [label, tallies[[poll.id, label]]] if tallies[[poll.id, label]].to_i.positive? } %>
 <% total = counts.sum { |_, count| count } %>
+<% unanimous = unanimous_vote(counts) %>
 
 <div class="col-12 col-xl-6">
   <%= link_to poll_path(poll), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
@@ -14,6 +15,9 @@
             <span class="badge text-bg-success">Aprovada</span>
           <% elsif poll.approval == false %>
             <span class="badge text-bg-danger">Rejeitada</span>
+          <% end %>
+          <% if unanimous %>
+            <span class="badge bg-navy">UNANIMIDADE: <%= unanimous %></span>
           <% end %>
         </div>
 

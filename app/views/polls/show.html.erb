@@ -11,6 +11,10 @@
     <% elsif @poll.approval == false %>
       <span class="badge text-bg-danger">Rejeitada</span>
     <% end %>
+    <% if @breakdown.unanimous %>
+      <span class="badge bg-navy">UNANIMIDADE: <%= @breakdown.unanimous %></span>
+      <%= info_tip("Todos os votos nominais foram iguais. O voto do presidente da sessão (Art. 17) não entra na conta.") %>
+    <% end %>
   </div>
 
   <h1 class="h4 fw-bold text-navy mb-3"><%= poll_summary(@poll) %></h1>
@@ -45,7 +49,10 @@
       </div>
     </div>
 
-    <h2 class="h5 fw-bold text-navy mb-3">Como cada partido votou</h2>
+    <h2 class="h5 fw-bold text-navy mb-3">
+      Como cada partido votou
+      <%= info_tip("Mostra como cada bancada votou de fato. A orientação oficial do partido e o fechamento de questão não estão nos dados carregados.") %>
+    </h2>
 
     <div class="card inspiration-card bg-white">
       <div class="card-body p-4">
@@ -55,10 +62,17 @@
               <%= link_to row[:label], party_path(row[:party_id]), class: "fw-bold text-navy text-decoration-none" %>
               <span class="small text-muted">
                 <%= row[:total] %> <%= row[:total] == 1 ? "deputado" : "deputados" %>
-                <% if row[:majority] %>
-                  <span class="badge <%= vote_color(row[:majority]) %> ms-1">Maioria: <%= row[:majority] %></span>
+                <% if row[:unanimous] %>
+                  <span class="badge bg-navy ms-1">Unânime: <%= row[:unanimous] %></span>
                 <% else %>
-                  <span class="badge text-bg-light border ms-1">Sem maioria</span>
+                  <% if row[:majority] %>
+                    <span class="badge <%= vote_color(row[:majority]) %> ms-1">Maioria: <%= row[:majority] %></span>
+                  <% else %>
+                    <span class="badge text-bg-light border ms-1">Sem maioria</span>
+                  <% end %>
+                  <% if row[:cohesion] %>
+                    <span class="ms-1"><%= row[:cohesion] %>% votaram igual</span>
+                  <% end %>
                 <% end %>
               </span>
             </div>

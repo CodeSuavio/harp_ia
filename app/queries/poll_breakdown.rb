@@ -1,4 +1,11 @@
 class PollBreakdown
+  NON_VOTING = "Artigo 17".freeze
+
+  def self.unanimous_label(pairs)
+    considered = pairs.reject { |label, _| label == NON_VOTING }
+    considered.first&.first if considered.size == 1
+  end
+
   def initialize(poll)
     @poll = poll
   end
@@ -14,6 +21,10 @@ class PollBreakdown
     tally.sum { |_, count| count }
   end
 
+  def unanimous
+    self.class.unanimous_label(tally)
+  end
+
   def by_party
     @by_party ||= counts.group_by { |(id, label, _), _| [id, label] }.map do |(id, label), rows|
       votes = rows.to_h { |(_, _, vote), count| [vote, count] }
@@ -24,12 +35,21 @@ class PollBreakdown
         label: label,
         votes: ordered,
         total: ordered.sum { |_, count| count },
-        majority: DeputyMetrics.majority_of(votes["Sim"].to_i, votes["Não"].to_i)
+        majority: DeputyMetrics.majority_of(votes["Sim"].to_i, votes["Não"].to_i),
+        unanimous: self.class.unanimous_label(ordered),
+        cohesion: cohesion(ordered)
       }
     end.sort_by { |row| [-row[:total], row[:label]] }
   end
 
   private
+
+  def cohesion(pairs)
+    considered = pairs.reject { |label, _| label == NON_VOTING }
+    total = considered.sum { |_, count| count }
+    top = considered.map { |_, count| count }.max.to_i
+    DeputyMetrics.percentage(top, total)
+  end
 
   def counts
     @counts ||= Vote.where(poll_id: @poll.id)
