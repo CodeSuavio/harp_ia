@@ -82,7 +82,7 @@
         <div class="list-group-item px-0 py-3">
           <div class="d-flex flex-wrap justify-content-between gap-2 mb-1">
             <%= link_to bill_path(bill), class: "fw-bold text-navy text-decoration-none", data: { turbo_frame: "_top" } do %>
-              Proposição <%= bill.bill_number %>/<%= bill.year %>
+              Proposição nº <%= bill.bill_number %>
             <% end %>
             <span class="small text-muted">
               <% if bill.submission_date %>

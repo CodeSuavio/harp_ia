@@ -1,0 +1,26 @@
+<% words = bill.keywords.to_s.split(";").map(&:strip).reject(&:blank?).first(3) %>
+
+<div class="col-12 col-xl-6">
+  <%= link_to bill_path(bill), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
+    <div class="card inspiration-card h-100 bg-white">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <span class="data-label text-muted"><%= bill.submission_date&.strftime("%d/%m/%Y") %></span>
+          <span class="panel-chip"><%= bill.party&.label %></span>
+        </div>
+
+        <p class="fw-semibold text-navy mb-3"><%= truncate(bill.summary, length: 220) %></p>
+
+        <p class="small text-muted mb-2">Autoria: <%= bill.deputy&.name %></p>
+
+        <% if bill.themes.any? || words.any? %>
+          <div class="d-flex flex-wrap gap-2">
+            <% bill.themes.each do |theme| %>
+              <span class="panel-chip"><%= theme.name %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

@@ -1,3 +1,51 @@
-<div class="container">
-  <h1>Projetos de lei</h1>
-</div>
+<%= render "painel/hero", title: "Projetos", highlight: "e propostas",
+      subtitle: "Projetos de lei, leis complementares, decretos legislativos e PECs apresentados em 2026." %>
+
+<section class="container search-container pb-5">
+  <%= turbo_frame_tag "bills_list", data: { turbo_action: "advance" } do %>
+    <%= form_with url: bills_path, method: :get,
+                  data: {
+                    controller: "filter-form",
+                    action: "input->filter-form#submit change->filter-form#submit"
+                  },
+                  class: "search-card shadow-lg bg-white rounded-4 p-3 mb-4" do %>
+      <div class="row g-2 align-items-center">
+        <div class="col-lg-4 panel-filter-col">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted">
+              <i class="fa-solid fa-magnifying-glass"></i>
+            </span>
+            <%= text_field_tag :q, params[:q],
+                  id: "bill-search",
+                  placeholder: "Assunto ou palavra-chave...",
+                  class: "form-control border-0 shadow-none bg-transparent fw-medium",
+                  data: { turbo_permanent: true } %>
+          </div>
+        </div>
+
+        <div class="col-6 col-lg panel-filter-col">
+          <%= select_tag :year,
+                options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+
+        <div class="col-6 col-lg panel-filter-col">
+          <%= select_tag :theme,
+                options_for_select(
+                  [["Todos os temas", ""]] + @themes.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] },
+                  params[:theme]
+                ),
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+
+        <div class="col-6 col-lg panel-filter-col">
+          <%= select_tag :party,
+                options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+    <% end %>
+
+    <%= render "list" %>
+  <% end %>
+</section>

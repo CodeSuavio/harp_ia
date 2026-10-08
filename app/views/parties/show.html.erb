@@ -76,7 +76,7 @@
           </div>
           <div class="small text-muted">
             <% if @average_cohesion %>média dos partidos: <%= @average_cohesion %>%<br><% end %>
-            <%= @cohesion[:polls] %> <%= "votação".pluralize(@cohesion[:polls]) %> ·
+            <%= @cohesion[:polls] %> <%= @cohesion[:polls] == 1 ? "votação" : "votações" %> ·
             <%= @cohesion[:unanimous] %> <%= @cohesion[:unanimous] == 1 ? "unânime" : "unânimes" %>
           </div>
         </div>
