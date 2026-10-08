@@ -95,7 +95,7 @@ class DeputiesController < ApplicationController
     authorize Deputy
 
     ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT)
-    @deputies = Deputy.includes(:party).where(id: ids).index_by { |d| d.id.to_s }.values_at(*ids).compact
+    @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by { |d| d.id.to_s }.values_at(*ids).compact
     @comparison = DeputyComparison.new(@deputies)
   end
 
