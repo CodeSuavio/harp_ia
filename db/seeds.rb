@@ -1,8 +1,44 @@
 require 'net/http'
 require 'uri'
 require 'json'
+require 'open-uri'
 
 $stdout.sync = true
+
+# Sobe as fotos para o Cloudinary em paralelo: uma por vez levaria horas.
+# photos: [[id, url_foto, nome], ...]. Foto que falhar (404, timeout) é
+# registrada e pulada, sem derrubar o seed.
+def upload_photos(model, photos, label)
+  Rails.application.eager_load! # nada de autoload dentro das threads
+
+  queue = Queue.new
+  photos.each { |photo| queue << photo }
+  attached = Concurrent::AtomicFixnum.new
+  failed = Concurrent::Array.new
+
+  # A thread principal já ocupa uma conexão do pool
+  threads = Array.new([ActiveRecord::Base.connection_pool.size - 1, 1].max) do
+    Thread.new do
+      while (photo = (queue.pop(true) rescue nil))
+        id, url, nome = photo
+        begin
+          ActiveRecord::Base.connection_pool.with_connection do
+            file = URI.parse(url).open(open_timeout: 10, read_timeout: 30)
+            model.find(id).photo.attach(io: file, filename: "#{nome.split.first}.jpg", content_type: "image/jpeg")
+          end
+          count = attached.increment
+          puts "#{count}/#{photos.size} fotos de #{label} enviadas" if (count % 250).zero?
+        rescue StandardError => e
+          failed << "#{nome} (#{url}): #{e.class} #{e.message}"
+        end
+      end
+    end
+  end
+  ActiveSupport::Dependencies.interlock.permit_concurrent_loads { threads.each(&:join) }
+
+  puts "fotos de #{label}: #{attached.value} enviadas, #{failed.size} falharam"
+  failed.each { |failure| puts "  falhou: #{failure}" }
+end
 
 # Propostas apontam para votações, partidos e deputados: saem antes
 ProposalPoll.destroy_all
@@ -46,11 +82,13 @@ response = Net::HTTP.get(url)
 
 data = JSON.parse(response)
 
+photos = []
+
 data.each do |dep|
   party = Party.find_by(label: dep["sigla_partido"])
   if party
   deputy = Deputy.new(
-    party: Party.find_by(label: dep["sigla_partido"]),
+    party: party,
     name: dep["nome"],
     cpf: dep["cpf"],
     json_id: dep["id"],
@@ -63,17 +101,14 @@ data.each do |dep|
     # office_room: dep[""],
     # office_
   )
-  if dep["url_foto"].present?
-    file = URI.parse(dep["url_foto"]).open
-    deputy.photo.attach(io: file, filename: "#{dep["nome"].split.first}.jpg", content_type: "image/jpg")
-    puts "foto adicionada"
-  end
   deputy.save!
+  photos << [deputy.id, dep["url_foto"], dep["nome"]] if dep["url_foto"].present?
   else
     puts "partido #{dep["sigla_partido"]} não encontrado"
   end
 end
 puts "importado #{Deputy.count} deputados"
+upload_photos(Deputy, photos, "deputados")
 
 
 
@@ -85,10 +120,12 @@ response = Net::HTTP.get(url)
 
 data = JSON.parse(response)
 
+photos = []
+
 data.each do |cara|
   party = Party.find_by(label: cara["sigla_partido"])
   if party
-    cara = Candidate.new(
+    candidate = Candidate.new(
       ballot_name: cara["nome_urna"],
       candidacy_status: cara["situacao_candidatura"],
       current_deputy_id: cara["deputado_id_atual"],
@@ -98,18 +135,19 @@ data.each do |cara|
       name: cara["nome"],
       number: cara["numero"].to_i,
       occupation: cara["ocupacao"],
-      party: Party.find_by(label: cara["sigla_partido"]),
-      #photo_file: ainda falta ver como fazer
+      party: party,
       race_color: cara["raca_cor"],
       #running_for_reelection: cara["concorre_a_reeleicao"] <= campo inteiro veio vazio
       state_label: cara["sigla_uf"],
     )
-    cara.save!
+    candidate.save!
+    photos << [candidate.id, cara["url_foto"], cara["nome"]] if cara["url_foto"].present?
   else
     puts "partido #{cara["sigla_partido"]} não encontrado"
   end
 end
 puts "importado #{Candidate.count} candidatos"
+upload_photos(Candidate, photos, "candidatos")
 
 
 URL_PRPOSICAO = "https://raw.githubusercontent.com/gabsgarcia/harpia-seed-data/refs/heads/main/db/seeds/proposicoes.json"

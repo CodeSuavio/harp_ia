@@ -40,6 +40,21 @@ class DeputyMetricsTest < ActiveSupport::TestCase
     end
   end
 
+  test "calcula a coesão do partido pelo índice de Rice" do
+    cohesion = DeputyMetrics.party_cohesion[parties(:mdb).id]
+    # first: 3 Sim → 1; second: 1 Sim × 2 Não → 1/3; média ≈ 0,67
+    assert_equal 67, cohesion[:pct]
+    assert_equal 2, cohesion[:polls]
+    assert_equal 1, cohesion[:unanimous]
+    assert_in_delta 1 / 3.0, cohesion[:by_poll][polls(:second).id][:index], 0.001
+    assert_equal({ sim: 1, nao: 2 }, cohesion[:by_poll][polls(:second).id].slice(:sim, :nao))
+  end
+
+  test "ignora votações com poucos votantes do partido" do
+    assert_nil DeputyMetrics.party_cohesion[parties(:pt).id] # só davi votou
+    assert_equal 67, DeputyMetrics.average_cohesion
+  end
+
   test "conta votações em que dois deputados votaram diferente" do
     assert_equal({ common: 2, different: 1, pct: 50 }, DeputyMetrics.divergence(deputies(:ana), deputies(:bruno)))
     assert_equal({ common: 0, different: 0, pct: nil }, DeputyMetrics.divergence(deputies(:ana), deputies(:davi)))

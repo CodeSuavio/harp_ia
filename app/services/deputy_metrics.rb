@@ -17,6 +17,10 @@ class DeputyMetrics
     "SE" => 45_933.10, "SP" => 42_837.33, "TO" => 45_297.48
   }.freeze
 
+  # Votos Sim/Não mínimos do partido numa votação para entrar na coesão
+  # (com 1 ou 2 votantes o índice é quase sempre 100% e não diz nada)
+  COHESION_MIN_VOTERS = 3
+
   def self.reference_year
     Expense.maximum(:year)
   end
@@ -120,6 +124,43 @@ class DeputyMetrics
         row.merge(against: row[:total] - row[:aligned], pct: percentage(row[:aligned], row[:total]))
       end.to_h
     end
+  end
+
+  # { party_id => { pct:, polls:, unanimous:, by_poll: { poll_id => { sim:, nao:, index: } } } }
+  #
+  # Coesão da bancada pelo índice de Rice: em cada votação, |Sim − Não| / (Sim + Não)
+  # (1 = todos votaram igual, 0 = racha meio a meio); o partido recebe a média em %.
+  # Só contam votações com pelo menos COHESION_MIN_VOTERS votos Sim/Não do partido.
+  def self.party_cohesion
+    cached("party-cohesion", Vote) do
+      by_party = Hash.new { |hash, key| hash[key] = Hash.new { |h, k| h[k] = { sim: 0, nao: 0 } } }
+      Vote.joins(:deputy).where(vote: Vote::DECISIVE)
+          .group("deputies.party_id", :poll_id, :vote).count
+          .each { |(party_id, poll_id, vote), count| by_party[party_id][poll_id][vote == "Sim" ? :sim : :nao] = count }
+
+      by_party.filter_map do |party_id, polls|
+        by_poll = polls.select { |_, row| row[:sim] + row[:nao] >= COHESION_MIN_VOTERS }
+        next if by_poll.empty?
+
+        by_poll = by_poll.transform_values do |row|
+          row.merge(index: (row[:sim] - row[:nao]).abs.to_f / (row[:sim] + row[:nao]))
+        end
+        indexes = by_poll.values.map { |row| row[:index] }
+
+        [party_id, {
+          pct: (indexes.sum / indexes.size * 100).round,
+          polls: indexes.size,
+          unanimous: indexes.count { |index| index == 1 },
+          by_poll: by_poll
+        }]
+      end.to_h
+    end
+  end
+
+  # Média simples da coesão dos partidos com dados (referência para cada partido)
+  def self.average_cohesion
+    values = party_cohesion.values.map { |row| row[:pct] }
+    values.empty? ? nil : (values.sum.to_f / values.size).round
   end
 
   # Quantas votações (com voto dos dois) cada par de deputados votou diferente
