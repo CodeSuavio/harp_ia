@@ -14,6 +14,11 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "span", text: /Compare até 3 deputados/
   end
 
+  test "link de comparação sai do turbo frame da listagem" do
+    get deputies_path
+    assert_select "turbo-frame#deputies_list a[data-deputy-compare-target=link][data-turbo-frame=_top]"
+  end
+
   test "busca por sigla do partido" do
     get deputies_path(q: "pt")
     assert_select "h3", count: 1, text: "Davi Rocha"

@@ -32,8 +32,8 @@
             <% @deputies.each do |deputy| %>
               <th class="border-0 text-center py-4" scope="col">
                 <%= link_to deputy_path(deputy), class: "text-decoration-none" do %>
-                  <% if deputy.photo_url.present? %>
-                    <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-2", alt: "" %>
+                  <% if deputy.photo.attached? %>
+                    <%= cl_image_tag deputy.photo.key, class: "candidate-photo rounded-circle mb-2", alt: "" %>
                   <% else %>
                     <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-2 mx-auto d-flex align-items-center justify-content-center">
                       <i class="fa-solid fa-user text-muted" aria-hidden="true"></i>
