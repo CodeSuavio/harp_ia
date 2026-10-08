@@ -128,7 +128,7 @@
                 <% end %>
                 <div class="text-muted">
                   <%= poll.label_comission %>
-                  <% if poll.bill %> · Proposição nº <%= poll.bill.bill_number %><% end %>
+                  <% if poll.bill %> · <%= proposicao_label(poll.bill) %><% end %>
                 </div>
               </td>
               <td class="text-center">

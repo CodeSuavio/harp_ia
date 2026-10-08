@@ -1,4 +1,5 @@
 class Deputy < ApplicationRecord
+  has_many :bill_authors, dependent: :delete_all
   belongs_to :party
 
   has_many :expenses, dependent: :destroy

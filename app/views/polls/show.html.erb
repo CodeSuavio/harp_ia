@@ -32,6 +32,7 @@
   <% else %>
     <div class="card inspiration-card bg-white mb-5">
       <div class="card-body p-4">
+<%= render "polls/bills", poll: @poll %>
         <h2 class="h6 fw-bold text-navy mb-3">Resultado geral</h2>
         <div class="progress rounded-pill mb-3" style="height: 12px;">
           <% @breakdown.tally.each do |label, count| %>

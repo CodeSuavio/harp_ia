@@ -1,19 +1,27 @@
-<% words = bill.keywords.to_s.split(";").map(&:strip).reject(&:blank?).first(3) %>
+<% author = bill.deputy || bill.authors.first %>
+<% others = bill.authors.size - 1 %>
 
 <div class="col-12 col-xl-6">
   <%= link_to bill_path(bill), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
     <div class="card inspiration-card h-100 bg-white">
       <div class="card-body p-4">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <span class="fw-bold text-navy"><%= proposicao_label(bill) %></span>
           <span class="data-label text-muted"><%= bill.submission_date&.strftime("%d/%m/%Y") %></span>
-          <span class="panel-chip"><%= bill.party&.label %></span>
+          <% if bill.party %>
+            <span class="panel-chip"><%= bill.party.label %></span>
+          <% end %>
         </div>
 
         <p class="fw-semibold text-navy mb-3"><%= truncate(bill.summary, length: 220) %></p>
 
-        <p class="small text-muted mb-2">Autoria: <%= bill.deputy&.name %></p>
+        <% if author %>
+          <p class="small text-muted mb-2">
+            Autoria: <%= author.name %><% if others.positive? %> e mais <%= others %><% end %>
+          </p>
+        <% end %>
 
-        <% if bill.themes.any? || words.any? %>
+        <% if bill.themes.any? %>
           <div class="d-flex flex-wrap gap-2">
             <% bill.themes.each do |theme| %>
               <span class="panel-chip"><%= theme.name %></span>

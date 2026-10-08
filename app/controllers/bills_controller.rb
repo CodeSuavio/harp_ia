@@ -2,13 +2,10 @@ class BillsController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :show]
 
   PER_PAGE = 20
+  NUMBER_QUERY = %r{\A\s*(PL|PLP|PEC|PDL|PRC|MPV)\s*(?:n[ºo°.]?\s*)?([\d.]+)(?:\s*/\s*(\d{4}))?\s*\z}i
 
   def index
-    base = policy_scope(Bill)
-    if params[:q].present?
-      like = "%#{params[:q].strip}%"
-      base = base.where("bills.summary ILIKE :q OR bills.keywords ILIKE :q", q: like)
-    end
+    base = search(policy_scope(Bill))
 
     filters = {
       year:  params[:year].presence,
@@ -26,23 +23,35 @@ class BillsController < ApplicationController
     @page = 1 if @page < 1
     @page = @total_pages if @page > @total_pages
 
-    @bills = scope.includes(:deputy, :party, :themes)
+    @bills = scope.includes(:deputy, :party, :themes, :authors)
                   .order(submission_date: :desc, id: :desc)
                   .offset((@page - 1) * PER_PAGE)
                   .limit(PER_PAGE)
                   .to_a
 
-    @years = Bill.distinct.pluck(:year).sort.reverse
+    @years = Bill.distinct.pluck(:year).compact.sort.reverse
     @parties = Party.where(id: Bill.select(:party_id)).order(:label)
     @themes = Theme.order(:name).select { |t| @theme_counts[t.id].to_i.positive? || params[:theme].to_s == t.id.to_s }
   end
 
   def show
-    @bill = Bill.includes(:deputy, :party, :themes).find(params[:id])
+    @bill = Bill.includes(:deputy, :party, :themes, :authors).find(params[:id])
     authorize @bill
+    @votings = @bill.votings.order(date: :desc)
   end
 
   private
+
+  def search(scope)
+    return scope if params[:q].blank?
+
+    if (match = params[:q].match(NUMBER_QUERY))
+      found = scope.where(bill_type: match[1].upcase, number: match[2].delete(".").to_i)
+      return match[3] ? found.where(year: match[3].to_i) : found
+    end
+
+    scope.where("bills.summary ILIKE :q OR bills.keywords ILIKE :q", q: "%#{params[:q].strip}%")
+  end
 
   def apply(scope, filters)
     filters.reduce(scope) do |current, (key, value)|
