@@ -8,4 +8,8 @@ class DeputyPolicy < ApplicationPolicy
   def show?
     true
   end
+
+  def compare?
+    true
+  end
 end

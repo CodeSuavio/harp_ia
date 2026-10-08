@@ -1,0 +1,50 @@
+<% counts = DeputyOverview::VOTE_ORDER.filter_map { |label| [label, tallies[[poll.id, label]]] if tallies[[poll.id, label]].to_i.positive? } %>
+<% total = counts.sum { |_, count| count } %>
+<% unanimous = unanimous_vote(counts) %>
+
+<div class="col-12 col-xl-6">
+  <%= link_to poll_path(poll), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
+    <div class="card inspiration-card h-100 bg-white">
+      <div class="card-body p-4">
+        <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+          <span class="data-label text-muted"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+          <% if poll.label_comission.present? %>
+            <span class="panel-chip"><%= poll.label_comission %></span>
+          <% end %>
+          <%= poll_result_badge(poll) %>
+          <% if unanimous %>
+            <span class="badge bg-navy">UNANIMIDADE: <%= unanimous %></span>
+          <% end %>
+        </div>
+
+        <p class="fw-semibold text-navy mb-3"><%= truncate(poll_summary(poll), length: 220) %></p>
+        <% if poll.bills.any? %><p class="small text-muted mb-2">Projeto: <%= poll.bills.map { |bill| proposicao_label(bill) }.join(", ") %></p><% end %>
+
+        <% if total.positive? %>
+          <div class="progress rounded-pill mb-2" style="height: 8px;">
+            <% counts.each do |label, count| %>
+              <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
+                   style="width: <%= bar_percent(count, total) %>%"
+                   title="<%= label %>: <%= count %>"></div>
+            <% end %>
+          </div>
+          <div class="d-flex flex-wrap gap-3 small text-muted mb-2">
+            <% counts.each do |label, count| %>
+              <span><span class="badge <%= vote_color(label) %> me-1">&nbsp;&nbsp;</span><%= label %>: <%= count %></span>
+            <% end %>
+          </div>
+        <% else %>
+          <p class="data-label text-muted mb-2">Sem votos nominais carregados</p>
+        <% end %>
+
+        <% if poll.themes.any? %>
+          <div class="d-flex flex-wrap gap-2">
+            <% poll.themes.each do |theme| %>
+              <span class="panel-chip"><%= theme.name %></span>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+</div>

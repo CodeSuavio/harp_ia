@@ -1,0 +1,13 @@
+<% if user_signed_in? %>
+  <%= button_to chats_path,
+        method: :post,
+        params: { message: { content: question } },
+        form: { data: { turbo: false } },
+        class: "btn btn-gold rounded-pill px-4 fw-bold" do %>
+    <i class="fa-solid fa-robot me-2"></i>Perguntar à Harpia
+  <% end %>
+<% else %>
+  <%= link_to new_user_session_path, class: "btn btn-outline-secondary rounded-pill px-4" do %>
+    <i class="fa-solid fa-robot me-2"></i>Entre para perguntar à Harpia
+  <% end %>
+<% end %>

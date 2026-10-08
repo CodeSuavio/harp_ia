@@ -1,0 +1,7 @@
+mdb_transparencia:
+  source_kind: programa_partido
+  party: mdb
+  theme: transparencia
+  title: Mais transparência nos gastos públicos
+  excerpt: Publicar todos os gastos em formato aberto.
+  source_url: https://example.com/programa-mdb

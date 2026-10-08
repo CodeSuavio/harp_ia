@@ -1,0 +1,118 @@
+<div
+  class="chat-widget"
+  data-controller="chat-widget">
+
+  <!-- Botão flutuante que abre o chatbot -->
+  <button
+    class="chat-widget-button"
+    type="button"
+    aria-label="Abrir assistente Estamos de Olho"
+    data-chat-widget-target="button"
+    data-action="click->chat-widget#open">
+
+    <%= image_tag "chatbot-logo.png",
+        class: "chat-widget-logo",
+        alt: "" %>
+  </button>
+
+  <!-- Janela do chatbot -->
+  <div
+    class="chat-widget-window"
+    data-chat-widget-target="window">
+
+    <!-- Cabeçalho -->
+    <div class="chat-widget-header">
+      <div class="chat-widget-title">
+
+        <%= image_tag "chatbot-logo.png",
+            class: "chat-widget-header-logo",
+            alt: "" %>
+
+        <span>Estamos de Olho</span>
+      </div>
+
+      <button
+        class="chat-widget-close"
+        type="button"
+        aria-label="Fechar assistente"
+        data-action="click->chat-widget#close">
+        ×
+      </button>
+    </div>
+
+    <!--
+      O Turbo Frame contém tanto as mensagens quanto o formulário.
+
+      Antes da primeira pergunta ainda não existe um Chat,
+      portanto o formulário envia para POST /chats.
+    -->
+    <%= turbo_frame_tag "chat_widget_messages" do %>
+
+      <!-- Área das mensagens -->
+      <% if user_signed_in? %>
+        <div class="chat-widget-messages">
+          <p>Olá! O que você gostaria de saber?</p>
+        </div>
+
+        <!-- Formulário da primeira pergunta
+          Usuários autenticados podem iniciar uma nova conversa
+          diretamente pelo widget.-->
+        <%= form_with url: chats_path,
+              method: :post,
+              class: "chat-widget-input",
+              data: {
+                turbo_frame: "chat_widget_messages",
+                action: "submit->chat-widget#showLoading turbo:submit-start->chat-widget#clearInput"
+              } do %>
+
+          <%= text_field_tag "message[content]",
+            nil,
+            placeholder: "Pergunte à Harpia...",
+            autocomplete: "off" %>
+
+          <%= button_tag type: "submit" do %>
+          ➤
+          <% end %>
+
+        <% end %>
+
+      <% else %>
+
+        <!-- Estado do widget para usuários não autenticados -->
+
+        <div class="chat-widget-login-required">
+           <div class="chat-widget-login-icon">
+            <i class="fa-solid fa-comments text-gold"></i>
+          </div>
+
+          <h3>Olá!</h3>
+
+          <p class="chat-widget-login-question">
+            O que você gostaria de saber?
+          </p>
+
+          <div class="chat-widget-login-divider"></div>
+          <div class="chat-widget-login-lock">
+            <i class="fa-solid fa-lock"></i>
+          </div>
+
+          <p class="chat-widget-login-message">
+            Entre na sua conta para conversar com a Harpia.
+          </p>
+
+          <%= link_to new_user_session_path,
+              class: "chat-widget-login-button",
+              data: { turbo_frame: "_top" } do %>
+            Entrar
+            <i class="fa-solid fa-arrow-right"></i>
+          <% end %>
+        </div>
+
+
+      <% end %> <!-- fecha if user_signed_in? -->
+
+    <% end %>   <!-- fecha turbo_frame_tag -->
+
+  </div>
+
+</div>

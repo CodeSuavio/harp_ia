@@ -1,22 +1,158 @@
-<div class="container my-4">
-  <%= link_to "← Partidos", parties_path %>
+<div class="container py-5">
+  <%= link_to "← Partidos", parties_path, class: "small text-decoration-none" %>
 
-  <h1 class="mt-3"><%= @party.label %></h1>
-  <p class="lead"><%= @party.name %></p>
-  <% if @party.url.present? %>
-    <p><%= link_to "Site oficial", @party.url, target: "_blank", rel: "noopener" %></p>
+  <div class="d-flex flex-wrap align-items-baseline gap-3 mt-3 mb-1">
+    <h1 class="h2 mb-0"><%= @party.label %></h1>
+    <% if @party.number.present? %>
+      <span class="badge badge-wrap text-bg-secondary fs-6">nº <%= @party.number %></span>
+    <% end %>
+  </div>
+
+  <p class="lead text-muted"><%= @party.name %></p>
+
+  <% if @party.former_labels.present? %>
+    <p class="small text-muted">
+      Siglas anteriores: <%= @party.former_labels.split.join(", ") %>
+    </p>
   <% end %>
 
-  <h2 class="h4 mt-4">Deputados</h2>
-  <% if @party.deputies.empty? %>
-    <p class="text-muted">Nenhum deputado deste partido.</p>
-  <% else %>
-    <ul class="list-group">
-      <% @party.deputies.each do |deputy| %>
-        <li class="list-group-item">
-          <%= link_to deputy.name, deputy_path(deputy) %> · <%= deputy.state_label %>
-        </li>
+  <div class="row g-3 my-4">
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0"><%= @deputies.size %></div>
+        <div class="small text-muted">na Câmara</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0"><%= @candidate_count %></div>
+        <div class="small text-muted">candidatos 2026</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0">
+          <%= @party.registered_on.present? ? @party.registered_on.year : "—" %>
+        </div>
+        <div class="small text-muted">registro no TSE</div>
+      </div>
+    </div>
+
+    <div class="col-6 col-md-3">
+      <div class="border rounded-3 p-3 text-center">
+        <div class="h4 mb-0"><%= @state_bench.size %></div>
+        <div class="small text-muted">
+          <%= "estado".pluralize(@state_bench.size) %> com bancada
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap gap-2 mb-5">
+    <% if @party.url.present? %>
+      <%= link_to "Site oficial", @party.url, target: "_blank", rel: "noopener",
+            class: "btn btn-outline-secondary btn-sm" %>
+    <% end %>
+
+    <% if @candidate_count.positive? %>
+      <%= link_to "Ver candidatos deste partido", candidates_path(party: @party.id),
+            class: "btn btn-primary btn-sm" %>
+    <% end %>
+  </div>
+
+  <h2 class="h5 mb-3">Coesão nas votações</h2>
+
+  <div class="border rounded-3 p-4 mb-5">
+    <% if @cohesion %>
+      <div class="row g-4 align-items-center">
+        <div class="col-md-4">
+          <div class="display-6 fw-bold mb-0"><%= @cohesion[:pct] %>%</div>
+          <div class="progress my-2" style="height: 8px;" role="progressbar"
+               aria-valuenow="<%= @cohesion[:pct] %>" aria-valuemin="0" aria-valuemax="100"
+               aria-label="Coesão da bancada">
+            <div class="progress-bar bg-gold" style="width: <%= @cohesion[:pct] %>%"></div>
+          </div>
+          <div class="small text-muted">
+            <% if @average_cohesion %>média dos partidos: <%= @average_cohesion %>%<br><% end %>
+            <%= @cohesion[:polls] %> <%= @cohesion[:polls] == 1 ? "votação" : "votações" %> ·
+            <%= @cohesion[:unanimous] %> <%= @cohesion[:unanimous] == 1 ? "unânime" : "unânimes" %>
+          </div>
+        </div>
+
+        <div class="col-md-8 small text-muted">
+          Em cada votação, compara os votos Sim e Não dos deputados do partido:
+          100% quando todos votam igual e 0% quando a bancada racha ao meio.
+          O valor é a média das votações com pelo menos <%= DeputyMetrics::COHESION_MIN_VOTERS %> votos Sim/Não do partido.
+          Usa o partido atual de cada deputado, então quem trocou de legenda conta no partido novo.
+        </div>
+      </div>
+
+      <% if @divided_polls.any? %>
+        <h3 class="h6 fw-bold mt-4 mb-2">Votações em que a bancada mais se dividiu</h3>
+        <ul class="list-group list-group-flush">
+          <% @divided_polls.each do |poll, row| %>
+            <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <span class="text-muted small text-nowrap me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+                <%= link_to poll_summary(poll).truncate(110), poll_path(poll), class: "text-reset" %>
+              </div>
+              <span class="small text-nowrap flex-shrink-0">
+                <span class="text-success fw-medium"><%= row[:sim] %> Sim</span> ×
+                <span class="text-danger fw-medium"><%= row[:nao] %> Não</span>
+              </span>
+            </li>
+          <% end %>
+        </ul>
       <% end %>
-    </ul>
+    <% else %>
+      <p class="text-muted mb-0">
+        Bancada pequena demais ou sem votações registradas para calcular a coesão.
+      </p>
+    <% end %>
+  </div>
+
+  <h2 class="h5 mb-3">Bancada na Câmara</h2>
+
+  <% if @deputies.empty? %>
+    <p class="text-muted">
+      Este partido não tem deputado federal em exercício.
+      <% if @candidate_count.positive? %>
+        Ele aparece aqui porque tem <%= @candidate_count %>
+        <%= "candidato".pluralize(@candidate_count) %> em 2026.
+      <% end %>
+    </p>
+  <% else %>
+    <p class="small text-muted mb-3">
+      <% @state_bench.first(8).each do |state, count| %>
+        <span class="badge badge-wrap text-bg-light border me-1"><%= state %> <%= count %></span>
+      <% end %>
+    </p>
+
+    <div class="row g-4">
+      <% @deputies.each do |deputy| %>
+        <div class="col-sm-6 col-lg-3">
+          <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset" do %>
+            <div class="card candidate-card h-100 text-center border-0 shadow-sm">
+              <div class="card-body">
+                <% if deputy.photo.attached? %>
+                  <%= cl_image_tag deputy.photo.key, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
+                <% end %>
+                <h3 class="h6 mb-1"><%= deputy.name %></h3>
+                <p class="text-brand small fw-bold text-uppercase mb-0"><%= deputy.state_label %></p>
+                <% if (alignment = @alignment.dig(deputy.id, :pct)) %>
+                  <span class="badge badge-wrap text-bg-light border mt-2"
+                        title="Votos Sim/Não iguais aos da maioria do partido">
+                    alinhamento <%= alignment %>%
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+>>>>>>> master
   <% end %>
 </div>

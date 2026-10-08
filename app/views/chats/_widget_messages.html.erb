@@ -1,0 +1,56 @@
+<div
+  class="chat-widget-messages"
+  data-chat-widget-target="messages">
+
+  <% @chat.messages.order(:created_at).each do |message| %>
+
+    <% if message.role == "user" %>
+
+      <!--
+        Mensagem enviada pelo usuário.
+        O target "userMessage" permite que o Stimulus encontre
+        a pergunta mais recente e posicione o scroll nela.
+      -->
+      <div
+        class="chat-widget-user-message"
+        data-chat-widget-target="userMessage">
+        <%= message.content %>
+      </div>
+
+    <% else %>
+
+      <!-- Resposta gerada pela Harpia -->
+      <div class="chat-widget-assistant-message">
+        <%= render_markdown(message.content) %>
+      </div>
+
+    <% end %>
+
+  <% end %>
+
+</div>
+
+<!--
+  Depois da primeira pergunta, o Chat já existe.
+
+  As próximas mensagens são enviadas para esse mesmo Chat,
+  permitindo continuar a conversa sem criar um novo Chat.
+-->
+<%= form_with url: chat_messages_path(@chat),
+              method: :post,
+              class: "chat-widget-input",
+              data: {
+                turbo_frame: "chat_widget_messages",
+                action: "submit->chat-widget#showLoading turbo:submit-start->chat-widget#clearInput"
+              } do %>
+
+  <%= text_field_tag "message[content]",
+      nil,
+      placeholder: "Pergunte à Harpia...",
+      autocomplete: "off" %>
+
+  <%= button_tag type: "submit" do %>
+    ➤
+  <% end %>
+
+<% end %>

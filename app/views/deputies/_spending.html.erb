@@ -1,0 +1,91 @@
+<% max_year = overview.spent_by_year.map(&:last).max %>
+<% types = overview.spent_by_type.first(6) %>
+<% max_type = types.map(&:last).max %>
+<% suppliers = overview.top_suppliers %>
+
+<section class="mt-5">
+  <h2 class="h5 mb-3">Gastos da cota parlamentar</h2>
+
+  <% if overview.expense_count.zero? %>
+    <p class="text-muted">Nenhum gasto registrado.</p>
+  <% else %>
+    <div class="row g-3 mb-4">
+      <div class="col-6 col-md-4">
+        <div class="border rounded-3 p-3 text-center">
+          <div class="h4 mb-0"><%= brl(overview.total_spent) %></div>
+          <div class="small text-muted">total gasto (todos os anos)</div>
+        </div>
+      </div>
+
+      <div class="col-6 col-md-4">
+        <div class="border rounded-3 p-3 text-center">
+          <div class="h4 mb-0"><%= overview.expense_count %></div>
+          <div class="small text-muted">despesas</div>
+        </div>
+      </div>
+
+      <div class="col-12 col-md-4">
+        <div class="border rounded-3 p-3 text-center">
+          <div class="h4 mb-0"><%= brl(overview.average_expense) %></div>
+          <div class="small text-muted">valor médio por despesa</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-6">
+        <h3 class="h6 text-muted mb-3">Por ano</h3>
+        <% overview.spent_by_year.each do |year, total| %>
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small">
+              <span><%= year %></span>
+              <span><%= brl(total) %></span>
+            </div>
+            <div class="progress" style="height: .6rem;">
+              <div class="progress-bar" role="progressbar" style="width: <%= bar_percent(total, max_year) %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <div class="col-md-6">
+        <h3 class="h6 text-muted mb-3">Principais tipos de gasto</h3>
+        <% types.each do |type, total| %>
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small gap-3">
+              <span title="<%= type %>"><%= truncate(type, length: 38) %></span>
+              <span class="text-nowrap"><%= brl(total) %></span>
+            </div>
+            <div class="progress" style="height: .6rem;">
+              <div class="progress-bar bg-secondary" role="progressbar" style="width: <%= bar_percent(total, max_type) %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+
+    <% if suppliers.any? %>
+      <h3 class="h6 text-muted mt-4 mb-3">Maiores fornecedores</h3>
+      <div class="table-responsive">
+        <table class="table table-sm align-middle">
+          <thead>
+            <tr>
+              <th>Fornecedor</th>
+              <th class="text-end">Despesas</th>
+              <th class="text-end">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% suppliers.each do |name, total, count| %>
+              <tr>
+                <td><%= name %></td>
+                <td class="text-end"><%= count %></td>
+                <td class="text-end text-nowrap"><%= brl(total) %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    <% end %>
+  <% end %>
+</section>

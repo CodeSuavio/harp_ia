@@ -1,0 +1,37 @@
+<% chips = {
+     "q"      => params[:q].presence,
+     "state"  => params[:state].presence,
+     "party"  => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?),
+     "gender" => params[:gender].presence&.capitalize
+   }.compact %>
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-4">
+  <span class="data-label text-muted me-2">
+    <%= @total %> <%= "candidato".pluralize(@total) %>
+  </span>
+
+  <% chips.each do |key, label| %>
+    <%= link_to candidates_path(request.query_parameters.except(key, "page")),
+          data: { turbo_frame: "_top" },
+          class: "panel-chip" do %>
+      <%= label %> &times;
+    <% end %>
+  <% end %>
+
+  <% if chips.any? %>
+    <%= link_to "Limpar tudo", candidates_path,
+          data: { turbo_frame: "_top" },
+          class: "small text-gold text-decoration-none fw-semibold ms-1" %>
+  <% end %>
+</div>
+
+<% if @candidates.empty? %>
+  <%= render "painel/empty_state" %>
+<% else %>
+  <div class="row g-4">
+    <%= render partial: "painel/candidate_card", collection: @candidates, as: :candidate,
+               locals: { metrics: @metrics, deputies: @deputies_by_json_id } %>
+  </div>
+
+  <%= render "painel/pagination", path_helper: :candidates_path %>
+<% end %>

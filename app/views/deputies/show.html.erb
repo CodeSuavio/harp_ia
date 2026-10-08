@@ -1,3 +1,79 @@
-<div class="container">
-  <h1>Deputado</h1>
+<% page_title = "#{@deputy.name} (#{[@deputy.party&.label, @deputy.state_label].compact.join('-')})" %>
+<% page_description = "Gastos, projetos de lei e votações de #{@deputy.name} na Câmara dos Deputados." %>
+<% content_for :title, "#{page_title} · Harpia" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= page_description %>">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="<%= page_title %>">
+  <meta property="og:description" content="<%= page_description %>">
+  <meta property="og:url" content="<%= deputy_url(@deputy) %>">
+  <% if @deputy.photo_url.present? %>
+    <meta property="og:image" content="<%= @deputy.photo_url %>">
+  <% end %>
+  <meta name="twitter:card" content="summary">
+<% end %>
+
+<div class="container py-5">
+  <!-- Botão Voltar -->
+  <div class="mb-4">
+    <%= link_to deputies_path, class: "text-decoration-none text-muted fw-medium transition" do %>
+      <i class="fa-solid fa-arrow-left me-2"></i> Voltar para o Diretório
+    <% end %>
+  </div>
+
+  <!-- Cabeçalho do Perfil -->
+  <div class="card inspiration-card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4">
+      <% if @deputy.photo.attached? %>
+        <%= cl_image_tag @deputy.photo.key, class: "deputy-avatar rounded-4 shadow-sm object-fit-cover", alt: @deputy.name %>
+      <% else %>
+        <div class="deputy-avatar rounded-4 bg-light d-flex align-items-center justify-content-center shadow-sm">
+          <i class="fa-solid fa-user-tie fa-3x text-gold"></i>
+        </div>
+      <% end %>
+
+      <div class="flex-grow-1 text-center text-md-start">
+        <h1 class="h2 fw-bold text-navy mb-3"><%= @deputy.name %></h1>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
+          <% if @deputy.party %>
+            <%= link_to party_path(@deputy.party), class: "badge badge-wrap bg-navy text-white px-3 py-2 fw-medium tracking-wider text-decoration-none" do %>
+              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %>
+            <% end %>
+          <% end %>
+          <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
+            <i class="fa-solid fa-location-dot me-1 text-gold"></i> <%= @deputy.state_label %>
+          </div>
+          <% if @candidate&.reelection? %>
+            <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
+              <i class="fa-solid fa-check-to-slot me-1 text-gold"></i> Candidato à reeleição
+            </div>
+          <% end %>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+          <%= link_to "https://www.camara.leg.br/deputados/#{@deputy.json_id}", target: "_blank", rel: "noopener",
+                class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
+            <i class="fa-solid fa-landmark me-2 text-gold"></i> Página na Câmara
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <%= turbo_frame_tag "deputy_tab", class: "d-block", data: { turbo_action: "advance" } do %>
+    <!-- Abas -->
+    <ul class="nav nav-pills deputy-tabs flex-nowrap overflow-auto mb-4 gap-2">
+      <% DeputiesController::TABS.each do |key, label| %>
+        <li class="nav-item">
+          <%= link_to label, deputy_tab_path(@deputy, key),
+                class: "nav-link rounded-pill text-nowrap #{'active' if key == @tab}",
+                aria: { current: ("page" if key == @tab) },
+                data: { turbo_frame: "deputy_tab" } %>
+        </li>
+      <% end %>
+    </ul>
+
+    <%= render "deputies/tabs/#{@tab}" %>
+  <% end %>
 </div>

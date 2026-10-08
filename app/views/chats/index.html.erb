@@ -1,0 +1,64 @@
+<div class="chats-wrapper">
+
+  <!-- ========================================== -->
+  <!-- HERO SECTION: CABEÇALHO DOS CHATS -->
+  <!-- ========================================== -->
+  <section
+    class="hero-section position-relative overflow-hidden d-flex align-items-center"
+    style="padding: 5rem 0 7rem 0;">
+
+    <div class="hero-glow"></div>
+
+    <div class="container hero-content position-relative z-1 text-center">
+
+      <div class="mb-3">
+        <i class="fa-solid fa-robot fa-2x text-gold"></i>
+      </div>
+
+      <h1 class="display-5 fw-bolder text-white mb-3 letter-spacing-tight">
+        Meus <span class="text-gold">Chats</span>
+      </h1>
+
+      <p
+        class="lead text-white-50 mx-auto mb-4"
+        style="max-width: 500px;">
+
+        O seu histórico de investigações e conversas com a inteligência artificial da Harpia.
+
+      </p>
+
+      <!-- Botão Novo Chat Principal -->
+      <%= button_to chats_path,
+              method: :post,
+              class: "btn btn-auth rounded-pill px-4 py-2 fw-bold text-uppercase d-inline-flex align-items-center shadow-sm",
+              data: { turbo_submits_with: "Criando..." } do %>
+
+        <i class="fa-solid fa-plus me-2"></i>
+        Novo Chat
+
+      <% end %>
+
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- GRID DE CONVERSAS E ESTADO VAZIO -->
+  <!-- ========================================== -->
+  <section
+    class="container position-relative"
+    style="margin-top: -3.5rem; z-index: 10; margin-bottom: 5rem;">
+
+    <!--
+      Esta div funciona como alvo para o Turbo.
+
+      Quando um novo chat for criado pelo widget,
+      poderemos atualizar apenas esta área da página,
+      sem precisar fazer refresh completo.
+    -->
+    <div id="chats_list">
+      <%= render "chats_list", chats: @chats %>
+    </div>
+
+  </section>
+
+</div>

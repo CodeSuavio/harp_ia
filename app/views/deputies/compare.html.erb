@@ -1,0 +1,92 @@
+<% content_for :title, "Comparar deputados · Harpia" %>
+
+<div class="container py-5">
+  <div class="mb-4">
+    <%= link_to deputies_path, class: "text-decoration-none text-muted fw-medium transition" do %>
+      <i class="fa-solid fa-arrow-left me-2"></i> Voltar para o Diretório
+    <% end %>
+  </div>
+
+  <h1 class="h4 fw-bold text-navy mb-4">
+    <i class="fa-solid fa-scale-balanced text-gold me-2"></i> Comparar deputados
+  </h1>
+
+  <% if @deputies.size < 2 %>
+    <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
+      <p class="text-muted mb-3">Selecione de 2 a <%= DeputiesController::COMPARE_LIMIT %> deputados na listagem para compará-los.</p>
+      <%= link_to "Ir para a listagem", deputies_path, class: "btn btn-auth rounded-pill px-4 mx-auto" %>
+    </div>
+  <% else %>
+    <p class="small text-muted mb-3">
+      <span class="compare-legend compare-best me-1" aria-hidden="true"></span> melhor da linha
+      <span class="compare-legend compare-worst ms-3 me-1" aria-hidden="true"></span> pior da linha.
+      Gastos menores, mais participação, mais projetos e mais coerência contam como melhor.
+      Alinhamento e votos contra o partido não têm lado melhor.
+    </p>
+
+    <div class="table-responsive card border-0 shadow-sm rounded-4 bg-white mb-4">
+      <table class="table align-middle mb-0 compare-table">
+        <thead>
+          <tr>
+            <th class="border-0"><span class="visually-hidden">Indicador</span></th>
+            <% @deputies.each do |deputy| %>
+              <th class="border-0 text-center py-4" scope="col">
+                <%= link_to deputy_path(deputy), class: "text-decoration-none" do %>
+                  <% if deputy.photo_url.present? %>
+                    <%= image_tag deputy.photo_url, class: "candidate-photo rounded-circle mb-2", alt: "" %>
+                  <% else %>
+                    <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-2 mx-auto d-flex align-items-center justify-content-center">
+                      <i class="fa-solid fa-user text-muted" aria-hidden="true"></i>
+                    </div>
+                  <% end %>
+                  <div class="text-navy fw-bold"><%= deputy.name %></div>
+                  <div class="small text-brand fw-bold text-uppercase"><%= deputy.party&.label %> · <%= deputy.state_label %></div>
+                <% end %>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @comparison.rows.each do |row| %>
+            <tr>
+              <th scope="row" class="text-muted small text-uppercase tracking-wider ps-4">
+                <%= row.label %><%= info_tip(row.info) if row.info %>
+              </th>
+              <% @deputies.each do |deputy| %>
+                <% cell = row.values[deputy.id] %>
+                <% mark = @comparison.highlight(row, deputy) %>
+                <td class="text-center fw-medium text-navy <%= "compare-#{mark}" if mark %>">
+                  <%= compare_value(row, cell) %>
+                  <% if cell[:detail] %><span class="d-block small text-muted fw-normal"><%= cell[:detail] %></span><% end %>
+                  <% if mark %><span class="visually-hidden">(<%= mark == :best ? "melhor" : "pior" %> da linha)</span><% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Divergência entre eles -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+      <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">
+        Como votaram entre si
+        <%= info_tip("Votações em que os dois registraram voto (qualquer tipo) e quantas tiveram votos diferentes.") %>
+      </h2>
+      <ul class="list-unstyled mb-0">
+        <% @comparison.divergences.each do |a, b, divergence| %>
+          <li class="mb-2">
+            <strong class="text-navy"><%= a.name %></strong> e <strong class="text-navy"><%= b.name %></strong>
+            <% if divergence[:common].positive? %>
+              votaram diferente em <strong><%= divergence[:different] %></strong> de <%= divergence[:common] %>
+              <%= divergence[:common] == 1 ? "votação" : "votações" %> em comum
+              <span class="text-muted">(<%= divergence[:pct] %>%)</span>
+            <% else %>
+              <span class="text-muted">não têm votações em comum registradas</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+</div>

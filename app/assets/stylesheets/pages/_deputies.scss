@@ -1,0 +1,117 @@
+// Perfil e listagem de deputados
+
+.deputy-avatar {
+  width: 160px;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.deputy-tabs {
+  scrollbar-width: none;
+
+  .nav-link {
+    color: $navy-blue;
+    background-color: #fff;
+    border: 1px solid rgba($navy-blue, 0.1);
+
+    &.active {
+      background-color: $navy-blue;
+      color: #fff;
+    }
+  }
+}
+
+.kpi-card {
+  transition: transform 0.15s ease;
+
+  &:hover { transform: translateY(-2px); }
+}
+
+.month-chart {
+  height: 180px;
+
+  .month-bar-wrap {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    min-width: 0;
+  }
+
+  .month-bar {
+    background-color: rgba($gold, 0.55);
+    min-height: 2px;
+    transition: background-color 0.15s ease;
+  }
+
+  .month-bar-wrap:hover .month-bar,
+  .month-bar-wrap.is-active .month-bar {
+    background-color: $gold;
+  }
+}
+
+.compare-toggle {
+  z-index: 2;
+  background-color: rgba(#fff, 0.9);
+  border-radius: 999px;
+  padding: 2px 8px;
+  cursor: pointer;
+  color: $navy-blue;
+}
+
+.compare-table th[scope="row"], .compare-table tbody th { white-space: nowrap; }
+
+// "Como calculamos" (ⓘ)
+.info-tip {
+  cursor: help;
+  font-size: 0.85em;
+
+  &:focus-visible { outline: 2px solid $gold; outline-offset: 2px; border-radius: 50%; }
+}
+
+// Comparação: melhor/pior de cada linha
+$compare-best: #198754;
+$compare-worst: #dc3545;
+
+.compare-table td.compare-best { background-color: rgba($compare-best, 0.1); box-shadow: inset 0 -3px 0 $compare-best; }
+.compare-table td.compare-worst { background-color: rgba($compare-worst, 0.08); box-shadow: inset 0 -3px 0 $compare-worst; }
+
+.compare-legend {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+  vertical-align: middle;
+
+  &.compare-best { background-color: $compare-best; }
+  &.compare-worst { background-color: $compare-worst; }
+}
+
+.promises-table blockquote {
+  border-left: 3px solid rgba($gold, 0.6);
+  padding-left: 0.5rem;
+}
+
+// Modo de comparação: as caixas "Comparar" dos cards só aparecem depois de ativá-lo
+.btn-compare-mode {
+  color: $navy-blue;
+  border: 1px solid rgba($navy-blue, 0.3);
+  background-color: #fff;
+
+  &:hover, &:focus-visible { border-color: $navy-blue; color: $navy-blue; }
+
+  &[aria-pressed="true"] {
+    background-color: $navy-blue;
+    border-color: $navy-blue;
+    color: #fff;
+  }
+}
+
+.compare-toggle,
+.compare-mode-hint { display: none; }
+
+.is-comparing {
+  .compare-toggle { display: inline-flex; align-items: center; }
+  .compare-card-body { padding-top: 3rem; }
+  .compare-mode-hint { display: inline; }
+}

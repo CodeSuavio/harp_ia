@@ -1,0 +1,11 @@
+<section class="hero-section panel-hero position-relative overflow-hidden">
+  <div class="hero-glow"></div>
+  <div class="container position-relative z-1">
+    <h1 class="display-5 fw-bolder text-white mb-2 letter-spacing-tight">
+      <%= title %><% if local_assigns[:highlight] %> <span class="text-gold"><%= highlight %></span><% end %>
+    </h1>
+    <% if local_assigns[:subtitle] %>
+      <p class="lead text-white-50 mb-0" style="max-width: 520px;"><%= subtitle %></p>
+    <% end %>
+  </div>
+</section>

@@ -1,15 +1,104 @@
-<h1>Chat</h1>
+<div class="chat-wrapper">
 
-<div>
- <% @messages.each do |message| %>
-  <p>
-    <strong><%= message.role %>:</strong>
-    <%= message.content %>
-  <p>
- <% end %>
+  <!-- ========================================== -->
+  <!-- HERO SECTION: CABEÇALHO DO CHAT -->
+  <!-- ========================================== -->
+  <section class="hero-section position-relative overflow-hidden d-flex align-items-center" style="padding: 3rem 0 5rem 0; min-height: auto;">
+    <div class="hero-glow" style="width: 400px; height: 400px; opacity: 0.5;"></div>
+    <div class="container hero-content position-relative z-1">
+      <div class="d-flex align-items-center justify-content-between">
+
+        <div class="d-flex align-items-center">
+          <div class="bg-light rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 50px; height: 50px;">
+            <i class="fa-solid fa-robot fa-lg text-gold"></i>
+          </div>
+          <div>
+            <h1 class="h3 fw-bolder text-white mb-0 letter-spacing-tight">
+              <%= @chat.title.presence || "Nova Investigação" %>
+            </h1>
+            <p class="text-white-50 small mb-0">Harpia Intelligence Analyst</p>
+          </div>
+        </div>
+
+        <div>
+          <%= link_to chats_path, class: "btn btn-sm btn-outline-light rounded-pill px-3" do %>
+            <i class="fa-solid fa-arrow-left me-1"></i> Voltar
+          <% end %>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================== -->
+  <!-- ÁREA DE MENSAGENS -->
+  <!-- ========================================== -->
+  <section class="container position-relative" style="margin-top: -3rem; z-index: 10; margin-bottom: 7rem;">
+    <div class="card border-0 shadow-lg bg-white rounded-4 inspiration-card overflow-hidden">
+
+      <div class="chat-messages p-4 p-md-5" style="max-height: 60vh; overflow-y: auto; background-color: #F8FAFC;">
+        <% if @messages.empty? %>
+          <div class="text-center py-5 opacity-50">
+            <i class="fa-solid fa-comment-dots fa-3x text-navy mb-3"></i>
+            <h4 class="h5 text-navy fw-bold">Como posso ajudar na sua análise?</h4>
+            <p class="text-muted small">Faça perguntas sobre candidatos, histórico ou dados eleitorais.</p>
+          </div>
+        <% else %>
+          <% @messages.each do |message| %>
+
+            <% if message.role == "user" %>
+              <!-- Mensagem do Utilizador -->
+              <div class="d-flex justify-content-end mb-4">
+                <div class="user-message bg-navy text-white rounded-4 p-3 shadow-sm" style="max-width: 80%; border-bottom-right-radius: 4px !important;">
+                  <%= message.content %>
+                </div>
+                <div class="ms-2 flex-shrink-0 mt-auto">
+                   <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 30px; height: 30px;">
+                    <i class="fa-solid fa-user text-muted small"></i>
+                   </div>
+                </div>
+              </div>
+            <% else %>
+              <!-- Mensagem da IA (Harpia) -->
+              <div class="d-flex justify-content-start mb-4">
+                <div class="me-2 flex-shrink-0 mt-auto">
+                   <div class="bg-gold rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+                    <i class="fa-solid fa-robot text-white small"></i>
+                   </div>
+                </div>
+                <div class="assistant-message bg-white text-navy rounded-4 p-3 shadow-sm border" style="max-width: 80%; border-bottom-left-radius: 4px !important;">
+                  <%= render_markdown(message.content) %>
+                </div>
+              </div>
+            <% end %>
+
+          <% end %>
+        <% end %>
+
+        <!-- Ponto de referência para rolar até a última mensagem -->
+        <div id="chat-bottom" data-controller="chat-scroll"></div>
+      </div>
+
+      <!-- ========================================== -->
+      <!-- FORMULÁRIO DE ENVIO -->
+      <!-- ========================================== -->
+      <div class="card-footer bg-white border-top p-3 p-md-4">
+        <%= form_with model: [@chat, @message], class: "chat-form" do |form| %>
+          <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+            <%= form.text_area :content,
+                               placeholder: "Pergunte à Harpia...",
+                               class: "form-control border-0 shadow-none bg-light px-4 py-3",
+                               rows: 1,
+                               style: "resize: none; overflow: hidden;" %>
+
+            <%= button_tag type: 'submit', class: "btn btn-auth px-4 d-flex align-items-center justify-content-center" do %>
+              <i class="fa-solid fa-paper-plane"></i>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+
+    </div>
+  </section>
+
 </div>
-
-<%= form_with model: [@chat, @message] do |form| %>
-  <%= form.text_area :content, placeholder: "Digite sua mensagem..." %>
-  <%= form.submit "Enviar", class: "btn btn-primary" %>
-<% end %>

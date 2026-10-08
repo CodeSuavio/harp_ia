@@ -1,0 +1,314 @@
+// Container do widget.
+// Mantém o chatbot fixo no canto inferior direito da tela.
+.chat-widget {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 1000; // Mantém o widget acima dos demais elementos da página.
+}
+
+// Botão que abre o chatbot.
+.chat-widget-button {
+  width: 64px;
+  height: 64px;
+
+  // Centraliza o logo da Harpia dentro do botão.
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  // Identidade visual do Harpia.
+  background-color: $navy-blue;
+  border: 2px solid $orange;
+  border-radius: 50%;
+
+  cursor: pointer;
+
+  // Cria profundidade para destacar o botão do conteúdo da página.
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+
+  // Suaviza as animações aplicadas no hover.
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+
+  // Feedback visual quando o usuário passa o mouse sobre o botão.
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+  }
+}
+
+// Logo da Harpia exibido dentro do botão.
+.chat-widget-logo {
+  width: 50px;
+  height: 50px;
+  object-fit: contain; // Mantém a proporção original da imagem.
+}
+
+// Janela principal do chatbot.
+.chat-widget-window {
+  position: absolute;
+  right: 0;
+  bottom: 80px;
+  width: 360px;
+  height: 480px;
+  display: flex;
+  flex-direction: column;
+  background-color: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+}
+
+// Cabeçalho do chatbot.
+.chat-widget-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background-color: $orange;
+  color: white;
+}
+
+// Container geral (Turbo Frame) que agrupa as mensagens e o campo de envio.
+// Ocupa todo o espaço restante da janela do chatbot.
+#chat_widget_messages {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+// Agrupa o logo e o nome "Estamos de Olho".
+.chat-widget-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 600;
+}
+
+// Logo exibido no cabeçalho.
+.chat-widget-header-logo {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+// Botão para fechar o chatbot.
+.chat-widget-close {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+// Área interna onde aparecem as mensagens da conversa.
+// Diferente de #chat_widget_messages, esta classe controla apenas
+// a lista de mensagens e permite scroll quando o conteúdo ultrapassa
+// o espaço disponível.
+.chat-widget-messages {
+  flex: 1;
+  min-height: 0;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+// Mensagem enviada pelo usuário.
+// Fica alinhada à direita e usa o laranja do widget para diferenciar
+// visualmente a pergunta da resposta da Harpia.
+.chat-widget-user-message {
+  width: fit-content;
+  max-width: 72%;
+  margin-left: auto;
+  margin-bottom: 14px;
+  padding: 10px 14px;
+  background-color: $orange;
+  color: white;
+  border-radius: 14px 14px 4px 14px;
+  font-size: 15px;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+}
+
+// Resposta da Harpia.
+// Permanece limpa sobre o fundo branco para facilitar a leitura.
+.chat-widget-assistant-message {
+  margin-right: 10px;
+  margin-bottom: 24px;
+  color: $navy-blue;
+  font-size: 15px;
+  line-height: 1.5;
+  // Evita espaço extra no início e no final do conteúdo Markdown.
+  p:first-child {
+    margin-top: 0;
+  }
+  p:last-child {
+    margin-bottom: 0;
+  }
+}
+
+// Área inferior para digitar a pergunta.
+// Permanece visível enquanto as mensagens fazem scroll.
+.chat-widget-input {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 12px;
+  border-top: 1px solid #e5e5e5;
+}
+
+// Campo de texto.
+.chat-widget-input input {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  outline: none;
+}
+
+// Botão de envio.
+.chat-widget-input button {
+  border: none;
+  background: none;
+  color: $orange;
+  font-size: 20px;
+}
+
+.chat-widget-loading {
+  // Cria um degradê que será visível somente dentro das letras.
+  background: linear-gradient(
+    90deg,
+    rgba($navy-blue, 0.35) 0%,
+    rgba($navy-blue, 0.35) 35%,
+    $navy-blue 50%,
+    rgba($navy-blue, 0.35) 65%,
+    rgba($navy-blue, 0.35) 100%
+  );
+
+  // Aumenta o fundo para que o degradê possa percorrer o texto.
+  background-size: 200% 100%;
+
+  // Faz o fundo aparecer apenas no formato das letras.
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+
+  font-style: italic;
+  font-size: 0.95rem;
+
+  // Mantém a animação rodando enquanto aguardamos a resposta.
+  animation: chat-widget-shimmer 2.0s linear infinite;
+}
+
+@keyframes chat-widget-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+.chat-widget-login-required {
+  // Estado do widget para usuários não autenticados
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 24px 40px 20px;
+  color: $navy-blue;
+
+  .chat-widget-login-icon {
+    // Ícone principal
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 64px;
+    height: 64px;
+    margin-bottom: 20px;
+    border-radius: 50%;
+    background-color: rgba($orange, 0.12);
+    color: $orange;
+    font-size: 26px;
+  }
+
+
+  h3 {
+    // Saudação
+    margin: 0 0 8px;
+    color: $navy-blue;
+    font-size: 1.8rem;
+    font-weight: 700;
+  }
+
+
+  .chat-widget-login-question {
+    // Pergunta inicial
+    margin: 0;
+    color: rgba($navy-blue, 0.75);
+    font-size: 1.05rem;
+    line-height: 1.4;
+  }
+
+
+  .chat-widget-login-divider {
+    // Pergunta inicial
+    width: 100%;
+    height: 1px;
+    margin: 24px 0 20px;
+    background-color: rgba($navy-blue, 0.12);
+  }
+
+
+  .chat-widget-login-lock {
+    // Cadeado
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 16px;
+    border-radius: 50%;
+    background-color: rgba($navy-blue, 0.07);
+    color: $navy-blue;
+    font-size: 17px;
+  }
+
+
+  .chat-widget-login-message {
+    // Mensagem de autenticação
+    max-width: 300px;
+    margin: 0 0 24px;
+    color: rgba($navy-blue, 0.65);
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+
+
+  .chat-widget-login-button {
+    // Botão Entrar
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+    padding: 14px 20px;
+    border-radius: 12px;
+    background-color: $navy-blue;
+    color: white;
+    font-size: 1rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition:
+      transform 0.2s ease,
+      opacity 0.2s ease;
+    &:hover {
+      color: white;
+      opacity: 0.92;
+      transform: translateY(-1px);
+    }
+    i {
+      font-size: 0.9rem;
+    }
+  }
+}
