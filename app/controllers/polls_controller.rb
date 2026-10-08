@@ -5,7 +5,7 @@ class PollsController < ApplicationController
 
   def index
     base = policy_scope(Poll)
-    base = base.where("polls.description ILIKE ?", "%#{params[:q].strip}%") if params[:q].present?
+    base = base.where("polls.description ILIKE ?", "%#{Poll.sanitize_sql_like(params[:q].strip)}%") if params[:q].present?
     base = base.where(id: Vote.select(:poll_id)) unless params[:all] == "1"
 
     filters = {
@@ -23,7 +23,7 @@ class PollsController < ApplicationController
     @page = 1 if @page < 1
     @page = @total_pages if @page > @total_pages
 
-    @polls = scope.includes(:themes)
+    @polls = scope.includes(:themes, :bills)
                   .order(date: :desc, id: :desc)
                   .offset((@page - 1) * PER_PAGE)
                   .limit(PER_PAGE)

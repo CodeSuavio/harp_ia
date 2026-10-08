@@ -6,11 +6,7 @@
     <% if @poll.label_comission.present? %>
       <span class="panel-chip"><%= @poll.label_comission %></span>
     <% end %>
-    <% if @poll.approval == true %>
-      <span class="badge text-bg-success">Aprovada</span>
-    <% elsif @poll.approval == false %>
-      <span class="badge text-bg-danger">Rejeitada</span>
-    <% end %>
+    <%= poll_result_badge(@poll) %>
     <% if @breakdown.unanimous %>
       <span class="badge bg-navy">UNANIMIDADE: <%= @breakdown.unanimous %></span>
       <%= info_tip("Todos os votos nominais foram iguais. O voto do presidente da sessão (Art. 17) não entra na conta.") %>
@@ -91,5 +87,6 @@
         <% end %>
       </div>
     </div>
+    <%= render "polls/dissidents", poll: @poll, breakdown: @breakdown %>
   <% end %>
 </section>

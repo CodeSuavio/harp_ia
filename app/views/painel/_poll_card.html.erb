@@ -11,17 +11,14 @@
           <% if poll.label_comission.present? %>
             <span class="panel-chip"><%= poll.label_comission %></span>
           <% end %>
-          <% if poll.approval == true %>
-            <span class="badge text-bg-success">Aprovada</span>
-          <% elsif poll.approval == false %>
-            <span class="badge text-bg-danger">Rejeitada</span>
-          <% end %>
+          <%= poll_result_badge(poll) %>
           <% if unanimous %>
             <span class="badge bg-navy">UNANIMIDADE: <%= unanimous %></span>
           <% end %>
         </div>
 
         <p class="fw-semibold text-navy mb-3"><%= truncate(poll_summary(poll), length: 220) %></p>
+        <% if poll.bills.any? %><p class="small text-muted mb-2">Projeto: <%= poll.bills.map { |bill| proposicao_label(bill) }.join(", ") %></p><% end %>
 
         <% if total.positive? %>
           <div class="progress rounded-pill mb-2" style="height: 8px;">

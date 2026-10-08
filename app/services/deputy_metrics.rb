@@ -177,7 +177,7 @@ class DeputyMetrics
   def self.average_bills
     cached("average-bills", Bill) do
       deputies = Deputy.count
-      deputies.zero? ? 0 : (Bill.count.to_f / deputies).round(1)
+      deputies.zero? ? 0 : (Bill.where.not(deputy_id: nil).count.to_f / deputies).round(1)
     end
   end
 

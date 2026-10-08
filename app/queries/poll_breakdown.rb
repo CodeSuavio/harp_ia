@@ -35,14 +35,32 @@ class PollBreakdown
         label: label,
         votes: ordered,
         total: ordered.sum { |_, count| count },
-        majority: DeputyMetrics.majority_of(votes["Sim"].to_i, votes["Não"].to_i),
+        majority: majority(ordered),
         unanimous: self.class.unanimous_label(ordered),
         cohesion: cohesion(ordered)
       }
     end.sort_by { |row| [-row[:total], row[:label]] }
   end
 
+  def dissidents
+    majorities = by_party.to_h { |row| [row[:party_id], row[:majority]] }
+    Vote.where(poll_id: @poll.id, vote: Vote::DECISIVE)
+        .includes(deputy: :party)
+        .filter_map do |vote|
+          majority = majorities[vote.deputy.party_id]
+          [vote, majority] if Vote::DECISIVE.include?(majority) && vote.vote != majority
+        end
+        .sort_by { |vote, _| [vote.deputy.party.label, vote.deputy.name] }
+  end
+
   private
+
+  def majority(pairs)
+    considered = pairs.reject { |label, _| label == NON_VOTING }
+    top = considered.map(&:last).max
+    leaders = considered.select { |_, count| count == top }
+    leaders.size == 1 ? leaders.first.first : nil
+  end
 
   def cohesion(pairs)
     considered = pairs.reject { |label, _| label == NON_VOTING }

@@ -3,9 +3,9 @@ class CandidatesController < ApplicationController
 
   PER_PAGE = 24
   SORTS = {
-    "name"   => { ballot_name: :asc },
-    "state"  => { state_label: :asc, ballot_name: :asc },
-    "number" => { number: :asc }
+    "name"   => { ballot_name: :asc, id: :asc },
+    "state"  => { state_label: :asc, ballot_name: :asc, id: :asc },
+    "number" => { number: :asc, id: :asc }
   }.freeze
 
   def index
@@ -35,7 +35,7 @@ class CandidatesController < ApplicationController
                        .offset((@page - 1) * PER_PAGE)
                        .limit(PER_PAGE)
 
-    @deputies_by_json_id = Deputy.where(json_id: @candidates.map(&:current_deputy_id).compact).index_by(&:json_id)
+    @deputies_by_json_id = Deputy.with_attached_photo.where(json_id: @candidates.map(&:current_deputy_id).compact).index_by(&:json_id)
     @metrics = DirectoryMetrics.new(@deputies_by_json_id.values)
 
     @states = Candidate.distinct.pluck(:state_label).compact.sort
@@ -58,10 +58,10 @@ class CandidatesController < ApplicationController
     return scope if params[:q].blank?
 
     term = params[:q].strip
-    like = "%#{term}%"
+    like = "%#{Candidate.sanitize_sql_like(term)}%"
     party_ids = Party.where(
-      "upper(label) = :t OR upper(coalesce(former_labels, '')) LIKE :lt",
-      t: term.upcase, lt: "%#{term.upcase}%"
+      "upper(label) = :t OR :t = ANY(string_to_array(upper(coalesce(former_labels, '')), ' '))",
+      t: term.upcase
     ).pluck(:id)
 
     if party_ids.any?
