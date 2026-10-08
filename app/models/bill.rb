@@ -6,7 +6,7 @@ class Bill < ApplicationRecord
   has_many :bill_themes, dependent: :delete_all
   has_many :themes, through: :bill_themes
   has_many :bill_authors, dependent: :delete_all
-  has_many :authors, -> { order("bill_authors.id") }, through: :bill_authors, source: :deputy
+  has_many :authors, through: :bill_authors, source: :deputy
   has_many :poll_bills, dependent: :delete_all
   has_many :votings, through: :poll_bills, source: :poll
 

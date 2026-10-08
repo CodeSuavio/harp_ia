@@ -30,7 +30,7 @@ class PartiesController < ApplicationController
     @party = Party.find(params[:id])
     authorize @party
 
-    @deputies = @party.deputies.order(:name)
+    @deputies = @party.deputies.with_attached_photo.order(:name)
     @candidate_count = @party.candidates.count
     @state_bench = @deputies.group_by(&:state_label).transform_values(&:size).sort_by { |state, count| [-count, state] }
 

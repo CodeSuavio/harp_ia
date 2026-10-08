@@ -8,6 +8,8 @@
     <div class="col-md-4">
       <% if @candidate.photo.attached? %>
         <%= cl_image_tag @candidate.photo.key, class: "img-fluid rounded", alt: @candidate.ballot_name %>
+      <% elsif deputy&.photo&.attached? %>
+        <%= cl_image_tag deputy.photo.key, class: "img-fluid rounded", alt: @candidate.ballot_name %>
       <% else %>
         <div class="candidate-photo-large rounded d-flex align-items-center justify-content-center">
           <span class="text-muted"><%= @candidate.ballot_name.to_s.first %></span>
@@ -17,6 +19,9 @@
 
     <div class="col-md-8">
       <h1><%= @candidate.ballot_name %></h1>
+      <% if deputy %>
+        <p class="small mb-2"><%= link_to "Projetos de autoria e coautoria (#{BillAuthor.where(deputy_id: deputy.id).count})", bills_path(author: deputy.id), class: "text-gold fw-semibold" %></p>
+      <% end %>
       <p class="text-muted"><%= @candidate.name %></p>
 
       <dl class="row">

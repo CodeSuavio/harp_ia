@@ -2,7 +2,9 @@
      "q"     => params[:q].presence,
      "year"  => params[:year].presence,
      "theme" => (@themes.find { |t| t.id.to_s == params[:theme].to_s }&.name if params[:theme].present?),
-     "party" => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?)
+     "party" => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?),
+     "type"  => params[:type].presence,
+     "author" => (Deputy.find_by(id: params[:author])&.name if params[:author].present?)
    }.compact %>
 
 <div class="d-flex flex-wrap align-items-center gap-2 mb-4">

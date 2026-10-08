@@ -38,11 +38,7 @@
         <li class="list-group-item px-0">
           <%= link_to poll_path(poll), class: "text-decoration-none text-reset" do %>
             <span class="data-label text-muted me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
-            <% if poll.approval == true %>
-              <span class="badge text-bg-success me-2">Aprovada</span>
-            <% elsif poll.approval == false %>
-              <span class="badge text-bg-danger me-2">Rejeitada</span>
-            <% end %>
+            <%= poll_result_badge(poll) %>
             <%= poll_summary(poll).truncate(140) %>
           <% end %>
         </li>

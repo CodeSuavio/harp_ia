@@ -10,7 +10,9 @@ class BillsController < ApplicationController
     filters = {
       year:  params[:year].presence,
       theme: params[:theme].presence,
-      party: params[:party].presence
+      party: params[:party].presence,
+      type:  params[:type].presence,
+      author: params[:author].presence
     }.compact
 
     scope = apply(base, filters)
@@ -23,13 +25,15 @@ class BillsController < ApplicationController
     @page = 1 if @page < 1
     @page = @total_pages if @page > @total_pages
 
-    @bills = scope.includes(:deputy, :party, :themes, :authors)
+    @bills = scope.includes(:deputy, :party, :themes, bill_authors: :deputy)
                   .order(submission_date: :desc, id: :desc)
                   .offset((@page - 1) * PER_PAGE)
                   .limit(PER_PAGE)
                   .to_a
 
     @years = Bill.distinct.pluck(:year).compact.sort.reverse
+
+    @types = Bill.where.not(bill_type: nil).distinct.order(:bill_type).pluck(:bill_type)
     @parties = Party.where(id: Bill.select(:party_id)).order(:label)
     @themes = Theme.order(:name).select { |t| @theme_counts[t.id].to_i.positive? || params[:theme].to_s == t.id.to_s }
   end
@@ -59,6 +63,8 @@ class BillsController < ApplicationController
       when :year  then current.where(year: value.to_i)
       when :theme then current.where(id: BillTheme.where(theme_id: value).select(:bill_id))
       when :party then current.where(party_id: value)
+      when :type  then current.where(bill_type: value)
+      when :author then current.where(id: BillAuthor.where(deputy_id: value).select(:bill_id))
       else current
       end
     end

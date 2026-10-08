@@ -1,5 +1,5 @@
-<% author = bill.deputy || bill.authors.first %>
-<% others = bill.authors.size - 1 %>
+<% author = bill.deputy || bill.bill_authors.min_by(&:id)&.deputy %>
+<% others = bill.bill_authors.size - 1 %>
 
 <div class="col-12 col-xl-6">
   <%= link_to bill_path(bill), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>

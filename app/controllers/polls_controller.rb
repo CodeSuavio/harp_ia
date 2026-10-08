@@ -23,7 +23,7 @@ class PollsController < ApplicationController
     @page = 1 if @page < 1
     @page = @total_pages if @page > @total_pages
 
-    @polls = scope.includes(:themes)
+    @polls = scope.includes(:themes, :bills)
                   .order(date: :desc, id: :desc)
                   .offset((@page - 1) * PER_PAGE)
                   .limit(PER_PAGE)

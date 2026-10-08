@@ -35,7 +35,7 @@ class CandidatesController < ApplicationController
                        .offset((@page - 1) * PER_PAGE)
                        .limit(PER_PAGE)
 
-    @deputies_by_json_id = Deputy.where(json_id: @candidates.map(&:current_deputy_id).compact).index_by(&:json_id)
+    @deputies_by_json_id = Deputy.with_attached_photo.where(json_id: @candidates.map(&:current_deputy_id).compact).index_by(&:json_id)
     @metrics = DirectoryMetrics.new(@deputies_by_json_id.values)
 
     @states = Candidate.distinct.pluck(:state_label).compact.sort
@@ -60,7 +60,7 @@ class CandidatesController < ApplicationController
     term = params[:q].strip
     like = "%#{Candidate.sanitize_sql_like(term)}%"
     party_ids = Party.where(
-      "upper(label) = :t OR upper(coalesce(former_labels, '')) LIKE :lt",
+      "upper(label) = :t OR :t = ANY(string_to_array(upper(coalesce(former_labels, '')), ' '))",
       t: term.upcase
     ).pluck(:id)
 

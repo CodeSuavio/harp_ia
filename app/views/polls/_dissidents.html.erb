@@ -1,0 +1,28 @@
+<% dissidents = breakdown.dissidents %>
+<% if dissidents.any? %>
+  <h2 class="h5 fw-bold text-navy mt-5 mb-3">
+    Votaram contra a maioria do próprio partido (<%= dissidents.size %>)
+    <%= info_tip("Votos Sim ou Não diferentes do voto da maioria da bancada nesta votação. Considera o partido atual de cada deputado.") %>
+  </h2>
+  <% if poll.date && poll.date.to_date < Date.new(2026, 4, 4) %>
+    <p class="small text-muted">Votação anterior ao fim da janela partidária (3/4/2026): parte desses deputados pode ter trocado de partido depois.</p>
+  <% end %>
+  <div class="card inspiration-card bg-white">
+    <div class="card-body p-4">
+      <ul class="list-unstyled mb-0">
+        <% dissidents.each do |vote, majority| %>
+          <li class="d-flex flex-wrap justify-content-between gap-2 py-2 border-bottom">
+            <span>
+              <%= link_to vote.deputy.name, deputy_path(vote.deputy), class: "text-navy fw-semibold text-decoration-none" %>
+              <span class="small text-muted"><%= vote.deputy.party.label %>-<%= vote.deputy.state_label %></span>
+            </span>
+            <span class="small">
+              <span class="badge <%= vote_color(vote.vote) %>"><%= vote.vote %></span>
+              <span class="text-muted ms-1">bancada: <%= majority %></span>
+            </span>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+  </div>
+<% end %>
