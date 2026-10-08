@@ -29,7 +29,7 @@ export default class extends Controller {
 
   // Roda no connect (com o ?uf= vindo do servidor) e a cada troca de estado
   selectedValueChanged() {
-    const state = this.data.states[this.selectedValue]
+    const state = this.mapData.states[this.selectedValue]
 
     this.tileTargets.forEach((tile) => {
       const active = tile.dataset.uf === this.selectedValue
@@ -41,17 +41,17 @@ export default class extends Controller {
     this.scopeTarget.textContent = state ? "Visão estadual" : "Visão nacional"
     this.titleTarget.textContent = state ? state.name : "Brasil"
     this.resetTarget.hidden = !state
-    this.render(state ? state.seats : this.data.national)
+    this.render(state ? state.seats : this.mapData.national)
     this.syncUrl()
   }
 
-  get data() {
-    return (this._data ??= JSON.parse(this.dataTarget.textContent))
+  get mapData() {
+    return (this._mapData ??= JSON.parse(this.dataTarget.textContent))
   }
 
   render(seats) {
     const rows = Object.entries(seats)
-      .map(([id, count]) => ({ party: this.data.parties[id], count }))
+      .map(([id, count]) => ({ party: this.mapData.parties[id], count }))
       .filter((row) => row.party)
       .sort((a, b) => b.count - a.count || a.party.label.localeCompare(b.party.label))
 
