@@ -1,80 +1,124 @@
 <% deputy = @candidate.current_deputy %>
 <% status = @candidate.candidacy_status.to_s %>
+<% page_title = "#{@candidate.ballot_name} (#{[@candidate.party&.label, @candidate.state_label].compact.join('-')})" %>
+<% content_for :title, "#{page_title} · Harpia" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= "Candidatura de #{@candidate.ballot_name} a deputado federal em 2026." %>">
+  <meta property="og:type" content="profile">
+  <meta property="og:title" content="<%= page_title %>">
+<% end %>
 
-<div class="container my-4">
-  <%= link_to "← Candidatos", candidates_path %>
+<div class="container py-5">
+  <!-- Botão Voltar -->
+  <div class="mb-4">
+    <%= link_to candidates_path, class: "text-decoration-none text-muted fw-medium transition" do %>
+      <i class="fa-solid fa-arrow-left me-2"></i> Voltar para Candidatos
+    <% end %>
+  </div>
 
-  <div class="row mt-3">
-    <div class="col-md-4">
-      <% if @candidate.photo.attached? %>
-        <%= cl_image_tag @candidate.photo.key, class: "img-fluid rounded", alt: @candidate.ballot_name %>
-      <% elsif deputy&.photo&.attached? %>
-        <%= cl_image_tag deputy.photo.key, class: "img-fluid rounded", alt: @candidate.ballot_name %>
+  <!-- Cabeçalho do Perfil -->
+  <div class="card inspiration-card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4">
+      <% photo = @candidate.photo.attached? ? @candidate.photo : deputy&.photo %>
+      <% if photo&.attached? %>
+        <%= cl_image_tag photo.key, class: "deputy-avatar rounded-4 shadow-sm object-fit-cover", alt: @candidate.ballot_name %>
       <% else %>
-        <div class="candidate-photo-large rounded d-flex align-items-center justify-content-center">
-          <span class="text-muted"><%= @candidate.ballot_name.to_s.first %></span>
+        <div class="deputy-avatar rounded-4 bg-light d-flex align-items-center justify-content-center shadow-sm">
+          <span class="display-4 fw-bold text-gold"><%= @candidate.ballot_name.to_s.first %></span>
+        </div>
+      <% end %>
+
+      <div class="flex-grow-1 text-center text-md-start min-w-0">
+        <h1 class="h2 fw-bold text-navy mb-1"><%= @candidate.ballot_name %></h1>
+        <% if @candidate.name.present? && @candidate.name.casecmp?(@candidate.ballot_name.to_s) == false %>
+          <p class="text-muted mb-3"><%= @candidate.name %></p>
+        <% else %>
+          <div class="mb-3"></div>
+        <% end %>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
+          <div class="badge badge-wrap bg-gold text-navy px-3 py-2 fw-bold tracking-wider">
+            <i class="fa-solid fa-hashtag me-1"></i> <%= @candidate.number %>
+          </div>
+          <% if @candidate.party %>
+            <%= link_to party_path(@candidate.party), class: "badge badge-wrap bg-navy text-white px-3 py-2 fw-medium tracking-wider text-decoration-none" do %>
+              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @candidate.party.label %>
+            <% end %>
+          <% end %>
+          <% if @candidate.state_label.present? %>
+            <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
+              <i class="fa-solid fa-location-dot me-1 text-gold"></i> <%= @candidate.state_label %>
+            </div>
+          <% end %>
+          <% if @candidate.reelection? %>
+            <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
+              <i class="fa-solid fa-check-to-slot me-1 text-gold"></i> Candidato à reeleição
+            </div>
+          <% end %>
+        </div>
+
+        <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
+          <%= render "painel/ask_harpia", question: harpia_question(@candidate, @overview) %>
+          <% if deputy %>
+            <%= link_to deputy_path(deputy), class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
+              <i class="fa-solid fa-chart-line me-2 text-gold"></i> Painel do deputado
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dados da candidatura (apenas os disponíveis) -->
+  <% info = [
+       ["Situação da candidatura", "fa-circle-check", (status if status.present? && status != "#NE")],
+       ["Ocupação", "fa-briefcase", @candidate.occupation],
+       ["Escolaridade", "fa-graduation-cap", @candidate.education_level],
+       ["Gênero", "fa-user", @candidate.gender&.capitalize],
+       ["Cor ou raça", "fa-users", @candidate.race_color&.capitalize]
+     ].select { |_, _, value| value.present? } %>
+
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+      <i class="fa-solid fa-id-card me-2 text-gold"></i>Dados da candidatura
+    </h2>
+    <div class="row g-3">
+      <% info.each do |label, icon, value| %>
+        <div class="col-sm-6 col-lg-4">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+              <i class="fa-solid <%= icon %> me-1 text-gold"></i> <%= label %>
+            </span>
+            <span class="text-navy fw-medium"><%= value %></span>
+          </div>
+        </div>
+      <% end %>
+
+      <% if deputy %>
+        <div class="col-sm-6 col-lg-4">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+              <i class="fa-solid fa-landmark me-1 text-gold"></i> Deputado em exercício
+            </span>
+            <%= link_to deputy.name, deputy_path(deputy), class: "text-decoration-none text-navy fw-medium hover-opacity" %>
+          </div>
+        </div>
+
+        <div class="col-sm-6 col-lg-4">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+              <i class="fa-solid fa-file-lines me-1 text-gold"></i> Projetos de lei
+            </span>
+            <%= link_to "#{BillAuthor.where(deputy_id: deputy.id).count} de autoria e coautoria", bills_path(author: deputy.id),
+                  class: "text-decoration-none text-gold fw-bold hover-opacity" %>
+          </div>
         </div>
       <% end %>
     </div>
 
-    <div class="col-md-8">
-      <h1><%= @candidate.ballot_name %></h1>
-      <% if deputy %>
-        <p class="small mb-2"><%= link_to "Projetos de autoria e coautoria (#{BillAuthor.where(deputy_id: deputy.id).count})", bills_path(author: deputy.id), class: "text-gold fw-semibold" %></p>
-      <% end %>
-      <p class="text-muted"><%= @candidate.name %></p>
-
-      <dl class="row">
-        <dt class="col-sm-4">Número</dt>
-        <dd class="col-sm-8"><%= @candidate.number %></dd>
-
-        <dt class="col-sm-4">Partido</dt>
-        <dd class="col-sm-8">
-          <%= link_to @candidate.party.label, party_path(@candidate.party) if @candidate.party %>
-        </dd>
-
-        <dt class="col-sm-4">Estado</dt>
-        <dd class="col-sm-8"><%= @candidate.state_label %></dd>
-
-        <% if deputy %>
-          <dt class="col-sm-4">Deputado em exercício</dt>
-          <dd class="col-sm-8"><%= link_to deputy.name, deputy_path(deputy) %></dd>
-        <% end %>
-
-        <% if status.present? && status != "#NE" %>
-          <dt class="col-sm-4">Situação da candidatura</dt>
-          <dd class="col-sm-8"><%= status %></dd>
-        <% end %>
-
-        <dt class="col-sm-4">Concorre à reeleição</dt>
-        <dd class="col-sm-8"><%= @candidate.reelection? ? "Sim" : "Não" %></dd>
-
-        <% if @candidate.gender.present? %>
-          <dt class="col-sm-4">Gênero</dt>
-          <dd class="col-sm-8"><%= @candidate.gender.capitalize %></dd>
-        <% end %>
-
-        <% if @candidate.race_color.present? %>
-          <dt class="col-sm-4">Cor ou raça</dt>
-          <dd class="col-sm-8"><%= @candidate.race_color.capitalize %></dd>
-        <% end %>
-
-        <dt class="col-sm-4">Escolaridade</dt>
-        <dd class="col-sm-8"><%= @candidate.education_level %></dd>
-
-        <dt class="col-sm-4">Ocupação</dt>
-        <dd class="col-sm-8"><%= @candidate.occupation %></dd>
-      </dl>
-
-      <div class="d-flex flex-wrap gap-2">
-        <%= render "painel/ask_harpia", question: harpia_question(@candidate, @overview) %>
-        <% if deputy %>
-          <%= link_to deputy_path(deputy), class: "btn btn-outline-secondary rounded-pill px-4" do %>
-            <i class="fa-solid fa-chart-line me-2"></i>Painel do deputado
-          <% end %>
-        <% end %>
-      </div>
-    </div>
+    <% if info.empty? && deputy.nil? %>
+      <p class="text-muted small mb-0">Não há outros dados disponíveis sobre esta candidatura.</p>
+    <% end %>
   </div>
 
   <% if @overview %>
