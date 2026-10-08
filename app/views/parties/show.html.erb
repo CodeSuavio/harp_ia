@@ -62,6 +62,57 @@
     <% end %>
   </div>
 
+  <h2 class="h5 mb-3">Coesão nas votações</h2>
+
+  <div class="border rounded-3 p-4 mb-5">
+    <% if @cohesion %>
+      <div class="row g-4 align-items-center">
+        <div class="col-md-4">
+          <div class="display-6 fw-bold mb-0"><%= @cohesion[:pct] %>%</div>
+          <div class="progress my-2" style="height: 8px;" role="progressbar"
+               aria-valuenow="<%= @cohesion[:pct] %>" aria-valuemin="0" aria-valuemax="100"
+               aria-label="Coesão da bancada">
+            <div class="progress-bar bg-gold" style="width: <%= @cohesion[:pct] %>%"></div>
+          </div>
+          <div class="small text-muted">
+            <% if @average_cohesion %>média dos partidos: <%= @average_cohesion %>%<br><% end %>
+            <%= @cohesion[:polls] %> <%= "votação".pluralize(@cohesion[:polls]) %> ·
+            <%= @cohesion[:unanimous] %> <%= @cohesion[:unanimous] == 1 ? "unânime" : "unânimes" %>
+          </div>
+        </div>
+
+        <div class="col-md-8 small text-muted">
+          Em cada votação, compara os votos Sim e Não dos deputados do partido:
+          100% quando todos votam igual e 0% quando a bancada racha ao meio.
+          O valor é a média das votações com pelo menos <%= DeputyMetrics::COHESION_MIN_VOTERS %> votos Sim/Não do partido.
+          Usa o partido atual de cada deputado, então quem trocou de legenda conta no partido novo.
+        </div>
+      </div>
+
+      <% if @divided_polls.any? %>
+        <h3 class="h6 fw-bold mt-4 mb-2">Votações em que a bancada mais se dividiu</h3>
+        <ul class="list-group list-group-flush">
+          <% @divided_polls.each do |poll, row| %>
+            <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+              <div>
+                <span class="text-muted small text-nowrap me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+                <%= poll.description.to_s.truncate(110) %>
+              </div>
+              <span class="small text-nowrap flex-shrink-0">
+                <span class="text-success fw-medium"><%= row[:sim] %> Sim</span> ×
+                <span class="text-danger fw-medium"><%= row[:nao] %> Não</span>
+              </span>
+            </li>
+          <% end %>
+        </ul>
+      <% end %>
+    <% else %>
+      <p class="text-muted mb-0">
+        Bancada pequena demais ou sem votações registradas para calcular a coesão.
+      </p>
+    <% end %>
+  </div>
+
   <h2 class="h5 mb-3">Bancada na Câmara</h2>
 
   <% if @deputies.empty? %>
@@ -90,6 +141,12 @@
                 <% end %>
                 <h3 class="h6 mb-1"><%= deputy.name %></h3>
                 <p class="text-brand small fw-bold text-uppercase mb-0"><%= deputy.state_label %></p>
+                <% if (alignment = @alignment.dig(deputy.id, :pct)) %>
+                  <span class="badge badge-wrap text-bg-light border mt-2"
+                        title="Votos Sim/Não iguais aos da maioria do partido">
+                    alinhamento <%= alignment %>%
+                  </span>
+                <% end %>
               </div>
             </div>
           <% end %>
