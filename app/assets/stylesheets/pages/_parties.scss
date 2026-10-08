@@ -1,0 +1,84 @@
+// Partidos: mapa do Brasil em grade + bancadas
+
+.party-map-card {
+  cursor: default;
+
+  // No desktop o mapa acompanha a rolagem da lista (navbar é sticky)
+  @media (min-width: 992px) {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+.party-map {
+  display: block;
+  width: 100%;
+  max-width: 340px;
+  margin: 0 auto;
+  user-select: none;
+}
+
+.uf-tile {
+  cursor: pointer;
+  outline: none;
+
+  rect {
+    fill: $royal-blue;
+    stroke: transparent;
+    stroke-width: 3;
+    transition: fill 0.15s ease, stroke 0.15s ease, transform 0.15s ease;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  text {
+    fill: $navy-blue;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  .uf-label { font-size: 15px; font-weight: 800; }
+  .uf-seats { font-size: 11px; opacity: 0.75; }
+
+  &.is-strong text { fill: #fff; }
+
+  &:hover rect,
+  &:focus-visible rect {
+    stroke: $gold;
+  }
+
+  // Estado ativo: dourado sólido, contorno navy e leve zoom
+  &.is-active {
+    rect {
+      fill: $gold;
+      fill-opacity: 1;
+      stroke: $navy-blue;
+      transform: scale(1.08);
+    }
+
+    text { fill: #fff; }
+  }
+}
+
+// Com um estado escolhido, os demais esmaecem para o ativo saltar aos olhos
+.has-selection .uf-tile:not(.is-active):not(:hover):not(:focus-visible) {
+  opacity: 0.45;
+}
+
+.party-panel {
+  // Ao rolar até o painel no mobile, não deixa o título embaixo da navbar
+  scroll-margin-top: 5.5rem;
+
+  .party-row a {
+    transition: background-color 0.15s ease;
+
+    &:hover { background-color: rgba($gold, 0.08); }
+  }
+
+  .party-row + .party-row { border-top: 1px solid rgba($navy-blue, 0.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uf-tile rect { transition: none; }
+  .uf-tile.is-active rect { transform: none; }
+}

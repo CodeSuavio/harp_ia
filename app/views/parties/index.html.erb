@@ -1,47 +1,112 @@
-<div class="container py-5">
-  <h1 class="h3 mb-4">Partidos</h1>
+<% content_for :title, "Partidos · Harpia" %>
 
-  <%= turbo_frame_tag "parties_list", data: { turbo_action: "advance" } do %>
-    <%= form_with url: parties_path, method: :get,
-                  data: {
-                    controller: "filter-form",
-                    action: "input->filter-form#submit change->filter-form#submit"
-                  },
-                  class: "row g-3 align-items-center bg-white rounded-3 shadow-sm p-3 mb-4" do %>
-      <div class="col-lg-6">
-        <div class="input-group">
-          <span class="input-group-text bg-white border-end-0">
-            <i class="fa-solid fa-magnifying-glass text-muted"></i>
-          </span>
-          <%= text_field_tag :q, params[:q],
-                id: "party-search",
-                placeholder: "Sigla ou nome (inclusive siglas antigas, tipo PMDB)...",
-                class: "form-control border-start-0",
-                data: { turbo_permanent: true } %>
+<%= render "painel/hero", title: "Partidos", highlight: "na Câmara",
+      subtitle: "Como as 513 cadeiras se dividem entre os partidos, no Brasil e em cada estado." %>
+
+<%# Tile = lado de cada quadrado do mapa; Step = lado + espaçamento %>
+<% tile = 56 %>
+<% step = 62 %>
+<% max_seats = [@state_seats.values.max.to_i, 1].max %>
+
+<section class="container search-container pb-5"
+         data-controller="party-map"
+         data-action="keydown.esc@window->party-map#clear"
+         data-party-map-selected-value="<%= @uf %>">
+  <script type="application/json" data-party-map-target="data"><%= raw json_escape(@map_data.to_json) %></script>
+
+  <div class="row g-4 align-items-start">
+    <!-- Mapa (esquerda / topo no mobile) -->
+    <div class="col-lg-5">
+      <div class="search-card party-map-card bg-white rounded-4 p-3 p-md-4"
+           data-action="click->party-map#clickOutside">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <h2 class="h6 fw-bold text-navy mb-0">
+            <i class="fa-solid fa-map-location-dot text-gold me-1" aria-hidden="true"></i>
+            Escolha um estado
+          </h2>
+          <span class="small text-muted">cor = tamanho da bancada</span>
         </div>
-      </div>
 
-      <div class="col-lg-3 col-md-6">
-        <%= select_tag :sort,
-              options_for_select(
-                [["Maior bancada", "bench"],
-                 ["Sigla A-Z", "label"],
-                 ["Número de legenda", "number"],
-                 ["Mais antigos", "registered"],
-                 ["Mais coesos", "cohesion"]],
-                params[:sort]
-              ),
-              class: "form-select" %>
-      </div>
+        <svg class="party-map" viewBox="0 0 <%= 6 * step - (step - tile) %> <%= 8 * step - (step - tile) %>"
+             role="group" aria-label="Mapa do Brasil por estado">
+          <% PartiesController::MAP_GRID.each do |uf, (col, row)| %>
+            <% seats = @state_seats[uf] %>
+            <% weight = 0.15 + 0.85 * seats / max_seats %>
+            <g class="uf-tile <%= 'is-strong' if weight > 0.5 %>"
+               role="button" tabindex="0" aria-pressed="false"
+               aria-label="<%= PartiesController::STATES[uf] %>: <%= seats %> <%= "deputado".pluralize(seats) %>"
+               transform="translate(<%= col * step %> <%= row * step %>)"
+               data-uf="<%= uf %>"
+               data-party-map-target="tile"
+               data-action="click->party-map#pick keydown.enter->party-map#pick keydown.space->party-map#pick">
+              <title><%= PartiesController::STATES[uf] %> · <%= seats %> <%= "deputado".pluralize(seats) %></title>
+              <rect width="<%= tile %>" height="<%= tile %>" rx="10" fill-opacity="<%= weight.round(2) %>"></rect>
+              <text x="<%= tile / 2 %>" y="<%= tile / 2 - 4 %>" class="uf-label"><%= uf %></text>
+              <text x="<%= tile / 2 %>" y="<%= tile / 2 + 12 %>" class="uf-seats"><%= seats %></text>
+            </g>
+          <% end %>
+        </svg>
 
-      <div class="col-lg-3 col-md-6">
-        <div class="form-check">
-          <%= check_box_tag :bench, "1", params[:bench] == "1", class: "form-check-input" %>
-          <%= label_tag :bench, "Só com bancada na Câmara", class: "form-check-label small" %>
+        <p class="small text-muted text-center mt-3 mb-0">
+          Clique de novo no estado (ou fora dele) para voltar ao Brasil.
+        </p>
+      </div>
+    </div>
+
+    <!-- Partidos (direita / abaixo no mobile) -->
+    <div class="col-lg-7">
+      <div class="search-card bg-white rounded-4 p-3 p-md-4 party-panel" data-party-map-target="panel">
+        <div class="d-flex justify-content-between align-items-start gap-3 mb-3" aria-live="polite">
+          <div>
+            <span class="data-label text-muted small text-uppercase fw-bold" data-party-map-target="scope">Visão nacional</span>
+            <h2 class="h4 fw-bold text-navy mb-0" data-party-map-target="title">Brasil</h2>
+            <span class="small text-muted" data-party-map-target="summary"></span>
+          </div>
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill flex-shrink-0"
+                  data-party-map-target="reset" data-action="party-map#clear" hidden>
+            <i class="fa-solid fa-earth-americas me-1" aria-hidden="true"></i> Ver Brasil
+          </button>
         </div>
-      </div>
-    <% end %>
 
-    <%= render "list" %>
-  <% end %>
-</div>
+        <ol class="list-unstyled mb-0" data-party-map-target="list"></ol>
+
+        <p class="text-muted text-center py-4 mb-0" data-party-map-target="empty" hidden>
+          Nenhum deputado registrado neste estado.
+        </p>
+
+        <template data-party-map-target="row">
+          <li class="party-row">
+            <a class="d-block text-decoration-none text-reset py-2 px-2 rounded-3" data-field="link">
+              <div class="d-flex justify-content-between align-items-baseline gap-3">
+                <div class="min-w-0">
+                  <strong class="text-navy me-1" data-field="label"></strong>
+                  <span class="small text-muted text-truncate" data-field="name"></span>
+                </div>
+                <div class="text-end flex-shrink-0 small">
+                  <span class="fw-bold text-navy" data-field="pct"></span>
+                  <span class="text-muted ms-1" data-field="seats"></span>
+                </div>
+              </div>
+              <div class="progress rounded-pill mt-1" style="height: 6px;">
+                <div class="progress-bar bg-gold" data-field="bar"></div>
+              </div>
+            </a>
+          </li>
+        </template>
+
+        <% if @parties_without_bench.any? %>
+          <details class="mt-4 small">
+            <summary class="text-muted">
+              <%= @parties_without_bench.size %> <%= @parties_without_bench.size == 1 ? "partido registrado" : "partidos registrados" %> sem deputado na Câmara
+            </summary>
+            <div class="d-flex flex-wrap gap-2 mt-2">
+              <% @parties_without_bench.each do |party| %>
+                <%= link_to party.label, party_path(party), class: "panel-chip", title: party.name %>
+              <% end %>
+            </div>
+          </details>
+        <% end %>
+      </div>
+    </div>
+  </div>
+</section>
