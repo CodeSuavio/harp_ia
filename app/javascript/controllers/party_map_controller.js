@@ -7,7 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 const percent = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 })
 
 export default class extends Controller {
-  static targets = ["data", "tile", "panel", "list", "row", "empty", "scope", "title", "summary", "reset"]
+  static targets = ["data", "tile", "panel", "list", "row", "empty", "scope", "title", "summary", "reset", "hint"]
   static values = { selected: String }
 
   pick(event) {
@@ -41,6 +41,7 @@ export default class extends Controller {
     this.scopeTarget.textContent = state ? "Visão estadual" : "Visão nacional"
     this.titleTarget.textContent = state ? state.name : "Brasil"
     this.resetTarget.hidden = !state
+    this.hintTarget.hidden = Boolean(state)
     this.render(state ? state.seats : this.mapData.national)
     this.syncUrl()
   }
