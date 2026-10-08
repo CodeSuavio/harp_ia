@@ -53,6 +53,9 @@
                 &middot; desde <%= party.registered_on.year %>
               <% end %>
             </div>
+            <% if (cohesion = @cohesion.dig(party.id, :pct)) %>
+              <div class="mt-1">coesão <%= cohesion %>%</div>
+            <% end %>
           </div>
         </div>
       <% end %>
