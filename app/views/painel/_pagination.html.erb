@@ -1,0 +1,15 @@
+<% if @total_pages > 1 %>
+  <nav class="d-flex justify-content-center align-items-center gap-3 mt-5">
+    <% if @page > 1 %>
+      <%= link_to "Anterior", public_send(path_helper, request.query_parameters.merge(page: @page - 1)),
+            class: "btn btn-outline-secondary btn-sm rounded-pill px-4" %>
+    <% end %>
+
+    <span class="data-label text-muted">Página <%= @page %> de <%= @total_pages %></span>
+
+    <% if @page < @total_pages %>
+      <%= link_to "Próxima", public_send(path_helper, request.query_parameters.merge(page: @page + 1)),
+            class: "btn btn-gold btn-sm rounded-pill px-4" %>
+    <% end %>
+  </nav>
+<% end %>

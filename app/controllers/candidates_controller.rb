@@ -35,6 +35,9 @@ class CandidatesController < ApplicationController
                        .offset((@page - 1) * PER_PAGE)
                        .limit(PER_PAGE)
 
+    @deputies_by_json_id = Deputy.where(json_id: @candidates.map(&:current_deputy_id).compact).index_by(&:json_id)
+    @metrics = DirectoryMetrics.new(@deputies_by_json_id.values)
+
     @states = Candidate.distinct.pluck(:state_label).compact.sort
     @parties = Party.order(:label)
   end
@@ -42,6 +45,7 @@ class CandidatesController < ApplicationController
   def show
     @candidate = Candidate.find(params[:id])
     authorize @candidate
+    @overview = DeputyOverview.new(@candidate.current_deputy) if @candidate.current_deputy
   end
 
   private

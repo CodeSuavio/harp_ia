@@ -1,0 +1,28 @@
+<section class="mt-5">
+  <h2 class="h5 mb-3">Como votou</h2>
+
+  <% if overview.votes_count.zero? %>
+    <p class="text-muted">Nenhum voto registrado nas votações carregadas.</p>
+  <% else %>
+    <p class="small text-muted mb-2">
+      <%= overview.votes_count %> votos em <%= overview.polls_voted %> votações carregadas
+    </p>
+
+    <div class="progress mb-3" style="height: 1.5rem;">
+      <% overview.vote_breakdown.each do |label, count| %>
+        <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
+             style="width: <%= bar_percent(count, overview.votes_count) %>%"
+             title="<%= label %>: <%= count %>"></div>
+      <% end %>
+    </div>
+
+    <ul class="list-unstyled d-flex flex-wrap gap-3 small mb-0">
+      <% overview.vote_breakdown.each do |label, count| %>
+        <li>
+          <span class="badge <%= vote_color(label) %> me-1">&nbsp;&nbsp;</span>
+          <%= label %>: <%= count %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
+</section>

@@ -1,3 +1,6 @@
+<% deputy = @candidate.current_deputy %>
+<% status = @candidate.candidacy_status.to_s %>
+
 <div class="container my-4">
   <%= link_to "← Candidatos", candidates_path %>
 
@@ -28,11 +31,28 @@
         <dt class="col-sm-4">Estado</dt>
         <dd class="col-sm-8"><%= @candidate.state_label %></dd>
 
-        <dt class="col-sm-4">Situação da candidatura</dt>
-        <dd class="col-sm-8"><%= @candidate.candidacy_status %></dd>
+        <% if deputy %>
+          <dt class="col-sm-4">Deputado em exercício</dt>
+          <dd class="col-sm-8"><%= link_to deputy.name, deputy_path(deputy) %></dd>
+        <% end %>
+
+        <% if status.present? && status != "#NE" %>
+          <dt class="col-sm-4">Situação da candidatura</dt>
+          <dd class="col-sm-8"><%= status %></dd>
+        <% end %>
 
         <dt class="col-sm-4">Concorre à reeleição</dt>
-        <dd class="col-sm-8"><%= @candidate.running_for_reelection ? "Sim" : "Não" %></dd>
+        <dd class="col-sm-8"><%= @candidate.reelection? ? "Sim" : "Não" %></dd>
+
+        <% if @candidate.gender.present? %>
+          <dt class="col-sm-4">Gênero</dt>
+          <dd class="col-sm-8"><%= @candidate.gender.capitalize %></dd>
+        <% end %>
+
+        <% if @candidate.race_color.present? %>
+          <dt class="col-sm-4">Cor ou raça</dt>
+          <dd class="col-sm-8"><%= @candidate.race_color.capitalize %></dd>
+        <% end %>
 
         <dt class="col-sm-4">Escolaridade</dt>
         <dd class="col-sm-8"><%= @candidate.education_level %></dd>
@@ -40,6 +60,20 @@
         <dt class="col-sm-4">Ocupação</dt>
         <dd class="col-sm-8"><%= @candidate.occupation %></dd>
       </dl>
+
+      <div class="d-flex flex-wrap gap-2">
+        <%= render "painel/ask_harpia", question: harpia_question(@candidate, @overview) %>
+        <% if deputy %>
+          <%= link_to deputy_path(deputy), class: "btn btn-outline-secondary rounded-pill px-4" do %>
+            <i class="fa-solid fa-chart-line me-2"></i>Painel do deputado
+          <% end %>
+        <% end %>
+      </div>
     </div>
   </div>
+
+  <% if @overview %>
+    <%= render "deputies/spending", overview: @overview %>
+    <%= render "deputies/votes", overview: @overview %>
+  <% end %>
 </div>
