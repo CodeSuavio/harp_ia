@@ -2,7 +2,7 @@ require "net/http"
 require "json"
 
 namespace :proposicoes do
-  desc "Numero oficial, autores e projetos de cada votacao (harpia-seed-data e API da Camara)"
+  desc "Numero oficial, autores, projeto de cada votacao e temas (harpia-seed-data e API da Camara)"
   task cruzar: :environment do
     fonte = "https://raw.githubusercontent.com/gabsgarcia/harpia-seed-data/refs/heads/main/db/seeds/proposicoes.json"
     api = "https://dadosabertos.camara.leg.br/api/v2"
@@ -34,43 +34,49 @@ namespace :proposicoes do
         numerados += 1
 
         rows.map { |row| deputados[row["deputado_id"].to_i] }.compact.uniq.each do |deputy_id|
-          BillAuthor.find_or_create_by!(bill_id: bill_id, deputy_id: deputy_id)
-          autorias += 1
+          autorias += 1 if BillAuthor.find_or_create_by!(bill_id: bill_id, deputy_id: deputy_id).previously_new_record?
         end
       end
     end
     puts "projetos com numero oficial: #{numerados}"
-    puts "autorias gravadas: #{autorias}"
+    puts "autorias novas: #{autorias}"
 
     importar = lambda do |camara_id|
       dados = get_json.call("#{api}/proposicoes/#{camara_id}")&.dig("dados")
       return nil unless dados && tipos.include?(dados["siglaTipo"])
 
+      autores = get_json.call("#{api}/proposicoes/#{camara_id}/autores")&.dig("dados")
+      return nil if autores.nil?
+
+      json_ids = autores.sort_by { |autor| autor["ordemAssinatura"].to_i }
+                        .filter_map { |autor| autor["uri"].to_s[%r{/deputados/(\d+)\z}, 1]&.to_i }
       ano = dados["ano"].to_i
       ano = dados["dataApresentacao"].to_s[0, 4].to_i if ano < 1900
-      bill = Bill.create!(
-        bill_number: camara_id,
-        bill_type: dados["siglaTipo"],
-        number: dados["numero"].to_i,
-        year: ano,
-        summary: dados["ementa"],
-        keywords: dados["keywords"],
-        submission_date: dados["dataApresentacao"],
-        url: "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=#{camara_id}"
-      )
-      autores = get_json.call("#{api}/proposicoes/#{camara_id}/autores")&.dig("dados") || []
-      json_ids = autores.filter_map { |autor| autor["uri"].to_s[%r{/deputados/(\d+)\z}, 1]&.to_i }
-      Deputy.where(json_id: json_ids).pluck(:id).each { |deputy_id| BillAuthor.find_or_create_by!(bill: bill, deputy_id: deputy_id) }
-      bill
+
+      ActiveRecord::Base.transaction do
+        bill = Bill.create!(
+          bill_number: camara_id,
+          bill_type: dados["siglaTipo"],
+          number: dados["numero"].to_i,
+          year: ano,
+          summary: dados["ementa"],
+          keywords: dados["keywords"],
+          submission_date: dados["dataApresentacao"],
+          url: "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=#{camara_id}"
+        )
+        por_json_id = Deputy.where(json_id: json_ids).index_by(&:json_id)
+        json_ids.uniq.filter_map { |json_id| por_json_id[json_id] }.each { |deputy| BillAuthor.create!(bill: bill, deputy: deputy) }
+        bill
+      end
     end
 
     importados = 0
     vinculos = 0
-    sem_resposta = []
+    falhas = []
     Poll.where(id: Vote.select(:poll_id)).find_each do |poll|
       dados = get_json.call("#{api}/votacoes/#{poll.json_id}")&.dig("dados")
       if dados.nil?
-        sem_resposta << poll.json_id
+        falhas << "#{poll.json_id}: sem resposta da API"
         next
       end
 
@@ -83,15 +89,21 @@ namespace :proposicoes do
         end
         next unless bill
 
-        PollBill.find_or_create_by!(poll: poll, bill: bill)
-        vinculos += 1
+        vinculos += 1 if PollBill.find_or_create_by!(poll: poll, bill: bill).previously_new_record?
       end
+    rescue ActiveRecord::ActiveRecordError => e
+      falhas << "#{poll.json_id}: #{e.message}"
+    ensure
       sleep 0.2
     end
 
+    temas = ThemeClassifier.new.classify_all!
+
     puts "projetos votados importados: #{importados}"
-    puts "vinculos votacao-projeto: #{vinculos}"
+    puts "vinculos novos votacao-projeto: #{vinculos}"
     puts "votacoes com projeto: #{PollBill.distinct.count(:poll_id)} de #{Poll.where(id: Vote.select(:poll_id)).count}"
-    puts "sem resposta da API (rodar de novo resolve): #{sem_resposta.join(', ')}" if sem_resposta.any?
+    puts "temas: #{temas[:bills]} vinculos de projetos, #{temas[:polls]} de votacoes"
+    puts "votacoes nominais com tema: #{PollTheme.where(poll_id: Vote.select(:poll_id)).distinct.count(:poll_id)}"
+    falhas.each { |falha| puts "  falhou (rodar de novo resolve): #{falha}" }
   end
 end

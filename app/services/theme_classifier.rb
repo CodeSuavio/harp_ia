@@ -57,9 +57,11 @@ class ThemeClassifier
       ids.each { |theme_id| bill_rows << { bill_id: bill.id, theme_id: theme_id } }
     end
 
+    poll_links = PollBill.pluck(:poll_id, :bill_id).group_by(&:first).transform_values { |rows| rows.map(&:last) }
     poll_rows = []
     Poll.find_each do |poll|
-      ids = (theme_ids_for(poll.description) + bill_theme_ids.fetch(poll.bill_id, [])).uniq
+      linked = [poll.bill_id, *poll_links[poll.id]].compact
+      ids = (theme_ids_for(poll.description) + linked.flat_map { |bill_id| bill_theme_ids.fetch(bill_id, []) }).uniq
       ids.each { |theme_id| poll_rows << { poll_id: poll.id, theme_id: theme_id } }
     end
 

@@ -35,7 +35,7 @@ class PollBreakdown
         label: label,
         votes: ordered,
         total: ordered.sum { |_, count| count },
-        majority: DeputyMetrics.majority_of(votes["Sim"].to_i, votes["Não"].to_i),
+        majority: majority(ordered),
         unanimous: self.class.unanimous_label(ordered),
         cohesion: cohesion(ordered)
       }
@@ -43,6 +43,13 @@ class PollBreakdown
   end
 
   private
+
+  def majority(pairs)
+    considered = pairs.reject { |label, _| label == NON_VOTING }
+    top = considered.map(&:last).max
+    leaders = considered.select { |_, count| count == top }
+    leaders.size == 1 ? leaders.first.first : nil
+  end
 
   def cohesion(pairs)
     considered = pairs.reject { |label, _| label == NON_VOTING }

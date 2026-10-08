@@ -3,9 +3,9 @@ class CandidatesController < ApplicationController
 
   PER_PAGE = 24
   SORTS = {
-    "name"   => { ballot_name: :asc },
-    "state"  => { state_label: :asc, ballot_name: :asc },
-    "number" => { number: :asc }
+    "name"   => { ballot_name: :asc, id: :asc },
+    "state"  => { state_label: :asc, ballot_name: :asc, id: :asc },
+    "number" => { number: :asc, id: :asc }
   }.freeze
 
   def index
@@ -58,10 +58,10 @@ class CandidatesController < ApplicationController
     return scope if params[:q].blank?
 
     term = params[:q].strip
-    like = "%#{term}%"
+    like = "%#{Candidate.sanitize_sql_like(term)}%"
     party_ids = Party.where(
       "upper(label) = :t OR upper(coalesce(former_labels, '')) LIKE :lt",
-      t: term.upcase, lt: "%#{term.upcase}%"
+      t: term.upcase
     ).pluck(:id)
 
     if party_ids.any?

@@ -50,7 +50,7 @@ class BillsController < ApplicationController
       return match[3] ? found.where(year: match[3].to_i) : found
     end
 
-    scope.where("bills.summary ILIKE :q OR bills.keywords ILIKE :q", q: "%#{params[:q].strip}%")
+    scope.where("bills.summary ILIKE :q OR bills.keywords ILIKE :q", q: "%#{Bill.sanitize_sql_like(params[:q].strip)}%")
   end
 
   def apply(scope, filters)
