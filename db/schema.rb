@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_03_203034) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_08_160000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_203034) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "bill_authors", force: :cascade do |t|
+    t.bigint "bill_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "deputy_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bill_id", "deputy_id"], name: "index_bill_authors_on_bill_id_and_deputy_id", unique: true
+    t.index ["bill_id"], name: "index_bill_authors_on_bill_id"
+    t.index ["deputy_id"], name: "index_bill_authors_on_deputy_id"
+  end
+
   create_table "bill_themes", force: :cascade do |t|
     t.bigint "bill_id", null: false
     t.bigint "theme_id", null: false
@@ -52,15 +62,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_203034) do
 
   create_table "bills", force: :cascade do |t|
     t.string "bill_number"
+    t.string "bill_type"
     t.datetime "created_at", null: false
-    t.bigint "deputy_id", null: false
+    t.bigint "deputy_id"
     t.string "keywords"
-    t.bigint "party_id", null: false
+    t.integer "number"
+    t.bigint "party_id"
     t.datetime "submission_date"
     t.text "summary"
     t.datetime "updated_at", null: false
     t.string "url"
     t.integer "year"
+    t.index ["bill_type", "number", "year"], name: "index_bills_on_bill_type_and_number_and_year", unique: true
     t.index ["deputy_id"], name: "index_bills_on_deputy_id"
     t.index ["party_id"], name: "index_bills_on_party_id"
   end
@@ -180,6 +193,16 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_203034) do
     t.string "succeeded_by"
     t.datetime "updated_at", null: false
     t.string "url"
+  end
+
+  create_table "poll_bills", force: :cascade do |t|
+    t.bigint "bill_id", null: false
+    t.datetime "created_at", null: false
+    t.bigint "poll_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["bill_id"], name: "index_poll_bills_on_bill_id"
+    t.index ["poll_id", "bill_id"], name: "index_poll_bills_on_poll_id_and_bill_id", unique: true
+    t.index ["poll_id"], name: "index_poll_bills_on_poll_id"
   end
 
   create_table "poll_themes", force: :cascade do |t|
@@ -427,6 +450,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_203034) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "bill_authors", "bills"
+  add_foreign_key "bill_authors", "deputies"
   add_foreign_key "bill_themes", "bills"
   add_foreign_key "bill_themes", "themes"
   add_foreign_key "bills", "deputies"
@@ -437,6 +462,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_03_203034) do
   add_foreign_key "deputies", "parties"
   add_foreign_key "expenses", "deputies"
   add_foreign_key "messages", "chats"
+  add_foreign_key "poll_bills", "bills"
+  add_foreign_key "poll_bills", "polls"
   add_foreign_key "poll_themes", "polls"
   add_foreign_key "poll_themes", "themes"
   add_foreign_key "polls", "bills"

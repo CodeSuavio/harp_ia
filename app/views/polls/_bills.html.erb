@@ -1,0 +1,9 @@
+<% bills = poll.bills.to_a %>
+<% if bills.any? %>
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <span class="data-label text-muted"><%= bills.size == 1 ? "Projeto em votação" : "Projetos em votação" %></span>
+    <% bills.each do |bill| %>
+      <%= link_to proposicao_label(bill), bill_path(bill), class: "panel-chip text-decoration-none", data: { turbo_frame: "_top" } %>
+    <% end %>
+  </div>
+<% end %>

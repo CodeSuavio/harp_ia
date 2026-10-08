@@ -1,11 +1,15 @@
-<% words = @bill.keywords.to_s.split(";").map(&:strip).reject(&:blank?) %>
+<% words = @bill.keywords.to_s.split(/[;,]/).map(&:strip).reject(&:blank?) %>
+<% coauthors = @bill.authors.reject { |deputy| deputy.id == @bill.deputy_id }.sort_by(&:name) %>
 
 <section class="container py-5" style="max-width: 860px;">
   <%= link_to "← Projetos", bills_path, class: "small text-muted text-decoration-none" %>
 
   <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-3">
+    <span class="fw-bold text-navy fs-5"><%= proposicao_label(@bill) %></span>
     <span class="data-label text-muted"><%= @bill.submission_date&.strftime("%d/%m/%Y") %></span>
-    <span class="panel-chip"><%= @bill.party&.label %></span>
+    <% if @bill.party %>
+      <span class="panel-chip"><%= @bill.party.label %></span>
+    <% end %>
     <% @bill.themes.each do |theme| %>
       <span class="panel-chip"><%= theme.name %></span>
     <% end %>
@@ -13,11 +17,38 @@
 
   <p class="fs-5 fw-semibold text-navy"><%= @bill.summary %></p>
 
-  <p class="text-muted">
-    Autoria:
-    <%= link_to @bill.deputy.name, deputy_path(@bill.deputy), class: "text-navy fw-semibold" %>
-    · Proposição nº <%= @bill.bill_number %>
-  </p>
+  <% if @bill.deputy %>
+    <p class="text-muted mb-1">
+      Autoria:
+      <%= link_to @bill.deputy.name, deputy_path(@bill.deputy), class: "text-navy fw-semibold" %>
+    </p>
+  <% end %>
+
+  <% if coauthors.any? %>
+    <p class="text-muted small">
+      <%= @bill.deputy ? "Coautoria" : "Autoria" %> (<%= coauthors.size %>):
+      <%= safe_join(coauthors.map { |deputy| link_to(deputy.name, deputy_path(deputy), class: "text-navy") }, ", ") %>
+    </p>
+  <% end %>
+
+  <% if @votings.any? %>
+    <h2 class="h6 text-uppercase text-muted mt-4">Votações deste projeto</h2>
+    <ul class="list-group list-group-flush mb-4">
+      <% @votings.each do |poll| %>
+        <li class="list-group-item px-0">
+          <%= link_to poll_path(poll), class: "text-decoration-none text-reset" do %>
+            <span class="data-label text-muted me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+            <% if poll.approval == true %>
+              <span class="badge text-bg-success me-2">Aprovada</span>
+            <% elsif poll.approval == false %>
+              <span class="badge text-bg-danger me-2">Rejeitada</span>
+            <% end %>
+            <%= poll_summary(poll).truncate(140) %>
+          <% end %>
+        </li>
+      <% end %>
+    </ul>
+  <% end %>
 
   <% if words.any? %>
     <h2 class="h6 text-uppercase text-muted mt-4">Palavras-chave</h2>
