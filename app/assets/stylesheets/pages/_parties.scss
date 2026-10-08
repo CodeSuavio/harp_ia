@@ -13,7 +13,7 @@
 .party-map {
   display: block;
   width: 100%;
-  max-width: 340px;
+  max-width: 480px;
   margin: 0 auto;
   user-select: none;
 }
@@ -21,14 +21,14 @@
 .uf-tile {
   cursor: pointer;
   outline: none;
+  transition: opacity 0.15s ease;
 
-  rect {
+  .uf-shape {
     fill: $royal-blue;
-    stroke: transparent;
-    stroke-width: 3;
-    transition: fill 0.15s ease, stroke 0.15s ease, transform 0.15s ease;
-    transform-box: fill-box;
-    transform-origin: center;
+    stroke: #fff;
+    stroke-width: 1;
+    stroke-linejoin: round;
+    transition: fill 0.15s ease;
   }
 
   text {
@@ -37,27 +37,56 @@
     pointer-events: none;
   }
 
-  .uf-label { font-size: 15px; font-weight: 800; }
-  .uf-seats { font-size: 11px; opacity: 0.75; }
+  // Tamanhos em unidades do viewBox: o SVG encolhe com a tela, então no celular a fonte cresce
+  .uf-label { font-size: 13px; font-weight: 800; }
+  .uf-seats { font-size: 11px; opacity: 0.85; }
 
-  &.is-strong text { fill: #fff; }
-
-  &:hover rect,
-  &:focus-visible rect {
-    stroke: $gold;
+  @media (max-width: 575.98px) {
+    .uf-label { font-size: 18px; }
+    .uf-seats { font-size: 15px; }
   }
 
-  // Estado ativo: dourado sólido, contorno navy e leve zoom
+  &.is-strong > text:not(.uf-callout) { fill: #fff; }
+
+  // Rótulos fora do mapa (estados pequenos): texto sempre escuro, sobre o fundo branco
+  .uf-callout { text-anchor: start; }
+  .uf-callout .uf-seats { font-weight: 400; }
+
+  .uf-leader {
+    stroke: rgba($navy-blue, 0.35);
+    stroke-width: 1;
+  }
+
+  .uf-hit { fill: transparent; }
+
+  &:hover .uf-shape,
+  &:focus-visible .uf-shape {
+    fill: $gold;
+    fill-opacity: 0.7;
+  }
+
+  &:focus-visible .uf-hit { stroke: $gold; }
+
+  // Estado ativo: dourado sólido (o contorno vem do .uf-highlight)
   &.is-active {
-    rect {
+    .uf-shape {
       fill: $gold;
       fill-opacity: 1;
-      stroke: $navy-blue;
-      transform: scale(1.08);
     }
 
-    text { fill: #fff; }
+    > text:not(.uf-callout) { fill: #fff; }
+    .uf-callout { font-weight: 800; }
+    .uf-leader { stroke: $gold; stroke-width: 1.5; }
   }
+}
+
+// Cópia do contorno do estado ativo desenhada por último, para a borda não ficar sob os vizinhos
+.uf-highlight {
+  fill: none;
+  stroke: $navy-blue;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  pointer-events: none;
 }
 
 // Com um estado escolhido, os demais esmaecem para o ativo saltar aos olhos
@@ -79,6 +108,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .uf-tile rect { transition: none; }
-  .uf-tile.is-active rect { transform: none; }
+  .uf-tile,
+  .uf-tile .uf-shape { transition: none; }
 }

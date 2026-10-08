@@ -7,7 +7,7 @@ import { Controller } from "@hotwired/stimulus"
 const percent = new Intl.NumberFormat("pt-BR", { style: "percent", maximumFractionDigits: 1 })
 
 export default class extends Controller {
-  static targets = ["data", "tile", "panel", "list", "row", "empty", "scope", "title", "summary", "reset", "hint"]
+  static targets = ["data", "tile", "panel", "list", "row", "empty", "scope", "title", "summary", "reset", "hint", "highlight"]
   static values = { selected: String }
 
   pick(event) {
@@ -31,12 +31,15 @@ export default class extends Controller {
   selectedValueChanged() {
     const state = this.mapData.states[this.selectedValue]
 
+    let shape = ""
     this.tileTargets.forEach((tile) => {
       const active = tile.dataset.uf === this.selectedValue
       tile.classList.toggle("is-active", active)
       tile.setAttribute("aria-pressed", active)
+      if (active) shape = tile.querySelector(".uf-shape").getAttribute("d")
     })
     this.element.classList.toggle("has-selection", Boolean(state))
+    this.highlightTarget.setAttribute("d", shape)
 
     this.scopeTarget.textContent = state ? "Visão estadual" : "Visão nacional"
     this.titleTarget.textContent = state ? state.name : "Brasil"

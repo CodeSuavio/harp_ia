@@ -3,9 +3,6 @@
 <%= render "painel/hero", title: "Partidos", highlight: "na Câmara",
       subtitle: "Como as 513 cadeiras se dividem entre os partidos, no Brasil e em cada estado." %>
 
-<%# Tile = lado de cada quadrado do mapa; Step = lado + espaçamento %>
-<% tile = 56 %>
-<% step = 62 %>
 <% max_seats = [@state_seats.values.max.to_i, 1].max %>
 
 <section class="container search-container pb-5"
@@ -27,24 +24,41 @@
           <span class="small text-muted">cor = tamanho da bancada</span>
         </div>
 
-        <svg class="party-map" viewBox="0 0 <%= 6 * step - (step - tile) %> <%= 8 * step - (step - tile) %>"
+        <svg class="party-map" viewBox="<%= BrazilMap::VIEW_BOX %>"
              role="group" aria-label="Mapa do Brasil por estado">
-          <% PartiesController::MAP_GRID.each do |uf, (col, row)| %>
+          <% BrazilMap::PATHS.each do |uf, path| %>
             <% seats = @state_seats[uf] %>
             <% weight = 0.15 + 0.85 * seats / max_seats %>
             <g class="uf-tile <%= 'is-strong' if weight > 0.5 %>"
                role="button" tabindex="0" aria-pressed="false"
                aria-label="<%= PartiesController::STATES[uf] %>: <%= seats %> <%= "deputado".pluralize(seats) %>"
-               transform="translate(<%= col * step %> <%= row * step %>)"
                data-uf="<%= uf %>"
                data-party-map-target="tile"
                data-action="click->party-map#pick keydown.enter->party-map#pick keydown.space->party-map#pick">
               <title><%= PartiesController::STATES[uf] %> · <%= seats %> <%= "deputado".pluralize(seats) %></title>
-              <rect width="<%= tile %>" height="<%= tile %>" rx="10" fill-opacity="<%= weight.round(2) %>"></rect>
-              <text x="<%= tile / 2 %>" y="<%= tile / 2 - 4 %>" class="uf-label"><%= uf %></text>
-              <text x="<%= tile / 2 %>" y="<%= tile / 2 + 12 %>" class="uf-seats"><%= seats %></text>
+              <path class="uf-shape" d="<%= path %>" fill-opacity="<%= weight.round(2) %>"></path>
+
+              <% if (callout = BrazilMap::CALLOUTS[uf]) %>
+                <% (x, y), (from_x, from_y) = callout %>
+                <line class="uf-leader" x1="<%= from_x %>" y1="<%= from_y %>" x2="<%= x - 3 %>" y2="<%= y - 4 %>"></line>
+                <%# Área maior que o texto, para o estado pequeno ficar fácil de clicar %>
+                <rect class="uf-hit" x="<%= x - 4 %>" y="<%= y - 15 %>" width="58" height="21" rx="4"></rect>
+                <text class="uf-callout" x="<%= x %>" y="<%= y %>">
+                  <tspan class="uf-label"><%= uf %></tspan> <tspan class="uf-seats"><%= seats %></tspan>
+                </text>
+              <% else %>
+                <% x, y = BrazilMap::LABELS[uf] %>
+                <%# dy em "em" para a segunda linha acompanhar a fonte maior do mobile %>
+                <text x="<%= x %>" y="<%= y - 1 %>">
+                  <tspan class="uf-label"><%= uf %></tspan>
+                  <tspan class="uf-seats" x="<%= x %>" dy="1.1em"><%= seats %></tspan>
+                </text>
+              <% end %>
             </g>
           <% end %>
+
+          <%# Contorno do estado ativo por cima dos vizinhos (no SVG, quem vem depois fica na frente) %>
+          <path class="uf-highlight" data-party-map-target="highlight"></path>
         </svg>
 
         <p class="small text-muted text-center mt-3 mb-0">
