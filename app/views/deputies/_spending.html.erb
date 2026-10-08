@@ -3,61 +3,55 @@
 <% max_type = types.map(&:last).max %>
 <% suppliers = overview.top_suppliers %>
 
-<section class="mt-5">
-  <h2 class="h5 mb-3">Gastos da cota parlamentar</h2>
+<section class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-wallet me-2 text-gold"></i>Gastos da cota parlamentar
+  </h2>
 
   <% if overview.expense_count.zero? %>
-    <p class="text-muted">Nenhum gasto registrado.</p>
+    <p class="text-muted small mb-0">Nenhum gasto registrado.</p>
   <% else %>
     <div class="row g-3 mb-4">
-      <div class="col-6 col-md-4">
-        <div class="border rounded-3 p-3 text-center">
-          <div class="h4 mb-0"><%= brl(overview.total_spent) %></div>
-          <div class="small text-muted">total gasto (todos os anos)</div>
+      <% [
+           [brl(overview.total_spent), "total gasto (todos os anos)"],
+           [overview.expense_count, "despesas"],
+           [brl(overview.average_expense), "valor médio por despesa"]
+         ].each_with_index do |(value, label), index| %>
+        <div class="<%= index == 2 ? 'col-12' : 'col-6' %> col-md-4">
+          <div class="p-3 bg-light rounded-3 h-100 <%= 'border-start border-4 border-gold' if index.zero? %>">
+            <div class="h4 fw-bold text-navy mb-0"><%= value %></div>
+            <div class="small text-muted"><%= label %></div>
+          </div>
         </div>
-      </div>
-
-      <div class="col-6 col-md-4">
-        <div class="border rounded-3 p-3 text-center">
-          <div class="h4 mb-0"><%= overview.expense_count %></div>
-          <div class="small text-muted">despesas</div>
-        </div>
-      </div>
-
-      <div class="col-12 col-md-4">
-        <div class="border rounded-3 p-3 text-center">
-          <div class="h4 mb-0"><%= brl(overview.average_expense) %></div>
-          <div class="small text-muted">valor médio por despesa</div>
-        </div>
-      </div>
+      <% end %>
     </div>
 
     <div class="row g-4">
       <div class="col-md-6">
-        <h3 class="h6 text-muted mb-3">Por ano</h3>
+        <h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Por ano</h3>
         <% overview.spent_by_year.each do |year, total| %>
           <div class="mb-2">
             <div class="d-flex justify-content-between small">
-              <span><%= year %></span>
+              <span class="text-navy fw-medium"><%= year %></span>
               <span><%= brl(total) %></span>
             </div>
-            <div class="progress" style="height: .6rem;">
-              <div class="progress-bar" role="progressbar" style="width: <%= bar_percent(total, max_year) %>%"></div>
+            <div class="progress" style="height: .5rem;">
+              <div class="progress-bar bg-gold" role="progressbar" style="width: <%= bar_percent(total, max_year) %>%"></div>
             </div>
           </div>
         <% end %>
       </div>
 
       <div class="col-md-6">
-        <h3 class="h6 text-muted mb-3">Principais tipos de gasto</h3>
+        <h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Principais tipos de gasto</h3>
         <% types.each do |type, total| %>
           <div class="mb-2">
             <div class="d-flex justify-content-between small gap-3">
-              <span title="<%= type %>"><%= truncate(type, length: 38) %></span>
+              <span class="text-navy fw-medium" title="<%= type %>"><%= truncate(type, length: 38) %></span>
               <span class="text-nowrap"><%= brl(total) %></span>
             </div>
-            <div class="progress" style="height: .6rem;">
-              <div class="progress-bar bg-secondary" role="progressbar" style="width: <%= bar_percent(total, max_type) %>%"></div>
+            <div class="progress" style="height: .5rem;">
+              <div class="progress-bar bg-navy" role="progressbar" style="width: <%= bar_percent(total, max_type) %>%"></div>
             </div>
           </div>
         <% end %>
@@ -65,22 +59,22 @@
     </div>
 
     <% if suppliers.any? %>
-      <h3 class="h6 text-muted mt-4 mb-3">Maiores fornecedores</h3>
+      <h3 class="small fw-bold text-muted text-uppercase tracking-wider mt-4 mb-3">Maiores fornecedores</h3>
       <div class="table-responsive">
-        <table class="table table-sm align-middle">
+        <table class="table table-sm table-hover align-middle mb-0">
           <thead>
-            <tr>
-              <th>Fornecedor</th>
-              <th class="text-end">Despesas</th>
-              <th class="text-end">Total</th>
+            <tr class="small text-muted text-uppercase">
+              <th class="fw-semibold">Fornecedor</th>
+              <th class="fw-semibold text-end">Despesas</th>
+              <th class="fw-semibold text-end">Total</th>
             </tr>
           </thead>
           <tbody>
             <% suppliers.each do |name, total, count| %>
               <tr>
-                <td><%= name %></td>
+                <td class="text-navy"><%= name %></td>
                 <td class="text-end"><%= count %></td>
-                <td class="text-end text-nowrap"><%= brl(total) %></td>
+                <td class="text-end text-nowrap fw-medium"><%= brl(total) %></td>
               </tr>
             <% end %>
           </tbody>
