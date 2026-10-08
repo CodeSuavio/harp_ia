@@ -1,29 +1,29 @@
 class PartiesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :show]
 
-  SORTS = %w[bench label number registered cohesion].freeze
   DIVIDED_POLLS = 5
 
+  STATES = {
+    "AC" => "Acre", "AL" => "Alagoas", "AP" => "Amapá", "AM" => "Amazonas",
+    "BA" => "Bahia", "CE" => "Ceará", "DF" => "Distrito Federal", "ES" => "Espírito Santo",
+    "GO" => "Goiás", "MA" => "Maranhão", "MT" => "Mato Grosso", "MS" => "Mato Grosso do Sul",
+    "MG" => "Minas Gerais", "PA" => "Pará", "PB" => "Paraíba", "PR" => "Paraná",
+    "PE" => "Pernambuco", "PI" => "Piauí", "RJ" => "Rio de Janeiro", "RN" => "Rio Grande do Norte",
+    "RS" => "Rio Grande do Sul", "RO" => "Rondônia", "RR" => "Roraima", "SC" => "Santa Catarina",
+    "SP" => "São Paulo", "SE" => "Sergipe", "TO" => "Tocantins"
+  }.freeze
+
   def index
-    scope = apply_search(policy_scope(Party))
-    @deputy_counts = Deputy.group(:party_id).count
-    @candidate_counts = Candidate.group(:party_id).count
-    @cohesion = DeputyMetrics.party_cohesion
+    parties = policy_scope(Party).order(:label).to_a
+    seats = Deputy.group(:state_label, :party_id).count
 
-    scope = scope.where(id: @deputy_counts.keys) if params[:bench] == "1"
+    @state_seats = Hash.new(0)
+    seats.each { |(uf, _), count| @state_seats[uf] += count }
 
-    @sort = SORTS.include?(params[:sort]) ? params[:sort] : "bench"
-    parties = scope.to_a
-
-    @parties = case @sort
-               when "label"      then parties.sort_by(&:label)
-               when "number"     then parties.sort_by { |p| [p.number || 9999, p.label] }
-               when "registered" then parties.sort_by { |p| [p.registered_on || Date.new(2100, 1, 1), p.label] }
-               when "cohesion"   then parties.sort_by { |p| pct = @cohesion.dig(p.id, :pct); [pct ? 0 : 1, -pct.to_i, p.label] }
-               else                   parties.sort_by { |p| [-@deputy_counts[p.id].to_i, p.label] }
-               end
-
-    @total = @parties.size
+    bench_ids = seats.keys.to_set(&:last)
+    with_bench, @parties_without_bench = parties.partition { |p| bench_ids.include?(p.id) }
+    @map_data = map_data(with_bench, seats)
+    @uf = params[:uf].to_s.upcase.presence_in(STATES.keys)
   end
 
   def show
@@ -42,6 +42,24 @@ class PartiesController < ApplicationController
 
   private
 
+  # Tudo o que o mapa precisa para trocar de estado sem ir ao servidor:
+  # { parties: { id => {label, name, url} }, national: { party_id => cadeiras },
+  #   states: { "SP" => { name:, seats: { party_id => cadeiras } } } }
+  def map_data(parties, seats)
+    national = Hash.new(0)
+    by_state = Hash.new { |hash, uf| hash[uf] = {} }
+    seats.each do |(uf, party_id), count|
+      national[party_id] += count
+      by_state[uf][party_id] = count
+    end
+
+    {
+      parties: parties.to_h { |p| [p.id, { label: p.label, name: p.name, url: party_path(p) }] },
+      national: national,
+      states: STATES.to_h { |uf, name| [uf, { name: name, seats: by_state[uf] }] }
+    }
+  end
+
   # [[votação, { sim:, nao:, index: }]] em que a bancada mais se dividiu
   def divided_polls
     return [] unless @cohesion
@@ -51,15 +69,5 @@ class PartiesController < ApplicationController
                               .first(DIVIDED_POLLS)
     polls = Poll.where(id: rows.map(&:first)).index_by(&:id)
     rows.filter_map { |poll_id, row| [polls[poll_id], row] if polls[poll_id] }
-  end
-
-  def apply_search(scope)
-    return scope if params[:q].blank?
-
-    term = "%#{params[:q].strip.upcase}%"
-    scope.where(
-      "upper(label) LIKE :t OR upper(name) LIKE :t OR upper(coalesce(former_labels, '')) LIKE :t",
-      t: term
-    )
   end
 end

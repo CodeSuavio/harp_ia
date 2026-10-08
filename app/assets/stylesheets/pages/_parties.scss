@@ -1,0 +1,113 @@
+// Partidos: mapa do Brasil em grade + bancadas
+
+.party-map-card {
+  cursor: default;
+
+  // No desktop o mapa acompanha a rolagem da lista (navbar é sticky)
+  @media (min-width: 992px) {
+    position: sticky;
+    top: 6rem;
+  }
+}
+
+.party-map {
+  display: block;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
+  user-select: none;
+}
+
+.uf-tile {
+  cursor: pointer;
+  outline: none;
+  transition: opacity 0.15s ease;
+
+  .uf-shape {
+    fill: $royal-blue;
+    stroke: #fff;
+    stroke-width: 1;
+    stroke-linejoin: round;
+    transition: fill 0.15s ease;
+  }
+
+  text {
+    fill: $navy-blue;
+    text-anchor: middle;
+    pointer-events: none;
+  }
+
+  // Tamanhos em unidades do viewBox: o SVG encolhe com a tela, então no celular a fonte cresce
+  .uf-label { font-size: 13px; font-weight: 800; }
+  .uf-seats { font-size: 11px; opacity: 0.85; }
+
+  @media (max-width: 575.98px) {
+    .uf-label { font-size: 18px; }
+    .uf-seats { font-size: 15px; }
+  }
+
+  &.is-strong > text:not(.uf-callout) { fill: #fff; }
+
+  // Rótulos fora do mapa (estados pequenos): texto sempre escuro, sobre o fundo branco
+  .uf-callout { text-anchor: start; }
+  .uf-callout .uf-seats { font-weight: 400; }
+
+  .uf-leader {
+    stroke: rgba($navy-blue, 0.35);
+    stroke-width: 1;
+  }
+
+  .uf-hit { fill: transparent; }
+
+  &:hover .uf-shape,
+  &:focus-visible .uf-shape {
+    fill: $gold;
+    fill-opacity: 0.7;
+  }
+
+  &:focus-visible .uf-hit { stroke: $gold; }
+
+  // Estado ativo: dourado sólido (o contorno vem do .uf-highlight)
+  &.is-active {
+    .uf-shape {
+      fill: $gold;
+      fill-opacity: 1;
+    }
+
+    > text:not(.uf-callout) { fill: #fff; }
+    .uf-callout { font-weight: 800; }
+    .uf-leader { stroke: $gold; stroke-width: 1.5; }
+  }
+}
+
+// Cópia do contorno do estado ativo desenhada por último, para a borda não ficar sob os vizinhos
+.uf-highlight {
+  fill: none;
+  stroke: $navy-blue;
+  stroke-width: 2;
+  stroke-linejoin: round;
+  pointer-events: none;
+}
+
+// Com um estado escolhido, os demais esmaecem para o ativo saltar aos olhos
+.has-selection .uf-tile:not(.is-active):not(:hover):not(:focus-visible) {
+  opacity: 0.45;
+}
+
+.party-panel {
+  // Ao rolar até o painel no mobile, não deixa o título embaixo da navbar
+  scroll-margin-top: 5.5rem;
+
+  .party-row a {
+    transition: background-color 0.15s ease;
+
+    &:hover { background-color: rgba($gold, 0.08); }
+  }
+
+  .party-row + .party-row { border-top: 1px solid rgba($navy-blue, 0.06); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .uf-tile,
+  .uf-tile .uf-shape { transition: none; }
+}
