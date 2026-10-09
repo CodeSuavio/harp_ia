@@ -121,6 +121,15 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_match "70% dos gastos de 2025", response.body
   end
 
+  test "aba de gastos lista os gastos fora do padrão e marca as notas" do
+    get deputy_path(deputies(:bruno), tab: "expenses")
+    assert_match "1 nota de combustíveis e lubrificantes acima de", response.body # 3000 contra 300 de Ana
+    assert_select "tbody i[aria-label='Nota fora do padrão']", count: 1
+
+    get deputy_path(deputies(:ana), tab: "expenses")
+    assert_match "Nenhum gasto fora do padrão em 2025", response.body
+  end
+
   test "mascara CPF de fornecedor pessoa física" do
     get deputy_path(deputies(:ana), tab: "expenses")
     assert_match "***.456.789-**", response.body

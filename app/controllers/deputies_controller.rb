@@ -127,6 +127,8 @@ class DeputiesController < ApplicationController
     @rank = DeputyMetrics.expense_rank(@deputy, @year)
     @year_over_year = @stats.year_over_year(year: @year)
     @concentration = @stats.supplier_concentration(year: @year)
+    @anomalies = ExpenseAnomalies.new(@deputy).for_year(@year)
+    @anomaly_expense_ids = @anomalies.flat_map { |row| row[:expense_ids].to_a }.to_set
     @monthly = expenses.group(:month).sum(:net_amount)
     @by_type = @stats.expenses_by_type(year: @year)
     @top_suppliers = expenses.group(:supplier, :supplier_cnpj_cpf)

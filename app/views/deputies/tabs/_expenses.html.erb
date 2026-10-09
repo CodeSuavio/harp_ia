@@ -158,6 +158,36 @@
     </div>
   </div>
 
+  <!-- Gastos fora do padrão -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">
+      Gastos fora do padrão
+      <%= info_tip("Comparamos os gastos com o histórico do próprio deputado e com as notas dos demais deputados. Fugir do padrão não é irregularidade por si só, mas merece atenção.") %>
+    </h2>
+
+    <% if @anomalies.any? %>
+      <ul class="list-unstyled mb-0 small">
+        <% @anomalies.each do |anomaly| %>
+          <% title, criterion = expense_anomaly_text(anomaly) %>
+          <% filter = anomaly[:expense_type] ? { expense_type: anomaly[:expense_type] } : { month: anomaly[:month] } %>
+          <li class="d-flex gap-2 align-items-start mb-2">
+            <i class="fa-solid fa-triangle-exclamation mt-1 <%= { high: 'text-danger', medium: 'text-warning', low: 'text-muted' }[anomaly[:severity]] %>" aria-hidden="true"></i>
+            <div>
+              <% if filter.values.any? %>
+                <%= link_to title, deputy_tab_path(@deputy, "expenses", { year: @year }.merge(filter)), class: "text-navy" %>
+              <% else %>
+                <span class="text-navy"><%= title %></span>
+              <% end %>
+              <%= info_tip(criterion) %>
+            </div>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p class="small text-muted mb-0">Nenhum gasto fora do padrão em <%= @year %>.</p>
+    <% end %>
+  </div>
+
   <!-- Principais fornecedores -->
   <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
     <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">Principais fornecedores</h2>
@@ -243,7 +273,12 @@
                 <%= expense.document_date&.strftime("%d/%m/%Y") || "#{month_label(expense.month)}/#{expense.year}" %>
               </td>
               <td class="text-navy small"><%= expense_type_label(expense.expense_type) %></td>
-              <td class="text-muted small"><%= expense.supplier.presence || "Não informado" %></td>
+              <td class="text-muted small">
+                <%= expense.supplier.presence || "Não informado" %>
+                <% if @anomaly_expense_ids.include?(expense.id) %>
+                  <i class="fa-solid fa-triangle-exclamation text-warning ms-1" role="img" title="Nota fora do padrão" aria-label="Nota fora do padrão"></i>
+                <% end %>
+              </td>
               <td class="text-end fw-bold text-nowrap <%= expense.net_amount.to_f.negative? ? 'text-success' : 'text-navy' %>">
                 <%= brl(expense.net_amount) %>
                 <% if expense.net_amount.to_f.negative? %><span class="d-block small fw-normal">estorno</span><% end %>
