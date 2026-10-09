@@ -41,7 +41,9 @@
               class: "chat-widget-input",
               data: {
                 turbo_frame: "chat_widget_messages",
-                action: "submit->chat-widget#showLoading turbo:submit-start->chat-widget#clearInput"
+                action: "submit->chat-widget#showLoading " \
+                "turbo:submit-start->chat-widget#clearInput turbo:submit-start->chat-widget#disableForm " \
+                "turbo:submit-end->chat-widget#enableForm"
               } do %>
 
   <%= text_field_tag "message[content]",

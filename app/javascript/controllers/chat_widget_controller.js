@@ -34,10 +34,13 @@ export default class extends Controller {
     // Localiza o campo de texto do formulário que acabou de ser enviado.
     const input = event.currentTarget.querySelector('input[name="message[content]"]')
 
-    // Interrompe o comportamento caso o campo não seja encontrado
+    // Impede o envio caso o campo não seja encontrado
     // ou a pergunta esteja vazia.
-    if (!input || !input.value.trim()) return
-
+    if (!input || !input.value.trim()) {
+      event.preventDefault()
+      return
+    }
+    
     // Guarda a pergunta antes de limpar o campo.
     const question = input.value.trim()
 
@@ -73,6 +76,35 @@ export default class extends Controller {
     input.value = ""
     }
   }
+
+    disableForm(event) {
+      // Localiza o formulário que acabou de ser enviado.
+      const form = event.currentTarget
+
+      // Localiza o campo de texto e o botão de envio.
+      const input = form.querySelector('input[name="message[content]"]')
+      const button = form.querySelector('button[type="submit"]')
+
+      // Impede novos envios enquanto a Harpia processa a resposta.
+      if (input) input.disabled = true
+      if (button) button.disabled = true
+  }
+
+    enableForm(event) {
+      // Localiza o formulário após o Turbo finalizar a requisição.
+      const form = event.currentTarget
+
+      // Localiza o campo de texto e o botão de envio.
+      const input = form.querySelector('input[name="message[content]"]')
+      const button = form.querySelector('button[type="submit"]')
+
+      // Libera novamente o formulário para uma nova pergunta.
+      if (input) input.disabled = false
+      if (button) button.disabled = false
+
+      // Devolve o foco ao campo de texto.
+      if (input) input.focus()
+    }
 
   messagesTargetConnected() {
     // Sempre que o Turbo renderiza novamente a área de mensagens,
