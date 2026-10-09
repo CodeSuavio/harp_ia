@@ -1,0 +1,314 @@
+<% page_description = "Compare os partidos da Câmara: governismo, coesão, disciplina, gastos, projetos e candidaturas de 2026." %>
+<% content_for :title, "Comparar partidos · Harpia" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= page_description %>">
+  <meta property="og:title" content="Comparar partidos">
+  <meta property="og:description" content="<%= page_description %>">
+  <meta property="og:url" content="<%= compare_parties_url %>">
+<% end %>
+
+<% blocs = @comparison.blocs %>
+<% total_seats = [@comparison.total_seats, 1].max %>
+<% bloc_labels = PartyComparison::BLOCS.transform_values { |bloc| bloc[:label] }.merge(PartyComparison::NO_DATA => "Sem dados") %>
+
+<%= render "painel/hero", title: "Comparar partidos", highlight: "na Câmara",
+      subtitle: "Como cada bancada se posiciona: quanto vota com o Governo, quão unida é e o que mais a diferencia das outras." %>
+
+<div class="container py-5">
+  <div class="mb-4">
+    <%= link_to parties_path, class: "text-decoration-none text-muted fw-medium transition" do %>
+      <i class="fa-solid fa-arrow-left me-2"></i> Voltar para Partidos
+    <% end %>
+  </div>
+
+  <!-- Destaques -->
+  <% if @comparison.insights.any? %>
+    <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+      <i class="fa-solid fa-lightbulb me-2 text-gold"></i>O que os números mostram
+    </h2>
+    <div class="row g-3 mb-5">
+      <% @comparison.insights.each do |icon, title, text| %>
+        <div class="col-md-6 col-xl-4">
+          <div class="p-3 bg-white rounded-4 shadow-sm h-100 border-start border-4 border-gold party-insight">
+            <h3 class="h6 fw-bold text-navy mb-1">
+              <i class="fa-solid <%= icon %> text-gold me-1" aria-hidden="true"></i> <%= title %>
+            </h3>
+            <p class="small text-muted mb-0"><%= text %></p>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Blocos e maioria -->
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
+      <i class="fa-solid fa-landmark me-2 text-gold"></i>A Câmara em blocos
+      <%= info_tip("Cada partido entra num bloco pelo governismo: a porcentagem de votações com orientação Sim/Não do Governo em que a maioria da bancada votou igual. São necessárias ao menos #{PartyComparison::MIN_GOVERNMENT_POLLS} votações.") %>
+    </h2>
+    <p class="small text-muted mb-3">
+      <%= @comparison.total_seats %> deputados em exercício. A linha marca as <%= PartyComparison::MAJORITY %> cadeiras da maioria absoluta.
+    </p>
+
+    <div class="bloc-bar mb-3" role="img"
+         aria-label="<%= blocs.filter_map { |bloc, data| "#{bloc_labels[bloc]}: #{data[:seats]} cadeiras" if data[:seats].positive? }.join(', ') %>">
+      <% blocs.each do |bloc, data| %>
+        <% next if data[:seats].zero? %>
+        <div class="bloc-segment bloc-<%= bloc.to_s.dasherize %>" style="flex-grow: <%= data[:seats] %>"
+             title="<%= bloc_labels[bloc] %>: <%= data[:seats] %> cadeiras (<%= data[:parties].map(&:label).join(', ') %>)">
+          <% if data[:seats] * 100 / total_seats >= 8 %><span><%= data[:seats] %></span><% end %>
+        </div>
+      <% end %>
+      <div class="bloc-majority" style="left: <%= (PartyComparison::MAJORITY * 100.0 / total_seats).round(2) %>%">
+        <span><%= PartyComparison::MAJORITY %></span>
+      </div>
+    </div>
+
+    <div class="row g-3">
+      <% blocs.each do |bloc, data| %>
+        <% next if data[:parties].empty? %>
+        <div class="col-md-6 col-lg">
+          <div class="d-flex align-items-baseline gap-2 mb-1">
+            <span class="bloc-swatch bloc-<%= bloc.to_s.dasherize %>" aria-hidden="true"></span>
+            <strong class="text-navy"><%= bloc_labels[bloc] %></strong>
+            <span class="small text-muted"><%= data[:seats] %> <%= "cadeira".pluralize(data[:seats]) %></span>
+          </div>
+          <p class="small text-muted mb-2">
+            <%= PartyComparison::BLOCS.dig(bloc, :description) || "votou em poucas votações com orientação do Governo" %>
+          </p>
+          <div class="d-flex flex-wrap gap-1">
+            <% data[:parties].each do |row| %>
+              <%= link_to row.label, party_path(row.party), class: "panel-chip",
+                    title: (row.governism ? "#{row.party.name}: segue o Governo em #{row.governism_pct}%" : row.party.name) %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+
+  <!-- Mapa de posicionamento -->
+  <% positioned = @comparison.positioned %>
+  <% if positioned.size >= 2 %>
+    <% chart = positioning_chart(positioned) %>
+    <% dims = chart[:chart] %>
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+      <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
+        <i class="fa-solid fa-compass me-2 text-gold"></i>Mapa de posicionamento
+      </h2>
+      <p class="small text-muted mb-3">
+        Para a direita, mais votos com o Governo; para cima, bancada mais unida. O tamanho da bolha é a bancada.
+        Passe o mouse ou toque numa bolha para ver os números; clique para abrir o partido.
+      </p>
+
+      <div class="d-flex flex-wrap gap-3 small text-muted mb-2" aria-hidden="true">
+        <% PartyComparison::BLOCS.each do |bloc, data| %>
+          <span><span class="bloc-swatch bloc-<%= bloc.to_s.dasherize %> me-1"></span><%= data[:label] %></span>
+        <% end %>
+      </div>
+
+      <div class="positioning-scroll">
+      <svg class="positioning-chart" viewBox="0 0 <%= dims[:width] %> <%= dims[:height] %>" role="group"
+           aria-label="Partidos por governismo (eixo horizontal) e coesão (eixo vertical)">
+        <%# Grade e eixos %>
+        <% chart[:y_ticks].each do |pct, y| %>
+          <line class="grid" x1="<%= dims[:left] %>" x2="<%= dims[:left] + chart[:plot_w] %>" y1="<%= y %>" y2="<%= y %>"></line>
+          <text class="tick" x="<%= dims[:left] - 8 %>" y="<%= y + 4 %>" text-anchor="end"><%= pct %>%</text>
+        <% end %>
+        <% chart[:x_ticks].each do |pct, x| %>
+          <text class="tick" x="<%= x %>" y="<%= dims[:top] + chart[:plot_h] + 18 %>" text-anchor="middle"><%= pct %>%</text>
+        <% end %>
+        <line class="axis" x1="<%= dims[:left] %>" x2="<%= dims[:left] + chart[:plot_w] %>"
+              y1="<%= dims[:top] + chart[:plot_h] %>" y2="<%= dims[:top] + chart[:plot_h] %>"></line>
+        <text class="axis-title" x="<%= dims[:left] + chart[:plot_w] / 2 %>" y="<%= dims[:height] - 6 %>" text-anchor="middle">
+          Governismo: votações em que seguiu o Governo →
+        </text>
+        <text class="axis-title" transform="translate(14 <%= dims[:top] + chart[:plot_h] / 2 %>) rotate(-90)" text-anchor="middle">
+          Coesão da bancada →
+        </text>
+
+        <%# Limites dos blocos %>
+        <% [[chart[:center_x], "centro"], [chart[:government_x], "governistas"]].each do |x, label| %>
+          <line class="threshold" x1="<%= x %>" x2="<%= x %>" y1="<%= dims[:top] - 22 %>" y2="<%= dims[:top] + chart[:plot_h] %>"></line>
+          <text class="threshold-label" x="<%= x + 4 %>" y="<%= dims[:top] - 10 %>"><%= label %> →</text>
+        <% end %>
+
+        <%# Bolhas: maiores primeiro, para as pequenas ficarem por cima %>
+        <% chart[:points].each do |point| %>
+          <% row = point[:row] %>
+          <a href="<%= party_path(row.party) %>" class="bubble bloc-<%= row.bloc.to_s.dasherize %>"
+             aria-label="<%= row.label %>: <%= row.seats %> <%= "deputado".pluralize(row.seats) %>, segue o Governo em <%= row.governism_pct %>%, coesão <%= row.cohesion %>%">
+            <title><%= row.label %> · <%= row.seats %> <%= "deputado".pluralize(row.seats) %>&#10;Governismo <%= row.governism_pct %>% (<%= row.governism[:followed] %> de <%= row.governism[:total] %> votações)&#10;Coesão <%= row.cohesion %>%</title>
+            <circle class="hit" cx="<%= point[:cx] %>" cy="<%= point[:cy] %>" r="<%= [point[:r] + 4, 12].max %>"></circle>
+            <circle class="dot" cx="<%= point[:cx] %>" cy="<%= point[:cy] %>" r="<%= point[:r] %>"></circle>
+          </a>
+        <% end %>
+        <% chart[:points].each do |point| %>
+          <% next unless (label = point[:label]) %>
+          <text class="bubble-label <%= "is-inside bloc-#{point[:row].bloc.to_s.dasherize}" if label[:inside] %>"
+                x="<%= label[:x] %>" y="<%= label[:y] %>" text-anchor="<%= label[:anchor] %>"><%= point[:row].label %></text>
+        <% end %>
+      </svg>
+      </div>
+
+      <% left_out = @comparison.rows - positioned %>
+      <% if left_out.any? %>
+        <p class="small text-muted mt-2 mb-0">
+          Fora do mapa, por terem poucos votos registrados: <%= left_out.map(&:label).join(", ") %>.
+        </p>
+      <% end %>
+    </div>
+  <% end %>
+
+  <!-- Tabela de indicadores -->
+  <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 party-compare-card" id="indicadores">
+    <div class="p-4 pb-2">
+      <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
+        <i class="fa-solid fa-table-list me-2 text-gold"></i>Indicadores lado a lado
+      </h2>
+      <p class="small text-muted mb-0">Clique no nome de uma coluna para ordenar. Passe o mouse no ⓘ para ver como calculamos.</p>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle mb-0 party-compare-table">
+        <thead>
+          <tr class="small text-muted text-uppercase">
+            <% [
+                 ["label", nil],
+                 ["seats", "Deputados hoje e variação desde a posse da legislatura (trocas de partido, licenças e suplências)."],
+                 ["states", "Estados (e DF) com ao menos um deputado do partido. Entre parênteses, a fatia da bancada no estado mais representado."],
+                 ["governism", "Votações com orientação Sim/Não do Governo em que a maioria da bancada votou igual (mínimo de #{PartyComparison::MIN_GOVERNMENT_POLLS})."],
+                 ["cohesion", "Quão unida a bancada vota: 100% quando todos votam igual, 0% quando racha ao meio (média das votações com ao menos #{DeputyMetrics::COHESION_MIN_VOTERS} votos Sim/Não do partido)."],
+                 ["adherence", "Votações em que a maioria da bancada seguiu a orientação do próprio líder (ou da federação). Partidos que orientam em bloco ficam sem dado."],
+                 ["participation", "Média da participação dos deputados do partido nas votações nominais do período em que estavam no mandato."],
+                 ["expenses", "Média do gasto mensal da cota parlamentar (CEAP) dos deputados do partido em #{@comparison.year}."],
+                 ["bills", "Projetos de lei apresentados pelo partido divididos pelos deputados da bancada atual."],
+                 [nil, "Tema com mais projetos de lei do partido."],
+                 ["women", "Mulheres entre os candidatos do partido a deputado federal em 2026 (TSE)."]
+               ].each do |key, info| %>
+              <% label = key ? PartyComparison::SORTS[key][:label] : "Tema principal" %>
+              <th scope="col" class="<%= 'sticky-col' if key == 'label' %> <%= 'text-end' unless key == 'label' || key.nil? %>"
+                  <% if key %>aria-sort="<%= party_sort_aria(key, @sort, @direction) %>"<% end %>>
+                <%= key ? party_sort_link(label, key, @sort, @direction) : label %><%= info_tip(info) if info %>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @rows.each do |row| %>
+            <tr>
+              <th scope="row" class="sticky-col">
+                <div class="d-flex align-items-center gap-2">
+                  <span class="bloc-swatch bloc-<%= row.bloc.to_s.dasherize %>" title="<%= bloc_labels[row.bloc] %>"></span>
+                  <div>
+                    <%= link_to row.label, party_path(row.party), class: "fw-bold text-navy text-decoration-none" %>
+                    <span class="d-block small text-muted fw-normal"><%= bloc_labels[row.bloc] %></span>
+                  </div>
+                </div>
+              </th>
+              <td class="text-end">
+                <span class="fw-bold text-navy"><%= row.seats %></span>
+                <% if (change = row.bench_change) && !change.zero? %>
+                  <span class="d-block small <%= change.positive? ? 'text-success' : 'text-danger' %>"><%= format("%+d", change) %></span>
+                <% end %>
+              </td>
+              <td class="text-end">
+                <%= row.states %>
+                <span class="d-block small text-muted"><%= row.top_state[:state] %> <%= row.top_state[:pct] %>%</span>
+              </td>
+              <td class="text-end">
+                <% if row.governism %>
+                  <span class="fw-bold text-navy"><%= row.governism_pct %>%</span>
+                  <div class="progress rounded-pill mt-1 ms-auto" style="height: 4px; width: 64px;" aria-hidden="true">
+                    <div class="progress-bar bloc-<%= row.bloc.to_s.dasherize %>" style="width: <%= row.governism_pct %>%"></div>
+                  </div>
+                <% else %>—<% end %>
+              </td>
+              <td class="text-end"><%= percent(row.cohesion) %></td>
+              <td class="text-end"><%= percent(row.adherence) %></td>
+              <td class="text-end"><%= percent(row.participation) %></td>
+              <td class="text-end text-nowrap"><%= row.monthly ? brl(row.monthly, precision: 0) : "—" %></td>
+              <td class="text-end"><%= number_with_precision(row.bills_per_deputy, precision: 1, separator: ",") %></td>
+              <td class="small"><%= row.top_theme&.name || "—" %></td>
+              <td class="text-end">
+                <%= percent(row.women_pct) %>
+                <span class="d-block small text-muted"><%= row.candidates %> <%= "candidato".pluralize(row.candidates) %></span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+        <% if (average = @comparison.chamber_monthly) %>
+          <tfoot>
+            <tr class="small text-muted">
+              <th scope="row" class="sticky-col fw-normal">Média da Câmara</th>
+              <td colspan="6"></td>
+              <td class="text-end text-nowrap"><%= brl(average, precision: 0) %></td>
+              <td class="text-end"><%= number_with_precision(DeputyMetrics.average_bills, precision: 1, separator: ",") %></td>
+              <td colspan="2"></td>
+            </tr>
+          </tfoot>
+        <% end %>
+      </table>
+    </div>
+  </div>
+
+  <!-- Afinidade entre bancadas -->
+  <% affinity = @comparison.affinity %>
+  <% if affinity[:cells].any? %>
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+      <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
+        <i class="fa-solid fa-handshake me-2 text-gold"></i>Quem vota com quem
+        <%= info_tip("Nas votações em que as duas bancadas tiveram maioria (Sim ou Não), em quantas a maioria das duas foi a mesma. Só pares com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum.") %>
+      </h2>
+      <p class="small text-muted mb-3">
+        Partidos do mais governista ao mais oposicionista. Azul mais forte = votam mais vezes do mesmo lado.
+      </p>
+
+      <div class="table-responsive">
+        <table class="affinity-matrix mb-0">
+          <thead>
+            <tr>
+              <th scope="col"><span class="visually-hidden">Partido</span></th>
+              <% affinity[:parties].each do |row| %>
+                <th scope="col" class="affinity-col"><span><%= row.label %></span></th>
+              <% end %>
+            </tr>
+          </thead>
+          <tbody>
+            <% affinity[:parties].each do |row| %>
+              <tr>
+                <th scope="row" class="text-end pe-2 text-nowrap">
+                  <span class="bloc-swatch bloc-<%= row.bloc.to_s.dasherize %> me-1" aria-hidden="true"></span><%= row.label %>
+                </th>
+                <% affinity[:parties].each do |other| %>
+                  <% if other == row %>
+                    <td class="affinity-self" aria-label="—"></td>
+                  <% elsif (cell = affinity[:cells][[row.party.id, other.party.id]]) %>
+                    <td style="<%= affinity_cell_style(cell[:pct]) %>"
+                        title="<%= row.label %> e <%= other.label %>: mesmo lado em <%= cell[:same] %> de <%= cell[:common] %> votações (<%= cell[:pct] %>%)">
+                      <%= cell[:pct] %>
+                    </td>
+                  <% else %>
+                    <td class="text-muted" title="Poucas votações em comum">·</td>
+                  <% end %>
+                <% end %>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  <% end %>
+
+  <!-- Metodologia -->
+  <details class="small text-muted">
+    <summary class="fw-medium">Como calculamos e limites dos dados</summary>
+    <ul class="mt-2 mb-0">
+      <li>Todos os indicadores de voto usam o partido <strong>atual</strong> de cada deputado: quem trocou de legenda conta no partido novo.</li>
+      <li>O governismo usa a orientação de voto do líder do Governo registrada pela Câmara. Votações em que a bancada empatou não entram na conta.</li>
+      <li>Os blocos são faixas de governismo (governista a partir de <%= PartyComparison::BLOCS[:government][:min] %>%, centro a partir de <%= PartyComparison::BLOCS[:center][:min] %>%), não alianças formais nem cargos no Governo.</li>
+      <li>Bancadas de 1 ou 2 deputados refletem o comportamento de poucas pessoas; leia os números delas com cuidado.</li>
+      <li>Fontes: API de Dados Abertos da Câmara dos Deputados (votações, orientações, despesas e proposições) e TSE (candidaturas de 2026).</li>
+    </ul>
+  </details>
+</div>

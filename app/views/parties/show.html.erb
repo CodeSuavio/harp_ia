@@ -65,6 +65,9 @@
 
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
           <%= render "painel/ask_harpia", question: party_harpia_question(@party, @stats) %>
+          <%= link_to compare_parties_path, class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
+            <i class="fa-solid fa-scale-balanced me-2 text-gold"></i> Comparar com outros partidos
+          <% end %>
           <% if @party.url.present? %>
             <%= link_to @party.url.start_with?("http") ? @party.url : "https://#{@party.url}", target: "_blank", rel: "noopener",
                   class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>

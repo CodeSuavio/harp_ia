@@ -4,3 +4,8 @@ mdb_second: { poll: second, party: mdb, label: MDB, orientation: "Sim" }
 
 # O PT orienta pela federação
 federation_third: { poll: third, label: "Fdr PT-PCdoB-PV", orientation: "Não" }
+
+# Governo: o MDB acompanha na 1ª e contraria na 2ª; o PT (Davi) contraria na 3ª
+government_first:  { poll: first,  label: Governo, orientation: "Sim" }
+government_second: { poll: second, label: Governo, orientation: "Sim" }
+government_third:  { poll: third,  label: Governo, orientation: "Não" }
