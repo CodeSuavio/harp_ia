@@ -1,0 +1,63 @@
+<% profile = @stats.candidate_profile %>
+
+<% if profile.nil? %>
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <p class="text-muted small mb-0">Este partido não tem candidatos a deputado federal registrados para 2026.</p>
+  </div>
+<% else %>
+  <!-- Indicadores -->
+  <div class="row g-3 mb-4">
+    <% [
+         ["fa-check-to-slot", profile[:total], "#{'candidato'.pluralize(profile[:total])} a deputado federal",
+                              "Candidaturas registradas no TSE para 2026, em todos os estados."],
+         ["fa-rotate",        profile[:reelection], "#{profile[:reelection] == 1 ? 'tenta' : 'tentam'} a reeleição",
+                              "Deputados em exercício que são candidatos em 2026."],
+         ["fa-venus",         percent(profile[:women_pct]), "de mulheres (média geral: #{percent(profile[:chamber_women_pct])})",
+                              "Por lei, cada partido precisa ter ao menos 30% de candidaturas de cada gênero."]
+       ].each do |icon, value, label, info| %>
+      <div class="col-12 col-md-4">
+        <div class="p-3 bg-white rounded-4 shadow-sm h-100 border-start border-4 border-gold">
+          <i class="fa-solid <%= icon %> text-gold mb-2"></i>
+          <div class="h4 fw-bold text-navy mb-0"><%= value %></div>
+          <div class="small text-muted"><%= label %><%= info_tip(info) %></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-4">
+      <h2 class="h6 fw-bold text-navy mb-0 text-uppercase tracking-wider">
+        <i class="fa-solid fa-id-card me-2 text-gold"></i>Perfil das candidaturas
+      </h2>
+      <%= link_to candidates_path(party: @party.id), class: "btn btn-gold btn-sm rounded-pill px-3 fw-bold" do %>
+        Ver os candidatos <i class="fa-solid fa-arrow-right ms-1"></i>
+      <% end %>
+    </div>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <%= render "parties/distribution", title: "Gênero", rows: profile[:gender], total: profile[:total],
+              link: ->(gender) { candidates_path(party: @party.id, gender: gender) unless gender == PartyStats::NOT_INFORMED } %>
+      </div>
+      <div class="col-md-4">
+        <%= render "parties/distribution", title: "Cor ou raça", rows: profile[:race], total: profile[:total] %>
+      </div>
+      <div class="col-md-4">
+        <%= render "parties/distribution", title: "Escolaridade", rows: profile[:education], total: profile[:total], limit: 5 %>
+      </div>
+    </div>
+  </div>
+
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+      <i class="fa-solid fa-map-location-dot me-2 text-gold"></i>Candidatos por estado
+    </h2>
+    <div class="d-flex flex-wrap gap-2">
+      <% profile[:states].each do |state, count| %>
+        <%= link_to "#{state} #{count}", candidates_path(party: @party.id, state: state), class: "panel-chip",
+              title: PartiesController::STATES[state] %>
+      <% end %>
+    </div>
+  </div>
+<% end %>

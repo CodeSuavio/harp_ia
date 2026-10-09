@@ -31,18 +31,4 @@ PARTIDOS_TSE = [
   { label: "MISSÃO", name: "Partido Missão", number: 14, registered_on: "2025-11-04" }
 ]
 
-PARTIDOS_EXTINTOS_TSE = [
-  { label: "PSL", name: "Partido Social Liberal", succeeded_by: "UNIÃO" },
-  { label: "DEM", name: "Democratas", succeeded_by: "UNIÃO" },
-  { label: "PTB", name: "Partido Trabalhista Brasileiro", succeeded_by: "PRD" },
-  { label: "PATRIOTA", name: "Patriota", succeeded_by: "PRD" },
-  { label: "PROS", name: "Partido Republicano da Ordem Social", succeeded_by: "SOLIDARIEDADE" },
-  { label: "PSC", name: "Partido Social Cristão", succeeded_by: "PODE" },
-  { label: "PHS", name: "Partido Humanista da Solidariedade", succeeded_by: "PODE" },
-  { label: "PPL", name: "Partido Pátria Livre", succeeded_by: "PCdoB" },
-  { label: "PRP", name: "Partido Republicano Progressista", succeeded_by: "PATRIOTA" },
-  { label: "PRONA", name: "Partido de Reedificação da Ordem Nacional", succeeded_by: "PL" },
-  { label: "PGT", name: "Partido Geral dos Trabalhadores", succeeded_by: "PL" },
-  { label: "PST", name: "Partido Social Trabalhista", succeeded_by: "PL" },
-  { label: "PAN", name: "Partido dos Aposentados da Nação", succeeded_by: "PTB" }
-]
+# Extintos por fusão ou incorporação: ver Party::MERGERS

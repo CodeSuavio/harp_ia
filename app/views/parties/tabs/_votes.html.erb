@@ -1,0 +1,183 @@
+<% cohesion = @stats.cohesion %>
+<% average_cohesion = DeputyMetrics.average_cohesion %>
+<% divided_polls = @stats.divided_polls %>
+<% adherence = @stats.orientation_adherence %>
+<% affinity = @stats.affinity %>
+<% contested = @stats.contested_polls %>
+<% dissidents = @stats.dissidents %>
+
+<!-- Coesão nas votações -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-people-group me-2 text-gold"></i>Coesão nas votações
+  </h2>
+
+  <% if cohesion %>
+    <div class="row g-4 align-items-center">
+      <div class="col-md-4">
+        <div class="display-6 fw-bold text-navy mb-0"><%= cohesion[:pct] %>%</div>
+        <div class="progress rounded-pill my-2" style="height: 8px;" role="progressbar"
+             aria-valuenow="<%= cohesion[:pct] %>" aria-valuemin="0" aria-valuemax="100"
+             aria-label="Coesão da bancada">
+          <div class="progress-bar bg-gold" style="width: <%= cohesion[:pct] %>%"></div>
+        </div>
+        <div class="small text-muted">
+          <% if average_cohesion %>média dos partidos: <%= average_cohesion %>%<br><% end %>
+          <%= cohesion[:polls] %> <%= cohesion[:polls] == 1 ? "votação" : "votações" %> ·
+          <%= cohesion[:unanimous] %> <%= cohesion[:unanimous] == 1 ? "unânime" : "unânimes" %>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <div class="p-3 bg-light rounded-3 small text-muted">
+          <i class="fa-solid fa-circle-info me-1 text-gold"></i>
+          Em cada votação, compara os votos Sim e Não dos deputados do partido:
+          100% quando todos votam igual e 0% quando a bancada racha ao meio.
+          O valor é a média das votações com pelo menos <%= DeputyMetrics::COHESION_MIN_VOTERS %> votos Sim/Não do partido.
+          Usa o partido atual de cada deputado, então quem trocou de legenda conta no partido novo.
+        </div>
+      </div>
+    </div>
+
+    <% if divided_polls.any? %>
+      <h3 class="h6 fw-bold text-navy mt-4 mb-2">Votações em que a bancada mais se dividiu</h3>
+      <%= render "parties/poll_list", rows: divided_polls %>
+    <% end %>
+  <% else %>
+    <p class="text-muted small mb-0">
+      Bancada pequena demais ou sem votações registradas para calcular a coesão.
+    </p>
+  <% end %>
+</div>
+
+<!-- Orientação da liderança -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-bullhorn me-2 text-gold"></i>Orientação da liderança
+    <%= info_tip("Antes de cada votação no plenário, o líder orienta a bancada (Sim, Não, Liberado ou Obstrução). Quando o partido está numa federação, vale a orientação da federação. Contam só as orientações Sim ou Não.") %>
+  </h2>
+
+  <% if adherence %>
+    <div class="row g-4 align-items-center">
+      <div class="col-md-4">
+        <div class="display-6 fw-bold text-navy mb-0"><%= adherence[:pct] %>%</div>
+        <div class="progress rounded-pill my-2" style="height: 8px;">
+          <div class="progress-bar bg-gold" style="width: <%= adherence[:pct] %>%"></div>
+        </div>
+        <div class="small text-muted">
+          a maioria seguiu a orientação em <%= adherence[:followed] %> de <%= adherence[:total] %>
+          <%= adherence[:total] == 1 ? "votação" : "votações" %>
+        </div>
+      </div>
+
+      <div class="col-md-8">
+        <% if adherence[:against].any? %>
+          <h3 class="h6 fw-bold text-navy mb-2">Quando a bancada contrariou a liderança</h3>
+          <%= render "parties/poll_list", rows: adherence[:against], show_orientation: true %>
+        <% else %>
+          <p class="small text-muted mb-0">A maioria da bancada seguiu a orientação em todas as votações.</p>
+        <% end %>
+      </div>
+    </div>
+  <% else %>
+    <p class="text-muted small mb-0">
+      Ainda não há orientações de bancada importadas para as votações deste partido.
+    </p>
+  <% end %>
+</div>
+
+<!-- Afinidade com outros partidos -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-arrows-left-right me-2 text-gold"></i>Afinidade com outros partidos
+    <%= info_tip("Nas votações em que as duas bancadas tiveram maioria Sim ou Não, em quantas a maioria das duas votou igual. Só entram partidos com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum.") %>
+  </h2>
+
+  <% if affinity %>
+    <div class="row g-4">
+      <% [["Vota mais junto com", affinity[:closest], "bg-gold"], ["Vota mais diferente de", affinity[:farthest], "bg-navy"]].each do |title, rows, color| %>
+        <% next if rows.empty? %>
+        <div class="col-md-6">
+          <h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3"><%= title %></h3>
+          <% rows.each do |other, row| %>
+            <div class="mb-3">
+              <div class="d-flex justify-content-between small gap-3">
+                <%= link_to other.label, party_path(other), class: "text-navy fw-bold text-decoration-none", title: other.name %>
+                <span class="text-nowrap"><strong class="text-navy"><%= row[:pct] %>%</strong>
+                  <span class="text-muted">de <%= row[:common] %></span></span>
+              </div>
+              <div class="progress rounded-pill" style="height: .5rem;">
+                <div class="progress-bar <%= color %>" style="width: <%= row[:pct] %>%"></div>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-muted small mb-0">Sem votações suficientes para comparar este partido com os outros.</p>
+  <% end %>
+</div>
+
+<!-- Votações mais disputadas -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-scale-balanced me-2 text-gold"></i>Como votou nas votações mais disputadas
+    <%= info_tip("As votações com placar mais apertado na Câmara, entre as de maior participação, em que a bancada votou.") %>
+  </h2>
+
+  <% if contested.any? %>
+    <ul class="list-group list-group-flush">
+      <% contested.each do |poll, row| %>
+        <li class="list-group-item px-0">
+          <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
+            <span class="data-label text-muted small"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+            <%= poll_result_badge(poll) %>
+            <span class="small text-muted">Câmara: <%= row[:total][:sim] %> Sim × <%= row[:total][:nao] %> Não</span>
+          </div>
+          <%= link_to poll_summary(poll).truncate(140), poll_path(poll), class: "text-navy text-decoration-none hover-opacity d-block mb-1" %>
+          <div class="d-flex flex-wrap align-items-center gap-2 small">
+            <% position = bench_position(row[:party]) %>
+            <span class="badge <%= vote_color(position) %>"><%= @party.label %>: <%= position %></span>
+            <span class="text-muted"><%= row[:party][:sim] %> Sim × <%= row[:party][:nao] %> Não</span>
+            <% if row[:orientation] %>
+              <span class="text-muted">· liderança orientou <strong class="text-navy"><%= row[:orientation] %></strong></span>
+            <% end %>
+          </div>
+        </li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p class="text-muted small mb-0">Sem votações registradas para esta bancada.</p>
+  <% end %>
+</div>
+
+<!-- Quem mais vota contra o partido -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-user-slash me-2 text-gold"></i>Quem mais vota contra o partido
+    <%= info_tip("Deputados com menor alinhamento: votos Sim/Não diferentes da maioria do partido (sem contar o próprio voto). Só entram deputados com ao menos #{PartyStats::DISSIDENT_MIN_VOTES} votos Sim/Não.") %>
+  </h2>
+
+  <% if dissidents.any? %>
+    <div class="row g-3">
+      <% dissidents.each do |deputy, row| %>
+        <div class="col-sm-6 col-lg-4">
+          <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset" do %>
+            <div class="p-3 bg-light rounded-3 h-100 kpi-card">
+              <div class="fw-bold text-navy text-truncate"><%= deputy.name %></div>
+              <div class="small text-muted mb-2"><%= deputy.state_label %></div>
+              <div class="small">
+                <strong class="text-navy"><%= row[:pct] %>%</strong> de alinhamento ·
+                <span class="text-danger fw-medium"><%= row[:against] %> contra</span>
+                <span class="text-muted">em <%= row[:total] %></span>
+              </div>
+            </div>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% else %>
+    <p class="text-muted small mb-0">Nenhum deputado do partido votou contra a maioria da bancada.</p>
+  <% end %>
+</div>

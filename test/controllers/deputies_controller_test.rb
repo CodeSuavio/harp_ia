@@ -4,7 +4,7 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
   test "lista deputados com indicadores" do
     get deputies_path
     assert_response :success
-    assert_select "h3", text: "Ana Souza"
+    assert_select ".candidate-card h3", text: "Ana Souza"
     assert_select "input[data-deputy-compare-target=checkbox]", 4
   end
 
@@ -21,22 +21,22 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
 
   test "busca por sigla do partido" do
     get deputies_path(q: "pt")
-    assert_select "h3", count: 1, text: "Davi Rocha"
+    assert_select ".candidate-card h3", count: 1, text: "Davi Rocha"
   end
 
   test "filtra por estado" do
     get deputies_path(state: "RJ")
-    assert_select "h3", count: 2
+    assert_select ".candidate-card h3", count: 2
   end
 
   test "ordena por maior gasto" do
     get deputies_path(sort: "expenses")
-    assert_equal ["Bruno Lima", "Ana Souza"], css_select("h3").map(&:text).first(2)
+    assert_equal ["Bruno Lima", "Ana Souza"], css_select(".candidate-card h3").map(&:text).first(2)
   end
 
   test "ordena por quantidade de projetos" do
     get deputies_path(sort: "bills")
-    assert_equal "Ana Souza", css_select("h3").first.text
+    assert_equal "Ana Souza", css_select(".candidate-card h3").first.text
   end
 
   test "ignora ordenação inválida" do
@@ -100,15 +100,15 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
 
   test "ordena por participação e por votos contra o partido" do
     get deputies_path(sort: "participation")
-    assert_equal "Ana Souza", css_select("h3").first.text
+    assert_equal "Ana Souza", css_select(".candidate-card h3").first.text
 
     get deputies_path(sort: "against_party")
-    assert_equal "Ana Souza", css_select("h3").first.text
+    assert_equal "Ana Souza", css_select(".candidate-card h3").first.text
   end
 
   test "filtra candidatos à reeleição e mostra o selo no card" do
     get deputies_path(reelection: "1")
-    assert_select "h3", count: 1, text: "Ana Souza"
+    assert_select ".candidate-card h3", count: 1, text: "Ana Souza"
     assert_match "Candidato à reeleição", response.body
   end
 

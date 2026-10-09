@@ -1,0 +1,155 @@
+<% cohesion = @stats.cohesion %>
+<% alignment = DeputyMetrics.alignment %>
+<% absorbed = @party.absorbed %>
+<% federation = @stats.federation %>
+
+<!-- Indicadores principais -->
+<div class="row g-3 mb-4">
+  <% [
+       ["fa-landmark",         @deputies.size,           "#{'deputado'.pluralize(@deputies.size)} na Câmara", "overview",
+                               "Deputados federais em exercício filiados hoje ao partido."],
+       ["fa-map-location-dot", @stats.state_bench.size,  "#{'estado'.pluralize(@stats.state_bench.size)} com bancada", "overview",
+                               "Estados (e DF) com ao menos um deputado do partido em exercício."],
+       ["fa-people-group",     percent(cohesion&.dig(:pct)), "de coesão nas votações", "votes",
+                               "Média de quanto a bancada vota unida (Sim ou Não) nas votações nominais."],
+       ["fa-check-to-slot",    @candidate_count,         "#{'candidato'.pluralize(@candidate_count)} em 2026", "candidates",
+                               "Candidaturas a deputado federal registradas no TSE para 2026."]
+     ].each do |icon, value, label, tab, info| %>
+    <div class="col-6 col-lg-3">
+      <div class="p-3 bg-white rounded-4 shadow-sm h-100 border-start border-4 border-gold kpi-card position-relative">
+        <i class="fa-solid <%= icon %> text-gold mb-2"></i>
+        <div class="h4 fw-bold text-navy mb-0">
+          <% if tab == "overview" %>
+            <%= value %>
+          <% else %>
+            <%= link_to value, party_tab_path(@party, tab), class: "text-reset text-decoration-none stretched-link",
+                  data: { turbo_frame: "party_tab" } %>
+          <% end %>
+        </div>
+        <div class="small text-muted">
+          <%= label %><span class="position-relative" style="z-index: 2"><%= info_tip(info) %></span>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Bancada na Câmara -->
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+    <i class="fa-solid fa-landmark me-2 text-gold"></i>Bancada na Câmara
+  </h2>
+
+  <% if @deputies.empty? %>
+    <p class="text-muted small mb-0">
+      Este partido não tem deputado federal em exercício.
+      <% if @candidate_count.positive? %>
+        Ele aparece aqui porque tem <%= @candidate_count %>
+        <%= "candidato".pluralize(@candidate_count) %> em 2026.
+      <% end %>
+    </p>
+  <% else %>
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <%= render "parties/bench_map", state_bench: @stats.state_bench %>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="row g-3">
+          <% @deputies.each do |deputy| %>
+            <div class="col-sm-6">
+              <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset" do %>
+                <div class="p-3 bg-light rounded-3 h-100 d-flex align-items-center gap-3 kpi-card">
+                  <% if deputy.photo.attached? %>
+                    <%= cl_image_tag deputy.photo.key, class: "party-member-photo rounded-circle flex-shrink-0", alt: deputy.name %>
+                  <% else %>
+                    <div class="party-member-photo rounded-circle bg-white d-flex align-items-center justify-content-center flex-shrink-0">
+                      <i class="fa-solid fa-user text-gold"></i>
+                    </div>
+                  <% end %>
+                  <div class="min-w-0">
+                    <h3 class="h6 fw-bold text-navy mb-0 text-truncate">
+                      <%= deputy.name %>
+                      <% if deputy.json_id == @party.leader_json_id %>
+                        <span class="badge bg-gold text-navy ms-1">Líder</span>
+                      <% end %>
+                    </h3>
+                    <div class="small text-muted">
+                      <i class="fa-solid fa-location-dot me-1 text-gold"></i><%= deputy.state_label %>
+                    </div>
+                    <% if (pct = alignment.dig(deputy.id, :pct)) %>
+                      <div class="small text-muted" title="Votos Sim/Não iguais aos da maioria do partido">
+                        alinhamento <span class="fw-bold text-navy"><%= pct %>%</span>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  <% end %>
+</div>
+
+<!-- Histórico -->
+<% history = [
+     (["Registro no TSE", "fa-calendar", @party.registered_on.strftime("%d/%m/%Y")] if @party.registered_on),
+     (["Siglas anteriores", "fa-clock-rotate-left", @party.former_labels.split.join(", ")] if @party.former_labels.present?),
+     (["Bancada na posse da legislatura", "fa-people-arrows",
+       "#{@party.seats_at_start} #{'deputado'.pluralize(@party.seats_at_start)}" +
+         (@stats.bench_change.to_i.zero? ? " (igual a hoje)" : " (hoje #{@deputies.size}, #{format('%+d', @stats.bench_change)})")] if @party.seats_at_start)
+   ].compact %>
+
+<% if history.any? || absorbed.any? || federation %>
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+      <i class="fa-solid fa-landmark-flag me-2 text-gold"></i>Histórico
+    </h2>
+    <div class="row g-3">
+      <% history.each do |label, icon, value| %>
+        <div class="col-sm-6 col-lg-4">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+              <i class="fa-solid <%= icon %> me-1 text-gold"></i> <%= label %>
+            </span>
+            <span class="text-navy fw-medium"><%= value %></span>
+          </div>
+        </div>
+      <% end %>
+
+      <% if absorbed.any? %>
+        <div class="col-sm-6 col-lg-4">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+              <i class="fa-solid fa-code-merge me-1 text-gold"></i> Fusões e incorporações
+            </span>
+            <% absorbed.each do |sigla, merger| %>
+              <div class="text-navy fw-medium">
+                <span title="<%= merger[:name] %>"><%= sigla %></span>
+                <span class="small text-muted">em <%= merger[:year] %></span>
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+
+      <% if federation %>
+        <div class="col-sm-6 col-lg-4">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <span class="d-block text-muted small fw-bold text-uppercase mb-1 tracking-wider">
+              <i class="fa-solid fa-handshake me-1 text-gold"></i> Federação na Câmara
+              <%= info_tip("Partidos que orientam juntos as votações na Câmara, segundo as orientações de bancada mais recentes.") %>
+            </span>
+            <div class="d-flex flex-wrap gap-2 mt-1">
+              <% federation[:parties].each do |member| %>
+                <%= link_to member.label, party_path(member), class: "panel-chip #{'fw-bold' if member == @party}" %>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

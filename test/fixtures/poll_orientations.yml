@@ -1,0 +1,6 @@
+# MDB orienta Sim nas duas primeiras: a bancada segue na 1ª e contraria na 2ª (maioria Não)
+mdb_first:  { poll: first,  party: mdb, label: MDB, orientation: "Sim" }
+mdb_second: { poll: second, party: mdb, label: MDB, orientation: "Sim" }
+
+# O PT orienta pela federação
+federation_third: { poll: third, label: "Fdr PT-PCdoB-PV", orientation: "Não" }
