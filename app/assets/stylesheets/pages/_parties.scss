@@ -136,3 +136,190 @@
 .party-bench-map {
   max-width: 420px;
 }
+
+// ----- Comparação de partidos -----
+
+// Blocos por governismo: polos violeta e âmbar (sem cor de partido) e cinza neutro no meio.
+// Validados para daltonismo; os rótulos e a tabela dão a leitura sem depender da cor.
+$bloc-government: #5b48c2;
+$bloc-center: #a8a8a0;
+$bloc-opposition: #c27c00;
+
+.bloc-government { --bloc-color: #{$bloc-government}; }
+.bloc-center { --bloc-color: #{$bloc-center}; }
+.bloc-opposition { --bloc-color: #{$bloc-opposition}; }
+.bloc-no-data { --bloc-color: #{rgba($navy-blue, 0.15)}; }
+
+.bloc-swatch {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+  background-color: var(--bloc-color);
+}
+
+.progress-bar[class*="bloc-"] { background-color: var(--bloc-color); }
+
+.party-insight h3 { line-height: 1.35; }
+
+// Barra das cadeiras por bloco, com a marca da maioria absoluta
+.bloc-bar {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 32px;
+  margin-top: 1.5rem;
+
+  .bloc-segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 4px;
+    background-color: var(--bloc-color);
+    color: #fff;
+    font-weight: 700;
+    font-size: 0.85rem;
+
+    &:first-child { border-radius: 4px 0 0 4px; }
+    &:last-of-type { border-radius: 0 4px 4px 0; }
+  }
+
+  .bloc-center span { color: $navy-blue; }
+
+  .bloc-majority {
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    border-left: 2px dashed $navy-blue;
+
+    span {
+      position: absolute;
+      top: -1.35rem;
+      left: 0;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: $navy-blue;
+    }
+  }
+}
+
+// Mapa de posicionamento (governismo × coesão): no celular rola na horizontal
+// para os rótulos não ficarem minúsculos
+.positioning-scroll { overflow-x: auto; }
+
+.positioning-chart {
+  min-width: 600px;
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: inherit;
+
+  .grid { stroke: rgba($navy-blue, 0.08); }
+  .axis { stroke: rgba($navy-blue, 0.3); }
+  .tick { font-size: 11px; fill: #6c757d; }
+  .axis-title { font-size: 12px; font-weight: 600; fill: #6c757d; }
+
+  .threshold {
+    stroke: rgba($navy-blue, 0.25);
+    stroke-dasharray: 4 4;
+  }
+
+  .threshold-label { font-size: 11px; fill: #6c757d; }
+
+  .bubble {
+    cursor: pointer;
+    outline: none;
+
+    .hit { fill: transparent; }
+
+    .dot {
+      fill: var(--bloc-color);
+      fill-opacity: 0.85;
+      stroke: #fff;
+      stroke-width: 2;
+      transition: fill-opacity 0.15s ease;
+    }
+
+    &:hover .dot,
+    &:focus-visible .dot {
+      fill-opacity: 1;
+      stroke: $navy-blue;
+    }
+  }
+
+  .bubble-label {
+    font-size: 11px;
+    font-weight: 700;
+    fill: $navy-blue;
+    pointer-events: none;
+
+    // Dentro da bolha: branco sobre violeta e âmbar, azul-escuro sobre o cinza do centro
+    &.is-inside { fill: #fff; }
+    &.is-inside.bloc-center { fill: $navy-blue; }
+  }
+}
+
+// Tabela de indicadores: primeira coluna fixa ao rolar na horizontal
+.party-compare-table {
+  th, td { padding: 0.75rem; }
+  thead th { font-size: 0.7rem; letter-spacing: 0.04em; white-space: nowrap; vertical-align: bottom; }
+
+  .sticky-col {
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background-color: #fff;
+    padding-left: 1.5rem;
+  }
+
+  tbody tr:hover > * { background-color: rgba($gold, 0.05); }
+}
+
+// Matriz de afinidade
+.affinity-matrix {
+  border-collapse: separate;
+  border-spacing: 2px;
+  font-size: 0.75rem;
+
+  td {
+    width: 34px;
+    min-width: 34px;
+    height: 30px;
+    text-align: center;
+    border-radius: 4px;
+    font-weight: 600;
+  }
+
+  .affinity-self { background-color: rgba($navy-blue, 0.04); }
+
+  tbody th { font-weight: 700; color: $navy-blue; }
+
+  .affinity-col {
+    vertical-align: bottom;
+    text-align: center;
+    padding-bottom: 4px;
+
+    span {
+      writing-mode: vertical-rl;
+      transform: rotate(180deg);
+      font-weight: 700;
+      color: $navy-blue;
+      white-space: nowrap;
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .positioning-chart .bubble .dot { transition: none; }
+}
+
+// Atalho para a comparação no painel de partidos
+.party-compare-cta {
+  background-color: rgba($gold, 0.08);
+  border: 1px solid rgba($gold, 0.25);
+  transition: background-color 0.15s ease;
+
+  &:hover, &:focus-visible { background-color: rgba($gold, 0.15); }
+}

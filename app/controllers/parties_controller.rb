@@ -1,5 +1,5 @@
 class PartiesController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:index, :show]
+  skip_before_action :authenticate_user!, only: [:index, :show, :compare]
 
   TABS = {
     "overview"   => "Visão geral",
@@ -40,6 +40,15 @@ class PartiesController < ApplicationController
     @deputies = @party.deputies.with_attached_photo.order(:name).to_a
     @stats = PartyStats.new(@party, @deputies)
     @candidate_count = @party.candidates.count
+  end
+
+  def compare
+    authorize Party
+
+    @comparison = PartyComparison.new
+    @sort = PartyComparison::SORTS.key?(params[:sort]) ? params[:sort] : "seats"
+    @direction = %w[asc desc].include?(params[:dir]) ? params[:dir].to_sym : PartyComparison::SORTS[@sort][:default]
+    @rows = @comparison.sorted_rows(@sort, @direction)
   end
 
   private

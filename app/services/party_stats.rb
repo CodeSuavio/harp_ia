@@ -65,8 +65,11 @@ class PartyStats
 
   # ----- VOTAÇÕES -----
 
+  # Memoizado: cada leitura do cache desserializa a coesão de todos os partidos
   def cohesion
-    DeputyMetrics.party_cohesion[party.id]
+    return @cohesion if defined?(@cohesion)
+
+    @cohesion = DeputyMetrics.party_cohesion[party.id]
   end
 
   # [[votação, { sim:, nao:, index: }]] em que a bancada mais se dividiu

@@ -71,4 +71,29 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     get parties_path(uf: "XX")
     assert_select "[data-party-map-selected-value='']"
   end
+
+  test "comparação mostra destaques, blocos e a tabela de indicadores" do
+    get compare_parties_path
+    assert_response :success
+    assert_select "h1", text: /Comparar partidos/
+    assert_select ".party-insight", minimum: 1
+    assert_select ".party-compare-table tbody tr", 2
+    assert_select ".party-compare-table a[href=?]", party_path(parties(:mdb))
+    assert_select ".bloc-majority", text: "257"
+  end
+
+  test "comparação ordena pela coluna pedida e ignora coluna desconhecida" do
+    get compare_parties_path(sort: "seats", dir: "asc")
+    assert_select ".party-compare-table tbody tr:first-child th a", text: "PT"
+    assert_select "th[aria-sort=ascending]", text: /Cadeiras/
+
+    get compare_parties_path(sort: "xyz", dir: "sideways")
+    assert_response :success
+    assert_select ".party-compare-table tbody tr:first-child th a", text: "MDB"
+  end
+
+  test "lista de partidos leva à comparação" do
+    get parties_path
+    assert_select "a[href=?]", compare_parties_path
+  end
 end

@@ -16,7 +16,9 @@ Rails.application.routes.draw do
     resources :expenses, only: [:index]
   end
 
-  resources :parties, only: [:index, :show]
+  resources :parties, only: [:index, :show] do
+    get :compare, on: :collection
+  end
   resources :bills, only: [:index, :show]
   resources :candidates, only: [:index, :show]
 

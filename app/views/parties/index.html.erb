@@ -87,6 +87,15 @@
           Clique em um partido para ver mais informações: bancada, coesão nas votações e candidatos.
         </p>
 
+        <%= link_to compare_parties_path, class: "party-compare-cta d-flex align-items-center gap-3 p-3 mb-3 rounded-3 text-decoration-none" do %>
+          <i class="fa-solid fa-scale-balanced fa-lg text-gold" aria-hidden="true"></i>
+          <span class="flex-grow-1">
+            <strong class="d-block text-navy">Comparar partidos</strong>
+            <span class="small text-muted">Quem vota com o Governo, quem é mais unido, quem vota com quem</span>
+          </span>
+          <i class="fa-solid fa-chevron-right text-muted" aria-hidden="true"></i>
+        <% end %>
+
         <ol class="list-unstyled mb-0" data-party-map-target="list"></ol>
 
         <p class="text-muted text-center py-4 mb-0" data-party-map-target="empty" hidden>
