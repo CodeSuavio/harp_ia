@@ -1,0 +1,16 @@
+<%# rows: [[valor, quantidade]]; link: lambda opcional que leva o valor a uma URL filtrada %>
+<% max = rows.map(&:last).max %>
+<h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3"><%= title %></h3>
+<% rows.first(local_assigns.fetch(:limit, 6)).each do |value, count| %>
+  <% url = local_assigns[:link]&.call(value) %>
+  <%= content_tag(url ? :a : :div, href: url, class: "d-block text-decoration-none mb-2") do %>
+    <div class="d-flex justify-content-between small gap-3">
+      <span class="text-navy fw-medium"><%= value.to_s.capitalize %></span>
+      <span class="text-nowrap"><strong class="text-navy"><%= count %></strong>
+        <span class="text-muted">(<%= DeputyMetrics.percentage(count, total) %>%)</span></span>
+    </div>
+    <div class="progress" style="height: .5rem;">
+      <div class="progress-bar bg-gold" style="width: <%= bar_percent(count, max) %>%"></div>
+    </div>
+  <% end %>
+<% end %>

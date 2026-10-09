@@ -7,6 +7,7 @@ class Poll < ApplicationRecord
   has_many :poll_bills, dependent: :delete_all
   has_many :bills, through: :poll_bills
   has_many :proposal_polls, dependent: :delete_all
+  has_many :poll_orientations, dependent: :delete_all
 
   validates :date, :description, presence: true
 end

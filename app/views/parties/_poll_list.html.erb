@@ -1,0 +1,18 @@
+<%# rows: [[votação, { sim:, nao:, orientation: }]] com os votos da bancada %>
+<ul class="list-group list-group-flush">
+  <% rows.each do |poll, row| %>
+    <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+      <div class="min-w-0">
+        <span class="data-label text-muted small text-nowrap me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+        <%= link_to poll_summary(poll).truncate(110), poll_path(poll), class: "text-navy text-decoration-none hover-opacity" %>
+      </div>
+      <span class="small text-nowrap flex-shrink-0 text-end">
+        <span class="text-success fw-medium"><%= row[:sim] %> Sim</span> ×
+        <span class="text-danger fw-medium"><%= row[:nao] %> Não</span>
+        <% if local_assigns[:show_orientation] && row[:orientation] %>
+          <br><span class="text-muted">orientação: <strong class="text-navy"><%= row[:orientation] %></strong></span>
+        <% end %>
+      </span>
+    </li>
+  <% end %>
+</ul>

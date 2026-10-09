@@ -1,7 +1,13 @@
 class PartiesController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index, :show]
 
-  DIVIDED_POLLS = 5
+  TABS = {
+    "overview"   => "Visão geral",
+    "votes"      => "Votações",
+    "expenses"   => "Gastos",
+    "bills"      => "Projetos de lei",
+    "candidates" => "Candidatos 2026"
+  }.freeze
 
   STATES = {
     "AC" => "Acre", "AL" => "Alagoas", "AP" => "Amapá", "AM" => "Amazonas",
@@ -30,14 +36,10 @@ class PartiesController < ApplicationController
     @party = Party.find(params[:id])
     authorize @party
 
-    @deputies = @party.deputies.with_attached_photo.order(:name)
+    @tab = TABS.key?(params[:tab]) ? params[:tab] : "overview"
+    @deputies = @party.deputies.with_attached_photo.order(:name).to_a
+    @stats = PartyStats.new(@party, @deputies)
     @candidate_count = @party.candidates.count
-    @state_bench = @deputies.group_by(&:state_label).transform_values(&:size).sort_by { |state, count| [-count, state] }
-
-    @cohesion = DeputyMetrics.party_cohesion[@party.id]
-    @average_cohesion = DeputyMetrics.average_cohesion
-    @alignment = DeputyMetrics.alignment
-    @divided_polls = divided_polls
   end
 
   private
@@ -58,16 +60,5 @@ class PartiesController < ApplicationController
       national: national,
       states: STATES.to_h { |uf, name| [uf, { name: name, seats: by_state[uf] }] }
     }
-  end
-
-  # [[votação, { sim:, nao:, index: }]] em que a bancada mais se dividiu
-  def divided_polls
-    return [] unless @cohesion
-
-    rows = @cohesion[:by_poll].reject { |_, row| row[:index] == 1 }
-                              .sort_by { |poll_id, row| [row[:index], -poll_id] }
-                              .first(DIVIDED_POLLS)
-    polls = Poll.where(id: rows.map(&:first)).index_by(&:id)
-    rows.filter_map { |poll_id, row| [polls[poll_id], row] if polls[poll_id] }
   end
 end

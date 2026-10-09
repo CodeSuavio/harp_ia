@@ -10,4 +10,13 @@ module HarpiaHelper
 
     partes.join(" ")
   end
+
+  def party_harpia_question(party, stats)
+    partes = ["Com base nos dados da plataforma, explique de forma neutra o perfil do partido #{party.label} (#{party.name}) na Câmara dos Deputados."]
+    partes << "Bancada atual: #{stats.deputies.size} deputados em #{stats.state_bench.size} estados."
+    partes << "Coesão nas votações: #{stats.cohesion[:pct]}%." if stats.cohesion
+    partes << "Federação na Câmara: #{stats.federation[:label]}." if stats.federation
+    partes << "Candidatos a deputado federal em 2026: #{party.candidates.count}."
+    partes.join(" ")
+  end
 end

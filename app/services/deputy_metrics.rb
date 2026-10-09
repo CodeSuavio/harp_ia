@@ -163,6 +163,44 @@ class DeputyMetrics
     values.empty? ? nil : (values.sum.to_f / values.size).round
   end
 
+  # { party_id => { outro_party_id => { same:, common:, pct: } } }
+  #
+  # Afinidade entre bancadas: nas votações da coesão em que as duas têm maioria
+  # (Sim ou Não, sem empate), em quantas a maioria das duas foi a mesma.
+  def self.party_affinity
+    cached("party-affinity", Vote) { affinity_from(party_cohesion) }
+  end
+
+  # Mesma conta de party_affinity a partir de { party_id => { by_poll: { poll_id => { sim:, nao: } } } }
+  def self.affinity_from(cohesion)
+    majorities = cohesion.transform_values do |row|
+      row[:by_poll].filter_map do |poll_id, votes|
+        majority = majority_of(votes[:sim], votes[:nao])
+        [poll_id, majority] if majority
+      end.to_h
+    end
+
+    majorities.to_h do |party_id, own|
+      others = majorities.except(party_id).to_h do |other_id, theirs|
+        common = own.keys & theirs.keys
+        same = common.count { |poll_id| own[poll_id] == theirs[poll_id] }
+        [other_id, { same: same, common: common.size, pct: percentage(same, common.size) }]
+      end
+      [party_id, others]
+    end
+  end
+
+  # { poll_id => { sim:, nao: } } com os votos Sim/Não de toda a Câmara
+  def self.poll_totals
+    cached("poll-totals", Vote) do
+      totals = {}
+      Vote.where(vote: Vote::DECISIVE).group(:poll_id, :vote).count.each do |(poll_id, vote), count|
+        (totals[poll_id] ||= { sim: 0, nao: 0 })[vote == "Sim" ? :sim : :nao] = count
+      end
+      totals
+    end
+  end
+
   # Quantas votações (com voto dos dois) cada par de deputados votou diferente
   def self.divergence(deputy_a, deputy_b)
     votes_a = deputy_a.votes.pluck(:poll_id, :vote).to_h

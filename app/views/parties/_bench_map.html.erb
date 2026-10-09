@@ -1,0 +1,36 @@
+<%# Mapa estático da bancada: cada estado leva ao mapa de partidos com ele selecionado %>
+<% seats_by_state = state_bench.to_h %>
+<% max_seats = [seats_by_state.values.max.to_i, 1].max %>
+
+<svg class="party-map party-bench-map" viewBox="<%= BrazilMap::VIEW_BOX %>"
+     role="group" aria-label="Deputados do partido por estado">
+  <% BrazilMap::PATHS.each do |uf, path| %>
+    <% seats = seats_by_state[uf].to_i %>
+    <% weight = bench_map_weight(seats, max_seats) %>
+    <% name = PartiesController::STATES[uf] %>
+    <a href="<%= parties_path(uf: uf) %>" class="uf-tile <%= 'is-strong' if weight > 0.5 %>"
+       aria-label="<%= name %>: <%= seats %> <%= "deputado".pluralize(seats) %>. Ver todos os partidos do estado">
+      <title><%= name %> · <%= seats %> <%= "deputado".pluralize(seats) %></title>
+      <path class="uf-shape" d="<%= path %>" fill-opacity="<%= weight.round(2) %>"></path>
+
+      <% if (callout = BrazilMap::CALLOUTS[uf]) %>
+        <% (x, y), (from_x, from_y) = callout %>
+        <line class="uf-leader" x1="<%= from_x %>" y1="<%= from_y %>" x2="<%= x - 3 %>" y2="<%= y - 4 %>"></line>
+        <rect class="uf-hit" x="<%= x - 4 %>" y="<%= y - 15 %>" width="58" height="21" rx="4"></rect>
+        <text class="uf-callout" x="<%= x %>" y="<%= y %>">
+          <tspan class="uf-label"><%= uf %></tspan> <tspan class="uf-seats"><%= seats %></tspan>
+        </text>
+      <% else %>
+        <% x, y = BrazilMap::LABELS[uf] %>
+        <text x="<%= x %>" y="<%= y - 1 %>">
+          <tspan class="uf-label"><%= uf %></tspan>
+          <tspan class="uf-seats" x="<%= x %>" dy="1.1em"><%= seats %></tspan>
+        </text>
+      <% end %>
+    </a>
+  <% end %>
+</svg>
+
+<p class="small text-muted text-center mt-2 mb-0">
+  Cor mais forte = mais deputados. Clique num estado para ver todos os partidos dele.
+</p>

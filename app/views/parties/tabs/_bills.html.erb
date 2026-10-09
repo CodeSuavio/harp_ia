@@ -1,0 +1,97 @@
+<% bills_count = @stats.bills.count %>
+<% themes = @stats.bill_themes %>
+<% max_theme = themes.map(&:last).max %>
+<% proposals = @stats.proposals.to_a %>
+
+<div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+  <div class="d-flex flex-wrap justify-content-between align-items-start gap-3 mb-3">
+    <h2 class="h6 fw-bold text-navy mb-0 text-uppercase tracking-wider">
+      <i class="fa-solid fa-file-lines me-2 text-gold"></i>Projetos de lei
+      <%= info_tip("Proposições apresentadas por deputados quando estavam no partido.") %>
+    </h2>
+    <% if bills_count.positive? %>
+      <%= link_to bills_path(party: @party.id), class: "btn btn-light border btn-sm rounded-pill px-3 fw-medium text-navy" do %>
+        Ver todos os <%= bills_count %> <i class="fa-solid fa-arrow-right ms-1 text-gold"></i>
+      <% end %>
+    <% end %>
+  </div>
+
+  <% if bills_count.zero? %>
+    <p class="text-muted small mb-0">Nenhum projeto de lei registrado para este partido.</p>
+  <% else %>
+    <% types = @stats.bill_types.select { |type, _| type.present? } %>
+    <% if types.any? %>
+      <div class="d-flex flex-wrap gap-2 mb-4">
+        <% types.each do |type, count| %>
+          <%= link_to "#{type} #{count}", bills_path(party: @party.id, type: type), class: "panel-chip" %>
+        <% end %>
+      </div>
+    <% end %>
+
+    <div class="row g-4">
+      <div class="<%= themes.any? ? 'col-md-7' : 'col-12' %>">
+        <h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Mais recentes</h3>
+        <ul class="list-group list-group-flush">
+          <% @stats.recent_bills.each do |bill| %>
+            <li class="list-group-item px-0">
+              <div class="d-flex flex-wrap align-items-center gap-2 small mb-1">
+                <span class="fw-bold text-navy"><%= proposicao_label(bill) %></span>
+                <% if bill.submission_date %>
+                  <span class="data-label text-muted"><%= bill.submission_date.strftime("%d/%m/%Y") %></span>
+                <% end %>
+                <% if bill.deputy %>
+                  <span class="text-muted">· <%= bill.deputy.name %></span>
+                <% end %>
+              </div>
+              <%= link_to bill.summary.to_s.truncate(140), bill_path(bill), class: "text-navy text-decoration-none hover-opacity small" %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+
+      <% if themes.any? %>
+        <div class="col-md-5">
+          <h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Temas mais frequentes</h3>
+          <% themes.each do |theme, count| %>
+            <%= link_to bills_path(party: @party.id, theme: theme.id), class: "text-decoration-none d-block mb-2" do %>
+              <div class="d-flex justify-content-between small gap-3">
+                <span class="text-navy fw-medium"><%= theme.name %></span>
+                <span class="text-muted"><%= count %></span>
+              </div>
+              <div class="progress" style="height: .5rem;">
+                <div class="progress-bar bg-gold" style="width: <%= bar_percent(count, max_theme) %>%"></div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  <% end %>
+</div>
+
+<% if proposals.any? %>
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
+      <i class="fa-solid fa-scroll me-2 text-gold"></i>Propostas do partido
+    </h2>
+    <div class="row g-3">
+      <% proposals.each do |proposal| %>
+        <div class="col-md-6">
+          <div class="p-3 bg-light rounded-3 h-100">
+            <div class="d-flex flex-wrap gap-2 mb-1">
+              <span class="panel-chip"><%= proposal.theme.name %></span>
+              <span class="small text-muted"><%= proposal.source_label %><%= " · #{proposal.state_label}" if proposal.state_label %></span>
+            </div>
+            <div class="fw-bold text-navy small"><%= proposal.title %></div>
+            <% if proposal.excerpt.present? %>
+              <p class="small text-muted mb-0 mt-1"><%= proposal.excerpt.truncate(180) %></p>
+            <% end %>
+            <% if proposal.source_url.present? %>
+              <%= link_to "Fonte", proposal.source_url, target: "_blank", rel: "noopener", class: "small text-gold fw-bold text-decoration-none" %>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+<% end %>

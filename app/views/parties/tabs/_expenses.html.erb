@@ -1,0 +1,71 @@
+<% expenses = @stats.expenses %>
+
+<% if expenses.nil? %>
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <p class="text-muted small mb-0">Nenhum gasto da cota parlamentar registrado para a bancada deste partido.</p>
+  </div>
+<% else %>
+  <% max_type = expenses[:types].map(&:last).max %>
+
+  <!-- Indicadores -->
+  <div class="row g-3 mb-4">
+    <% [
+         ["fa-wallet",     brl(expenses[:total], precision: 0), "gastos da bancada em #{expenses[:year]}",
+                           "Soma do valor líquido das despesas da cota parlamentar (CEAP) dos deputados do partido no ano."],
+         ["fa-user-tie",   brl(expenses[:monthly], precision: 0), "por deputado, por mês",
+                           "Média do gasto mensal (meses com despesa) dos #{expenses[:deputies]} deputados do partido com despesas no ano."],
+         ["fa-scale-balanced", brl(expenses[:chamber_monthly], precision: 0), "média da Câmara, por deputado/mês",
+                           "Mesma conta para todos os deputados com despesas no ano."]
+       ].each do |icon, value, label, info| %>
+      <div class="col-12 col-md-4">
+        <div class="p-3 bg-white rounded-4 shadow-sm h-100 border-start border-4 border-gold">
+          <i class="fa-solid <%= icon %> text-gold mb-2"></i>
+          <div class="h4 fw-bold text-navy mb-0"><%= value %></div>
+          <div class="small text-muted"><%= label %><%= info_tip(info) %></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <% if (comparison = compared_to_average(expenses[:monthly], expenses[:chamber_monthly])) %>
+    <p class="small text-muted mb-4">
+      <i class="fa-solid fa-circle-info me-1 text-gold"></i>
+      Cada deputado do <%= @party.label %> gasta, em média, <strong class="text-navy"><%= comparison %></strong> da Câmara.
+      A cota varia por estado (passagens para Brasília custam mais para quem vem de longe), então a composição da bancada pesa nessa comparação.
+    </p>
+  <% end %>
+
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
+    <div class="row g-4">
+      <div class="col-md-6">
+        <h2 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Quem mais gasta por mês</h2>
+        <% expenses[:top].each do |deputy, monthly| %>
+          <%= link_to deputy_tab_path(deputy, "expenses"), class: "text-decoration-none d-block mb-2" do %>
+            <div class="p-3 bg-light rounded-3 d-flex justify-content-between align-items-center gap-3 kpi-card">
+              <div class="min-w-0">
+                <div class="fw-bold text-navy text-truncate"><%= deputy.name %></div>
+                <div class="small text-muted"><%= deputy.state_label %></div>
+              </div>
+              <span class="fw-bold text-navy text-nowrap"><%= brl(monthly, precision: 0) %><span class="small text-muted fw-normal">/mês</span></span>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <div class="col-md-6">
+        <h2 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Principais tipos de gasto</h2>
+        <% expenses[:types].each do |type, total| %>
+          <div class="mb-2">
+            <div class="d-flex justify-content-between small gap-3">
+              <span class="text-navy fw-medium" title="<%= type %>"><%= truncate(expense_type_label(type), length: 38) %></span>
+              <span class="text-nowrap"><%= brl(total, precision: 0) %></span>
+            </div>
+            <div class="progress" style="height: .5rem;">
+              <div class="progress-bar bg-navy" role="progressbar" style="width: <%= bar_percent(total, max_type) %>%"></div>
+            </div>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+<% end %>

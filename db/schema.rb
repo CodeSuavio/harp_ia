@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_08_160000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_08_170100) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -187,9 +187,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_160000) do
     t.datetime "created_at", null: false
     t.string "former_labels"
     t.string "label"
+    t.bigint "leader_json_id"
+    t.string "leader_name"
+    t.string "logo_url"
     t.string "name"
     t.integer "number"
     t.date "registered_on"
+    t.integer "seats_at_start"
     t.string "succeeded_by"
     t.datetime "updated_at", null: false
     t.string "url"
@@ -203,6 +207,18 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_160000) do
     t.index ["bill_id"], name: "index_poll_bills_on_bill_id"
     t.index ["poll_id", "bill_id"], name: "index_poll_bills_on_poll_id_and_bill_id", unique: true
     t.index ["poll_id"], name: "index_poll_bills_on_poll_id"
+  end
+
+  create_table "poll_orientations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.string "label", null: false
+    t.string "orientation", null: false
+    t.bigint "party_id"
+    t.bigint "poll_id", null: false
+    t.datetime "updated_at", null: false
+    t.index ["party_id"], name: "index_poll_orientations_on_party_id"
+    t.index ["poll_id", "label"], name: "index_poll_orientations_on_poll_id_and_label", unique: true
+    t.index ["poll_id"], name: "index_poll_orientations_on_poll_id"
   end
 
   create_table "poll_themes", force: :cascade do |t|
@@ -464,6 +480,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_08_160000) do
   add_foreign_key "messages", "chats"
   add_foreign_key "poll_bills", "bills"
   add_foreign_key "poll_bills", "polls"
+  add_foreign_key "poll_orientations", "parties"
+  add_foreign_key "poll_orientations", "polls"
   add_foreign_key "poll_themes", "polls"
   add_foreign_key "poll_themes", "themes"
   add_foreign_key "polls", "bills"
