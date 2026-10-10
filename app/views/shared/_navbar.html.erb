@@ -25,6 +25,12 @@
         <li class="nav-item">
           <%= link_to "DEPUTADOS", deputies_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(deputies_path)}" %>
         </li>
+<li class="nav-item">
+  <%= link_to "VOTAÇÕES", polls_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(polls_path)}" %>
+</li>
+<li class="nav-item">
+  <%= link_to "PROJETOS", bills_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(bills_path)}" %>
+</li>
         <li class="nav-item">
           <%= link_to "PARTIDOS", parties_path, class: "nav-link text-uppercase nav-hover #{'active' if current_page?(parties_path)}" %>
         </li>

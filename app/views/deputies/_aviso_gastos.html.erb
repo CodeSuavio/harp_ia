@@ -1,0 +1,28 @@
+<% cobertura = cobertura_de_gastos(deputy, year) %>
+<div class="alert alert-light border rounded-4 small mb-3">
+  <div class="d-flex gap-2 align-items-start">
+    <i class="fa-solid fa-circle-info text-gold mt-1" aria-hidden="true"></i>
+    <div>
+      <% if cobertura[:parcial] %>
+        <p class="mb-1 text-navy fw-semibold">Dados parciais para este deputado.</p>
+        <p class="mb-1">
+          A base de <%= year %> traz só os <%= GastosHelper::LIMITE_DA_FONTE %> lançamentos de maior valor de cada deputado.
+          Despesas menores (combustível, táxi, telefonia) ficam de fora, então o total, o uso da cota e o ranking podem estar abaixo do real.
+        </p>
+      <% end %>
+      <% if cobertura[:poucos_meses] %>
+        <p class="mb-1 text-navy fw-semibold">
+          Despesas em só <%= cobertura[:meses] %> <%= cobertura[:meses] == 1 ? "mês" : "meses" %> de <%= year %>.
+        </p>
+        <p class="mb-1">
+          Pode ter exercido o mandato por pouco tempo no ano (posse tardia, licença ou suplência). O valor baixo não indica economia.
+        </p>
+      <% end %>
+      <p class="mb-0 text-muted">
+        Fonte: cota parlamentar (CEAP) de <%= year %>, dados abertos da Câmara dos Deputados.
+        As votações e os projetos do site são de 2026, então não compare gasto e atuação como se fossem do mesmo período.
+        <%= link_to "Ver na Câmara", camara_expenses_url(deputy, year, nil), target: "_blank", rel: "noopener", class: "text-gold text-decoration-none" %>
+      </p>
+    </div>
+  </div>
+</div>
