@@ -1,0 +1,16 @@
+# Ana tomou posse pelo PT e trocou para o MDB durante o mandato
+ana_pt:
+  deputy: ana
+  party: pt
+  party_label: PT
+  legislature: 56
+  started_on: 2019-02-01
+  kind: first
+
+ana_mdb:
+  deputy: ana
+  party: mdb
+  party_label: MDB
+  legislature: 56
+  started_on: 2021-05-10
+  kind: switch

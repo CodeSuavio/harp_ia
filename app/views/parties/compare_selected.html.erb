@@ -1,0 +1,95 @@
+<% content_for :title, "Comparar partidos · Harpia" %>
+<% parties = @selection.parties %>
+
+<div class="container py-5">
+  <div class="mb-4">
+    <%= link_to parties_path, class: "text-decoration-none text-muted fw-medium transition" do %>
+      <i class="fa-solid fa-arrow-left me-2"></i> Voltar para Partidos
+    <% end %>
+  </div>
+
+  <h1 class="h4 fw-bold text-navy mb-4">
+    <i class="fa-solid fa-scale-balanced text-gold me-2"></i> Comparar partidos
+  </h1>
+
+  <% if parties.size < 2 %>
+    <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
+      <p class="text-muted mb-3">Selecione de 2 a <%= PartiesController::COMPARE_LIMIT %> partidos na lista de partidos para compará-los.</p>
+      <%= link_to "Ir para a lista de partidos", parties_path, class: "btn btn-auth rounded-pill px-4 mx-auto" %>
+    </div>
+  <% else %>
+    <p class="small text-muted mb-3">
+      <span class="compare-legend compare-best me-1" aria-hidden="true"></span> melhor da linha
+      <span class="compare-legend compare-worst ms-3 me-1" aria-hidden="true"></span> pior da linha.
+      Gastos menores, mais participação, mais projetos por deputado e mais mulheres candidatas contam como melhor.
+      Governismo, coesão e disciplina não têm lado melhor.
+    </p>
+
+    <div class="table-responsive card border-0 shadow-sm rounded-4 bg-white mb-4">
+      <table class="table align-middle mb-0 compare-table">
+        <thead>
+          <tr>
+            <th class="border-0"><span class="visually-hidden">Indicador</span></th>
+            <% parties.each do |row| %>
+              <th class="border-0 text-center py-4" scope="col">
+                <%= link_to party_path(row.party), class: "text-decoration-none d-inline-flex flex-column align-items-center gap-2" do %>
+                  <%= party_logo(row.party) %>
+                  <span class="text-navy fw-bold"><%= row.label %></span>
+                <% end %>
+                <div class="small text-muted fw-normal"><%= row.party.name %></div>
+                <div class="small fw-bold text-uppercase d-inline-flex align-items-center gap-1 mt-1">
+                  <span class="bloc-swatch bloc-<%= row.bloc.to_s.dasherize %>" aria-hidden="true"></span>
+                  <%= @selection.bloc_label(row.bloc) %>
+                </div>
+              </th>
+            <% end %>
+          </tr>
+        </thead>
+        <tbody>
+          <% @selection.rows.each do |row| %>
+            <tr>
+              <th scope="row" class="text-muted small text-uppercase tracking-wider ps-4">
+                <%= row.label %><%= info_tip(row.info) if row.info %>
+              </th>
+              <% parties.each do |party| %>
+                <% cell = row.values[party.party.id] %>
+                <% mark = @selection.highlight(row, party) %>
+                <td class="text-center fw-medium text-navy <%= "compare-#{mark}" if mark %>">
+                  <%= compare_value(row, cell) %>
+                  <% if cell[:detail] %><span class="d-block small text-muted fw-normal"><%= cell[:detail] %></span><% end %>
+                  <% if mark %><span class="visually-hidden">(<%= mark == :best ? "melhor" : "pior" %> da linha)</span><% end %>
+                </td>
+              <% end %>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Afinidade entre eles -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+      <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">
+        Como votaram entre si
+        <%= info_tip("Nas votações em que as duas bancadas tiveram maioria (Sim ou Não), em quantas a maioria das duas foi a mesma. Só pares com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum.") %>
+      </h2>
+      <ul class="list-unstyled mb-0">
+        <% @selection.affinities.each do |a, b, cell| %>
+          <li class="mb-2">
+            <strong class="text-navy"><%= a.label %></strong> e <strong class="text-navy"><%= b.label %></strong>
+            <% if cell %>
+              votaram do mesmo lado em <strong><%= cell[:same] %></strong> de <%= cell[:common] %> votações em comum
+              <span class="text-muted">(<%= cell[:pct] %>%)</span>
+            <% else %>
+              <span class="text-muted">têm poucas votações em comum para comparar</span>
+            <% end %>
+          </li>
+        <% end %>
+      </ul>
+    </div>
+
+    <p class="small text-muted mb-0">
+      Quer ver todos os partidos de uma vez?
+      <%= link_to "Veja o panorama da Câmara", compare_parties_path, class: "text-navy fw-medium" %>.
+    </p>
+  <% end %>
+</div>

@@ -65,6 +65,35 @@ namespace :partidos do
     puts "sem dados na Camara: #{ausentes.join(', ')}" if ausentes.any?
   end
 
+  desc "Historico de partidos de cada deputado (API da Camara)"
+  task historico: :environment do
+    api = "https://dadosabertos.camara.leg.br/api/v2"
+    predecessors = PartyHistory.predecessors
+    parties = Party.all.index_by { |party| party.label.upcase }
+
+    importados = 0
+    falhas = []
+
+    Deputy.find_each do |deputy|
+      dados = camara_json("#{api}/deputados/#{deputy.json_id}/historico")&.dig("dados")
+      next falhas << deputy.name unless dados
+
+      now = Time.current
+      rows = PartyHistory.new(dados, predecessors: predecessors).entries.map do |entry|
+        entry.to_h.merge(deputy_id: deputy.id, party_id: parties[entry.party_label]&.id, created_at: now, updated_at: now)
+      end
+      PartyAffiliation.transaction do
+        deputy.party_affiliations.delete_all
+        PartyAffiliation.insert_all(rows) if rows.any?
+      end
+      importados += 1
+      sleep 0.2 # a API recusa muitas requisições seguidas
+    end
+
+    puts "historicos importados: #{importados}"
+    puts "sem resposta da API: #{falhas.join(', ')}" if falhas.any?
+  end
+
   desc "Orientacao de voto das liderancas em cada votacao (API da Camara). FORCE=1 rebaixa as ja importadas"
   task orientacoes: :environment do
     api = "https://dadosabertos.camara.leg.br/api/v2"

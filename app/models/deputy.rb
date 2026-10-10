@@ -6,6 +6,7 @@ class Deputy < ApplicationRecord
   has_many :bills, dependent: :destroy
   has_many :votes, dependent: :destroy
   has_many :proposals, dependent: :destroy
+  has_many :party_affiliations, -> { order(:started_on, :id) }, dependent: :delete_all, inverse_of: :deputy
   has_many :candidates, foreign_key: :current_deputy_id, primary_key: :json_id, dependent: :destroy, inverse_of: :current_deputy #id recebido na coluna json_id
 
   has_one_attached :photo

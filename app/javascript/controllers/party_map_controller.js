@@ -55,7 +55,7 @@ export default class extends Controller {
 
   render(seats) {
     const rows = Object.entries(seats)
-      .map(([id, count]) => ({ party: this.mapData.parties[id], count }))
+      .map(([id, count]) => ({ id, party: this.mapData.parties[id], count }))
       .filter((row) => row.party)
       .sort((a, b) => b.count - a.count || a.party.label.localeCompare(b.party.label))
 
@@ -69,11 +69,13 @@ export default class extends Controller {
     this.listTarget.replaceChildren(...rows.map((row) => this.buildRow(row, total, leader)))
   }
 
-  buildRow({ party, count }, total, leader) {
+  buildRow({ id, party, count }, total, leader) {
     const row = this.rowTarget.content.firstElementChild.cloneNode(true)
     const field = (name) => row.querySelector(`[data-field="${name}"]`)
 
     field("link").href = party.url
+    field("compare").value = id
+    field("compare").setAttribute("aria-label", `Comparar ${party.label}`)
     field("label").textContent = party.label
     if (party.logo) {
       field("logo").src = party.logo

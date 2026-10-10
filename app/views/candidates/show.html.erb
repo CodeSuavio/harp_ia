@@ -121,6 +121,10 @@
     <% end %>
   </div>
 
+  <% if deputy %>
+    <%= render "deputies/party_history", affiliations: deputy.party_affiliations.includes(:party), candidate: @candidate %>
+  <% end %>
+
   <% if @overview %>
     <%= render "deputies/spending", overview: @overview %>
     <%= render "deputies/votes", overview: @overview %>

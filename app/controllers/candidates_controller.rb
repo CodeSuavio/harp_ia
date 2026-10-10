@@ -9,7 +9,7 @@ class CandidatesController < ApplicationController
   }.freeze
 
   def index
-    base = apply_search(policy_scope(Candidate))
+    base = policy_scope(Candidate).search(params[:q])
 
     filters = {
       state_label: params[:state].presence,
@@ -52,25 +52,5 @@ class CandidatesController < ApplicationController
 
   def apply(scope, filters)
     filters.reduce(scope) { |s, (column, value)| s.where(column => value) }
-  end
-
-  def apply_search(scope)
-    return scope if params[:q].blank?
-
-    term = params[:q].strip
-    like = "%#{Candidate.sanitize_sql_like(term)}%"
-    party_ids = Party.where(
-      "upper(label) = :t OR :t = ANY(string_to_array(upper(coalesce(former_labels, '')), ' '))",
-      t: term.upcase
-    ).pluck(:id)
-
-    if party_ids.any?
-      scope.where(
-        "candidates.ballot_name ILIKE :l OR candidates.name ILIKE :l OR candidates.party_id IN (:ids)",
-        l: like, ids: party_ids
-      )
-    else
-      scope.where("candidates.ballot_name ILIKE :l OR candidates.name ILIKE :l", l: like)
-    end
   end
 end
