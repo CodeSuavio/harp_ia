@@ -6,7 +6,10 @@
 <% max_seats = [@state_seats.values.max.to_i, 1].max %>
 
 <section class="container search-container pb-5"
-         data-controller="party-map"
+         data-controller="party-map compare-selection"
+         data-compare-selection-url-value="<%= compare_parties_path %>"
+         data-compare-selection-key-value="party-compare"
+         data-compare-selection-limit-value="<%= PartiesController::COMPARE_LIMIT %>"
          data-action="keydown.esc@window->party-map#clear"
          data-party-map-selected-value="<%= @uf %>">
   <script type="application/json" data-party-map-target="data"><%= raw json_escape(@map_data.to_json) %></script>
@@ -96,6 +99,29 @@
           <i class="fa-solid fa-chevron-right text-muted" aria-hidden="true"></i>
         <% end %>
 
+        <!-- Comparação lado a lado: ativa as caixas "Comparar" na lista -->
+        <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3 mb-3">
+          <button type="button" class="btn btn-sm btn-compare-mode rounded-pill px-3 fw-medium"
+                  aria-pressed="false"
+                  data-compare-selection-target="modeButton"
+                  data-action="compare-selection#toggleMode">
+            <i class="fa-solid fa-check-double me-1" aria-hidden="true"></i>
+            <span data-compare-selection-target="modeLabel">Escolher partidos</span>
+          </button>
+          <span class="small text-muted">
+            Compare até <%= PartiesController::COMPARE_LIMIT %> partidos lado a lado<span class="compare-mode-hint">: marque "Comparar" na lista</span>.
+          </span>
+
+          <!-- Seleção atual: aparece com o modo ativo e ao menos um partido marcado -->
+          <div class="d-flex align-items-center gap-3 ms-md-auto" data-compare-selection-target="bar" hidden>
+            <span class="small text-navy fw-medium"><span data-compare-selection-target="count">0</span> de <%= PartiesController::COMPARE_LIMIT %></span>
+            <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0" data-action="compare-selection#clear">Limpar</button>
+            <a href="#" class="btn btn-sm btn-auth rounded-pill px-3 fw-bold" data-compare-selection-target="link">
+              <i class="fa-solid fa-scale-balanced me-1" aria-hidden="true"></i> Comparar
+            </a>
+          </div>
+        </div>
+
         <ol class="list-unstyled mb-0" data-party-map-target="list"></ol>
 
         <p class="text-muted text-center py-4 mb-0" data-party-map-target="empty" hidden>
@@ -103,8 +129,14 @@
         </p>
 
         <template data-party-map-target="row">
-          <li class="party-row">
-            <a class="d-block text-decoration-none text-reset py-2 px-2 rounded-3" data-field="link">
+          <li class="party-row d-flex align-items-center gap-2">
+            <label class="compare-toggle small flex-shrink-0" title="Selecionar para comparar">
+              <input type="checkbox" class="form-check-input me-1" data-field="compare"
+                     data-compare-selection-target="checkbox"
+                     data-action="compare-selection#toggle">
+              Comparar
+            </label>
+            <a class="d-block flex-grow-1 min-w-0 text-decoration-none text-reset py-2 px-2 rounded-3" data-field="link">
               <div class="d-flex justify-content-between align-items-baseline gap-3">
                 <div class="min-w-0 d-flex align-items-center gap-2">
                   <img class="party-logo-sm" alt="" loading="lazy" data-field="logo" hidden>

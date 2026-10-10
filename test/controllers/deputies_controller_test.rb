@@ -5,7 +5,7 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     get deputies_path
     assert_response :success
     assert_select ".candidate-card h3", text: "Ana Souza"
-    assert_select "input[data-deputy-compare-target=checkbox]", 4
+    assert_select "input[data-compare-selection-target=checkbox]", 4
   end
 
   test "sigla do partido nos cartões leva à página do partido" do
@@ -15,13 +15,13 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
 
   test "botão abaixo dos filtros ativa a comparação e avisa o limite" do
     get deputies_path
-    assert_select "button[data-action='deputy-compare#toggleMode']", text: /Comparar deputados/
+    assert_select "button[data-action='compare-selection#toggleMode']", text: /Comparar deputados/
     assert_select "span", text: /Compare até 3 deputados/
   end
 
   test "link de comparação sai do turbo frame da listagem" do
     get deputies_path
-    assert_select "turbo-frame#deputies_list a[data-deputy-compare-target=link][data-turbo-frame=_top]"
+    assert_select "turbo-frame#deputies_list a[data-compare-selection-target=link][data-turbo-frame=_top]"
   end
 
   test "busca por sigla do partido" do

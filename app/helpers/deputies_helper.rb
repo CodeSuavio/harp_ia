@@ -122,6 +122,7 @@ module DeputiesHelper
     case row.format
     when :currency then brl(value)
     when :percent  then percent(value)
+    when :decimal  then number_with_precision(value, precision: 1, separator: ",")
     else value.to_s
     end
   end
