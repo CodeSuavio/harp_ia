@@ -1,13 +1,13 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Dicas localizadas. Cada uma aparece até a pessoa fechar ou usar o recurso.
+// Dicas localizadas. O ponto fica até a pessoa tocar em "Entendi" ou usar o recurso.
 // O X do balão desliga todas as dicas daquela página; "Rever dicas" no rodapé religa tudo.
 const STORAGE_KEY = "harpia-hints-v1"
 const ONBOARDING_KEY = "harpia-onboarding-v1"
 const MAX_BEACONS = 3
-const INSIDE = "summary, h1, h2, h3, h4, h5, h6"
-const TEMPLATE = (role) =>
-  `<div class="popover hint-pop" role="${role}"><div class="popover-arrow"></div><div class="popover-body"></div></div>`
+const NAVBAR = 76
+const INLINE = "h1, h2, h3, h4, h5, h6"
+const FOCUSABLE = "a[href], button, input, select, textarea, summary, [tabindex]"
 
 export default class extends Controller {
   static values = { page: String, items: Array }
@@ -24,12 +24,13 @@ export default class extends Controller {
     document.addEventListener("click", this.onClick)
     document.addEventListener("keydown", this.onKey)
     window.addEventListener("resize", this.onResize)
-    document.querySelectorAll(".hint-beacon").forEach((stale) => stale.remove())
+    document.querySelectorAll(".hint-beacon, .hint-toast").forEach((stale) => stale.remove())
     if (!this.Popover) return
 
-    const modal = document.getElementById("onboarding-modal")
-    if (modal && !this.onboardingSeen()) {
-      modal.addEventListener("hidden.bs.modal", () => { this.timer = setTimeout(() => this.start(), 600) }, { once: true })
+    this.modal = document.getElementById("onboarding-modal")
+    if (this.modal && !this.onboardingSeen()) {
+      this.afterOnboarding = () => { this.timer = setTimeout(() => this.start(), 600) }
+      this.modal.addEventListener("hidden.bs.modal", this.afterOnboarding, { once: true })
     } else {
       this.timer = setTimeout(() => this.start(), 800)
     }
@@ -37,6 +38,7 @@ export default class extends Controller {
 
   disconnect() {
     this.cleanup()
+    this.modal?.removeEventListener("hidden.bs.modal", this.afterOnboarding)
     document.removeEventListener("turbo:before-cache", this.cleanup)
     document.removeEventListener("click", this.onClick)
     document.removeEventListener("keydown", this.onKey)
@@ -53,17 +55,23 @@ export default class extends Controller {
       .filter((item) => item.target)
 
     pending.filter((item) => item.mode === "auto").forEach((item) => this.watch(item))
-    pending.filter((item) => item.mode !== "auto").slice(0, MAX_BEACONS).forEach((item) => this.addBeacon(item))
+    pending
+      .filter((item) => item.mode !== "auto" && item.target.getClientRects().length > 0)
+      .slice(0, MAX_BEACONS)
+      .forEach((item) => this.addBeacon(item))
     this.pulseFirst()
     return pending
   }
 
+  // Com "contains", fica o elemento mais interno que tem o texto
   find(item) {
-    return [...document.querySelectorAll(item.selector)]
-      .find((node) => !item.contains || node.textContent.includes(item.contains))
+    let nodes
+    try { nodes = [...document.querySelectorAll(item.selector)] } catch (_) { return null }
+    if (item.contains) nodes = nodes.filter((node) => node.textContent.includes(item.contains))
+    return nodes.find((node) => !nodes.some((other) => other !== node && node.contains(other)))
   }
 
-  // Balão automático: só quando o recurso estiver de fato visível
+  // Balão automático: abre quando a maior parte do recurso está na tela
   watch(item) {
     const observer = new IntersectionObserver((entries) => {
       if (!entries.some((entry) => entry.isIntersecting)) return
@@ -74,7 +82,7 @@ export default class extends Controller {
         observer.disconnect()
         this.open(item, { auto: true })
       }, 800)
-    }, { threshold: 0.6 })
+    }, { threshold: [0, 0.3, 0.6, 1] })
     observer.observe(item.target)
     this.observers.push(observer)
     this.listenForUse(item)
@@ -92,8 +100,8 @@ export default class extends Controller {
       this.current?.item === item ? this.close() : this.open(item)
     })
 
-    const inside = item.target.matches(INSIDE)
-    if (inside) {
+    item.inline = item.target.matches(INLINE)
+    if (item.inline) {
       beacon.classList.add("hint-beacon--inline")
       item.target.appendChild(beacon)
     } else {
@@ -106,7 +114,6 @@ export default class extends Controller {
     }
 
     item.beacon = beacon
-    item.inside = inside
     this.beacons.push(item)
     this.place(item)
     this.listenForUse(item)
@@ -119,14 +126,16 @@ export default class extends Controller {
     item.target.addEventListener(event, item.onUse, { once: true })
   }
 
+  // Ponto no canto superior direito do recurso, sem passar da borda da tela
   place(item) {
-    const { target, beacon, inside } = item
-    if (!beacon || inside) return
+    const { target, beacon, inline } = item
+    if (!beacon || inline) return
 
-    const left = target.offsetLeft + target.offsetWidth + 2
-    const top = target.offsetTop + 6
-    beacon.style.left = `${left}px`
-    beacon.style.top = `${top}px`
+    const half = beacon.offsetWidth / 2
+    const room = document.documentElement.clientWidth - target.getBoundingClientRect().right
+    const shift = Math.min(2, room - half - 4)
+    beacon.style.left = `${target.offsetLeft + target.offsetWidth + shift}px`
+    beacon.style.top = `${target.offsetTop + 6}px`
   }
 
   pulseFirst() {
@@ -136,30 +145,32 @@ export default class extends Controller {
   open(item, { auto = false } = {}) {
     this.close()
     const { target } = item
-    target.classList.add("hint-target")
     const popover = new this.Popover(target, {
       content: this.content(item),
       html: true,
       sanitize: false,
+      animation: false,
       trigger: "manual",
       placement: "bottom",
       fallbackPlacements: ["top", "bottom"],
       offset: [0, 12],
       customClass: "hint-pop",
-      template: TEMPLATE(auto ? "status" : "dialog"),
+      template: `<div class="popover hint-pop" role="dialog" aria-label="Dica: ${this.escape(item.label)}"><div class="popover-arrow"></div><div class="popover-body"></div></div>`,
       popperConfig: (config) => ({
         ...config,
         modifiers: [
           ...config.modifiers,
-          { name: "preventOverflow", options: { padding: { top: 76, right: 12, bottom: 96, left: 12 } } },
+          { name: "preventOverflow", options: { padding: { top: NAVBAR, right: 12, bottom: 96, left: 12 } } },
+          { name: "flip", options: { padding: { top: NAVBAR, bottom: 96 } } },
           { name: "arrow", options: { padding: 14 } }
         ]
       })
     })
+    target.classList.add("hint-target")
     item.beacon?.setAttribute("aria-expanded", "true")
     item.beacon?.classList.add("is-open")
     this.current = { item, popover }
-    this.remember(item.id)
+    if (auto) this.remember(item.id)
 
     if (!auto) {
       target.addEventListener("shown.bs.popover", () => popover.tip?.querySelector("[data-hint='done']")?.focus({ preventScroll: true }), { once: true })
@@ -167,19 +178,37 @@ export default class extends Controller {
     popover.show()
   }
 
+  // Fecha o balão; o ponto continua lá até "Entendi"
   close() {
     if (!this.current) return
 
     const { item, popover } = this.current
+    const hadFocus = popover.tip?.contains(document.activeElement)
     this.current = null
+    popover.hide()
     popover.dispose()
     item.target.classList.remove("hint-target")
-    this.removeBeacon(item)
+    item.beacon?.setAttribute("aria-expanded", "false")
+    item.beacon?.classList.remove("is-open")
+    if (hadFocus) this.focusBack(item)
   }
 
   done(item) {
     this.remember(item.id)
-    this.current?.item === item ? this.close() : this.removeBeacon(item)
+    const wasOpen = this.current?.item === item
+    const hadFocus = wasOpen && this.current.popover.tip?.contains(document.activeElement)
+    if (wasOpen) this.close()
+    this.removeBeacon(item)
+    if (hadFocus) this.focusBack(item)
+  }
+
+  focusBack(item) {
+    if (item.beacon?.isConnected) return item.beacon.focus({ preventScroll: true })
+
+    const { target } = item
+    if (!target.isConnected) return
+    if (!target.matches(FOCUSABLE)) target.setAttribute("tabindex", "-1")
+    target.focus({ preventScroll: true })
   }
 
   removeBeacon(item) {
@@ -197,6 +226,33 @@ export default class extends Controller {
     state.off[this.pageValue] = 1
     this.save(state)
     this.cleanup()
+    this.showUndo()
+  }
+
+  // Confirma o X e permite desfazer
+  showUndo() {
+    const toast = document.createElement("div")
+    toast.className = "hint-toast"
+    toast.setAttribute("role", "status")
+    toast.innerHTML = `<span>Dicas desta página desligadas.</span>
+      <button type="button" class="hint-toast-undo" data-hint="undo">Desfazer</button>`
+    document.body.appendChild(toast)
+    this.toast = toast
+    this.toastTimer = setTimeout(() => toast.remove(), 6000)
+  }
+
+  undo() {
+    const state = this.load()
+    delete state.off[this.pageValue]
+    this.save(state)
+    this.removeToast()
+    this.start()
+  }
+
+  removeToast() {
+    clearTimeout(this.toastTimer)
+    this.toast?.remove()
+    this.toast = null
   }
 
   reset(link) {
@@ -205,31 +261,29 @@ export default class extends Controller {
     const original = link.dataset.label || link.textContent
     link.dataset.label = original
     link.textContent = pending.length ? "Dicas reativadas" : "Esta página não tem dicas"
-    setTimeout(() => { link.textContent = original }, 2500)
+    clearTimeout(this.labelTimer)
+    this.labelTimer = setTimeout(() => { link.textContent = original }, 2500)
 
     const first = this.beacons[0]
     if (!first) return
     first.target.scrollIntoView({ behavior: "smooth", block: "center" })
-    setTimeout(() => this.open(first), 450)
+    this.resetTimer = setTimeout(() => { if (first.beacon?.isConnected) this.open(first) }, 450)
   }
 
   onClick(event) {
     const reset = event.target.closest("[data-hints-reset]")
     if (reset) { event.preventDefault(); return this.reset(reset) }
+    if (event.target.closest("[data-hint='undo']")) return this.undo()
 
     const tip = this.current?.popover.tip
     if (!tip) return
     if (event.target.closest("[data-hint='off']")) return this.turnOffPage()
-    if (event.target.closest("[data-hint='done']")) return this.close()
+    if (event.target.closest("[data-hint='done']")) return this.done(this.current.item)
     if (!tip.contains(event.target) && !event.target.closest(".hint-beacon")) this.close()
   }
 
   onKey(event) {
-    if (event.key !== "Escape" || !this.current) return
-
-    const { target } = this.current.item
-    this.close()
-    target.focus?.({ preventScroll: true })
+    if (event.key === "Escape" && this.current) this.close()
   }
 
   onResize() {
@@ -239,6 +293,7 @@ export default class extends Controller {
   cleanup() {
     clearTimeout(this.timer)
     clearTimeout(this.autoTimer)
+    clearTimeout(this.resetTimer)
     this.close()
     this.beacons.slice().forEach((item) => this.removeBeacon(item))
     this.observers.forEach((observer) => observer.disconnect())
@@ -248,12 +303,16 @@ export default class extends Controller {
   blocked() {
     if (document.querySelector(".modal.show, .offcanvas.show")) return true
     const chat = document.querySelector(".chat-widget-window")
-    return !!(chat && chat.offsetParent)
+    return !!(chat && chat.getClientRects().length > 0 && getComputedStyle(chat).visibility !== "hidden")
   }
 
+  // Ao menos 60% do recurso (ou da tela, se ele for maior que ela) abaixo da barra de navegação
   visible(element) {
     const rect = element.getBoundingClientRect()
-    return rect.width > 0 && rect.top >= 0 && rect.bottom <= window.innerHeight
+    const top = Math.max(rect.top, NAVBAR)
+    const bottom = Math.min(rect.bottom, window.innerHeight)
+    const shown = bottom - top
+    return rect.height > 0 && shown / Math.min(rect.height, window.innerHeight - NAVBAR) >= 0.6
   }
 
   content(item) {
@@ -269,7 +328,7 @@ export default class extends Controller {
   escape(text) {
     const span = document.createElement("span")
     span.textContent = text
-    return span.innerHTML
+    return span.innerHTML.replace(/"/g, "&quot;")
   }
 
   load() {

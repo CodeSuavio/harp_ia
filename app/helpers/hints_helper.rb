@@ -2,29 +2,27 @@ module HintsHelper
   # Dicas localizadas por página (controller#action). Só para o que a página não explica sozinha.
   # mode "beacon": ponto discreto ao lado do recurso, abre o balão ao tocar (padrão).
   # mode "auto": o balão aparece sozinho na primeira vez que o recurso surge na tela.
-  # contains: quando o seletor pega mais de um elemento, usa o primeiro com esse texto.
+  # contains: usa o elemento mais interno que tem esse texto.
   HINTS = {
     "polls#index" => [
       { id: "polls-governo", selector: "#governo", label: "filtro Governo venceu ou perdeu",
-        text: "Venceu: o resultado seguiu a orientação do governo. Perdeu: o resultado foi contrário a ela." }
+        text: "Governo venceu: o resultado foi o que o governo orientou. Governo perdeu: foi o contrário." },
+      { id: "polls-nominais", selector: "label[for='all']", label: "votações sem voto nominal",
+        text: "Nas votações simbólicas só o resultado fica registrado, sem o voto de cada deputado. Marque para incluí-las." },
+      { id: "polls-texto-mantido", selector: ".badge", contains: "Texto mantido", label: "selo Texto mantido",
+        text: "A votação era sobre mudar um trecho do projeto. A mudança não passou e o texto ficou como estava." }
     ],
     "polls#show" => [
       { id: "poll-selo", selector: ".badge[title*='orientou']", label: "selo de vitória ou derrota do governo",
-        text: "O governo orienta Sim ou Não. O selo compara essa orientação com o resultado da votação." },
-      { id: "poll-estados", selector: "details > summary", label: "votos por estado",
-        text: "Abra para ver como votaram os deputados de cada estado." },
+        text: "Compara a orientação do governo com o resultado: venceu se coincidem, perdeu se não." },
+      { id: "poll-artigo17", selector: "span", contains: "Artigo 17", label: "voto Artigo 17",
+        text: "Artigo 17 marca quem presidia a sessão. Pelo Regimento da Câmara, o presidente só vota para desempatar." },
       { id: "poll-contra", selector: "h2", contains: "Votaram contra", label: "votos contra a maioria do partido",
-        text: "Deputados que votaram diferente da maioria do próprio partido. O selo marca quem contrariou a orientação da liderança." }
-    ],
-    "bills#index" => [
-      { id: "bills-tipo", selector: "#type", label: "tipos de proposta",
-        text: "PL: projeto de lei. PLP: lei complementar. PEC: emenda à Constituição. MPV: medida provisória. PDL: decreto legislativo. PRC: resolução da Câmara." }
+        text: "Votaram diferente da maioria do próprio partido. O selo “contra a orientação” marca quem também votou contra o que o líder do partido orientou." }
     ],
     "deputies#show" => [
       { id: "dep-gastos-meses", selector: ".month-chart", mode: "auto", label: "gastos por mês",
-        text: "Selecione uma barra para ver só as despesas daquele mês." },
-      { id: "dep-promessas", selector: "a[href*='tab=promises']", label: "aba Promessas e Atuação",
-        text: "Compara, por tema, as promessas de campanha com a atuação no mandato." }
+        text: "Selecione uma barra para ver só as despesas daquele mês." }
     ]
   }.freeze
 

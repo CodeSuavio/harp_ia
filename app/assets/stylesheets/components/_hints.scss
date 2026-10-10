@@ -7,7 +7,6 @@
   --hint-coral-hover: #F4A07A;
   --hint-coral-press: #E4703F;
   --hint-ink: #E8ECF4;
-  --hint-ink-muted: #AEB7CC;
 }
 
 // Popovers e tooltips herdavam Work Sans; o resto do site é Inter
@@ -132,14 +131,29 @@
     background: var(--hint-coral);
   }
 
-  &::before { box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(10, 17, 40, .35); }
+  // anel branco + contorno navy: visível em fundo claro e escuro
+  &::before { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--hint-navy); }
   &::after { opacity: 0; pointer-events: none; }
   &:hover::before { background: var(--hint-coral-press); }
-  &:focus-visible { outline: 2px solid var(--hint-navy); outline-offset: 0; }
+  &:focus-visible { outline: 2px solid var(--hint-navy); outline-offset: 0; box-shadow: 0 0 0 4px #fff; }
 }
 
-// Só um ponto pulsa por vez, três vezes, e para
-.hint-beacon--pulse::after { animation: hint-pulse 2.4s cubic-bezier(.2, .8, .2, 1) .6s 3; }
+// Ponto colado ao texto de títulos
+.hint-beacon.hint-beacon--inline {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  margin: -6px 0 -6px .25rem;
+  vertical-align: middle;
+  translate: none;
+}
+
+// Enquanto o balão está aberto, o ponto some para não cobrir o recurso
+.hint-beacon.is-open { visibility: hidden; }
+
+// Só um ponto pulsa por vez, duas vezes, e para (menos de 5 s)
+.hint-beacon--pulse::after { animation: hint-pulse 1.8s cubic-bezier(.2, .8, .2, 1) .4s 2; }
 
 @keyframes hint-pulse {
   0% { transform: scale(1); opacity: .55; }
@@ -159,6 +173,38 @@
   border-radius: .5rem;
 }
 
+// Confirmação do X, com Desfazer (canto esquerdo: o assistente fica à direita)
+.hint-toast {
+  position: fixed;
+  left: 16px;
+  bottom: 24px;
+  z-index: 1040;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: calc(100vw - 112px);
+  padding: 10px 12px 10px 16px;
+  border-radius: 999px;
+  background: var(--hint-navy);
+  color: var(--hint-ink);
+  font-size: .875rem;
+  box-shadow: 0 8px 24px rgba(10, 17, 40, .28);
+  animation: hint-in .18s ease both;
+}
+
+.hint-toast-undo {
+  min-height: 32px;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--hint-coral);
+  font-weight: 600;
+  cursor: pointer;
+
+  &:focus-visible { outline: 2px solid #fff; }
+}
+
 // ---------- Celular ----------
 @media (max-width: 575.98px) {
   .popover.hint-pop {
@@ -166,45 +212,34 @@
     min-width: 0;
   }
 
-  .hint-text { font-size: .9375rem; }
+  .hint-text { font-size: .9375rem; padding-right: 48px; }
   .hint-btn { min-height: 44px; }
   .hint-off { width: 44px; height: 44px; top: 4px; right: 4px; }
-  .hint-text { padding-right: 48px; }
 }
 
 @media (pointer: coarse) {
-  .hint-beacon { width: 44px; height: 44px; }
+  .hint-beacon:not(.hint-beacon--inline) { width: 44px; height: 44px; }
+  .hint-toast-undo { min-height: 44px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   .hint-pop.show,
   .hint-beacon,
-  .hint-beacon--pulse::after { animation: none; }
+  .hint-beacon--pulse::after,
+  .hint-toast { animation: none; }
   .hint-btn,
   .hint-off { transition: none; }
 }
 
 @media (forced-colors: active) {
-  .popover.hint-pop { border: 1px solid CanvasText; }
+  .popover.hint-pop,
+  .hint-toast { border: 1px solid CanvasText; }
   .hint-beacon::before { background: Highlight; }
   .hint-target { outline-color: Highlight; box-shadow: none; }
 }
 
 @media print {
   .hint-beacon,
+  .hint-toast,
   .popover.hint-pop { display: none !important; }
 }
-
-// Ponto colado ao texto de títulos e do "Como votou cada estado"
-.hint-beacon.hint-beacon--inline {
-  position: relative;
-  display: inline-block;
-  width: 28px;
-  height: 28px;
-  margin: -6px 0 -6px .25rem;
-  vertical-align: middle;
-  translate: none;
-}
-
-// Enquanto o balão está aberto, o ponto some para não cobrir o recurso
-.hint-beacon.is-open { visibility: hidden; }
