@@ -149,6 +149,17 @@
   }
 }
 
+// Resposta da Harpia quando a pergunta está fora do escopo.
+// Mantém a identidade visual do chatbot, mas destaca que a resposta
+// representa uma orientação de escopo e não uma resposta convencional.
+.chat-widget-assistant-message--out-of-scope {
+  margin-right: 0;
+  padding: 12px 14px;
+  border-left: 3px solid $orange;
+  border-radius: 8px;
+  background-color: rgba($orange, 0.08);
+}
+
 // Área inferior para digitar a pergunta.
 // Permanece visível enquanto as mensagens fazem scroll.
 .chat-widget-input {

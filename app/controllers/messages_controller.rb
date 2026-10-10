@@ -3,10 +3,17 @@ class MessagesController < ApplicationController
   before_action :set_chat, only: [:create]
 
   def create
-    # Cria a mensagem temporariamente para que o Pundit
+    # Cria uma mensagem temporária apenas para que o Pundit
     # possa verificar se o usuário tem permissão para enviá-la.
-    @message = @chat.messages.new(message_params)
-    @message.role = "user"
+    #
+    # A mensagem é criada diretamente com Message.new para evitar
+    # adicioná-la à coleção @chat.messages antes de ser salva.
+    # O salvamento real da mensagem será feito pelo MessageProcessorService.
+    @message = Message.new(
+      chat: @chat,
+      content: message_params[:content],
+      role: "user"
+    )
 
     authorize @message
 
@@ -33,10 +40,20 @@ class MessagesController < ApplicationController
       # atualiza somente as mensagens e o formulário
       # dentro do widget.
       format.turbo_stream do
-        render turbo_stream: turbo_stream.update(
+        @chats = policy_scope(Chat)
+
+        render turbo_stream: [
+          turbo_stream.update(
           "chat_widget_messages",
           partial: "chats/widget_messages"
-        )
+        ),
+
+          turbo_stream.update(
+            "chats_list",
+            partial: "chats/chats_list",
+            locals: { chats: @chats}
+          )
+        ]
       end
     end
 
