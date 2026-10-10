@@ -112,11 +112,24 @@
   .uf-tile .uf-shape { transition: none; }
 }
 
-// Página do partido: número na urna no lugar da foto do cabeçalho
+// Página do partido: logo no lugar da foto do cabeçalho
 .party-avatar {
   width: 160px;
   height: 160px;
   flex-shrink: 0;
+}
+
+.party-avatar-logo {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+}
+
+// Número na urna ao lado da sigla
+.party-number {
+  font-size: 1.5rem;
+  line-height: 1.4;
+  background-color: rgba($gold, 0.1);
 }
 
 .party-member-photo {

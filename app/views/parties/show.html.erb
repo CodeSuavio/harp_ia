@@ -21,19 +21,18 @@
   <!-- Cabeçalho do Partido -->
   <div class="card inspiration-card shadow-sm border-0 rounded-4 p-4 bg-white mb-4">
     <div class="d-flex flex-column flex-md-row align-items-center align-items-md-start gap-4">
-      <div class="party-avatar rounded-4 bg-light d-flex flex-column align-items-center justify-content-center shadow-sm">
-        <% if @party.number.present? %>
-          <span class="display-5 fw-bold text-gold lh-1"><%= @party.number %></span>
-          <span class="small text-muted text-uppercase tracking-wider mt-1">nº na urna</span>
-        <% else %>
-          <i class="fa-solid fa-flag fa-3x text-gold"></i>
-        <% end %>
+      <div class="party-avatar rounded-4 bg-white border d-flex align-items-center justify-content-center p-3 shadow-sm">
+        <%= party_logo(@party, css: "party-avatar-logo") || tag.i(class: "fa-solid fa-flag fa-3x text-gold", aria: { hidden: true }) %>
       </div>
 
       <div class="flex-grow-1 text-center text-md-start min-w-0">
         <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 mb-1">
-          <%= party_logo(@party) %>
           <h1 class="h2 fw-bold text-navy mb-0"><%= @party.label %></h1>
+          <% if @party.number.present? %>
+            <span class="party-number rounded-3 px-2 fw-bold text-gold" title="Número do partido na urna">
+              <span class="small text-muted fw-medium text-uppercase me-1">nº</span><%= @party.number %>
+            </span>
+          <% end %>
         </div>
         <p class="text-muted mb-3"><%= @party.name %></p>
 
