@@ -27,10 +27,10 @@ class DeputyOverview
 
   def top_suppliers(limit = 5)
     expenses.where.not(supplier: [nil, ""])
-            .group(:supplier)
+            .group(Expense::SUPPLIER_KEY)
             .order(Arel.sql("SUM(net_amount) DESC NULLS LAST"))
             .limit(limit)
-            .pluck(:supplier, Arel.sql("SUM(net_amount)"), Arel.sql("COUNT(*)"))
+            .pluck(Expense::SUPPLIER_NAME, Arel.sql("SUM(net_amount)"), Arel.sql("COUNT(*)"))
   end
 
   def bills_count
