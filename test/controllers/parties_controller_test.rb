@@ -96,4 +96,29 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     get parties_path
     assert_select "a[href=?]", compare_parties_path
   end
+
+  test "lista de partidos tem o modo de escolher partidos para comparar" do
+    get parties_path
+    assert_select "[data-controller~=compare-selection][data-compare-selection-url-value=?]", compare_parties_path
+    assert_select "button[data-action='compare-selection#toggleMode']", text: /Escolher partidos/
+    assert_select "template input[data-compare-selection-target=checkbox][data-field=compare]"
+  end
+
+  test "comparação lado a lado dos partidos escolhidos" do
+    get compare_parties_path(ids: [parties(:pt).id, parties(:mdb).id])
+    assert_response :success
+    assert_select ".compare-table thead th[scope=col]", 2
+    assert_equal %w[PT MDB], css_select(".compare-table thead th[scope=col] span.fw-bold").map(&:text)
+    assert_select ".compare-table tbody th", text: /Gasto médio mensal/
+    assert_select ".compare-table td.compare-best", minimum: 1
+    assert_match(/(PT|MDB)<\/strong> e <strong class="text-navy">(PT|MDB)/, response.body)
+    assert_select ".party-compare-table", 0
+  end
+
+  test "comparação lado a lado pede ao menos dois partidos e ignora ids desconhecidos" do
+    get compare_parties_path(ids: [parties(:mdb).id, 0])
+    assert_response :success
+    assert_match "Selecione de 2", response.body
+    assert_select ".compare-table", 0
+  end
 end

@@ -92,7 +92,7 @@ module PartiesHelper
     next_direction = active ? (direction == :desc ? :asc : :desc) : default
     arrow = { asc: "fa-arrow-up-short-wide", desc: "fa-arrow-down-wide-short" }[direction] if active
     link_to compare_parties_path(sort: key, dir: next_direction, anchor: "indicadores"),
-            class: "text-reset text-decoration-none text-nowrap" do
+            class: "text-reset text-decoration-none" do
       safe_join([label, (tag.i(class: "fa-solid #{arrow} ms-1 text-gold", aria: { hidden: true }) if arrow)].compact)
     end
   end

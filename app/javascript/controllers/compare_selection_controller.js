@@ -1,18 +1,15 @@
 import { Controller } from "@hotwired/stimulus"
 
-// Seleciona deputados na listagem para compará-los lado a lado.
-// As caixas "Comparar" só aparecem com o modo de comparação ativo (botão abaixo dos filtros).
-// Modo e seleção ficam no sessionStorage para sobreviver à troca de página/filtros.
-const STORAGE_KEY = "deputy-compare"
-const MODE_KEY = "deputy-compare-mode"
-
+// Seleciona itens de uma listagem (deputados, partidos) para compará-los lado a lado.
+// As caixas "Comparar" só aparecem com o modo de comparação ativo (botão da listagem).
+// Modo e seleção ficam no sessionStorage (chave `key`) para sobreviver à troca de página/filtros.
 export default class extends Controller {
   static targets = ["checkbox", "bar", "count", "link", "modeButton", "modeLabel"]
-  static values = { url: String, limit: { type: Number, default: 3 } }
+  static values = { url: String, key: String, limit: { type: Number, default: 3 } }
 
   connect() {
     this.selected ??= this.load()
-    this.active ??= this.selected.length > 0 || this.read(MODE_KEY) === true
+    this.active ??= this.selected.length > 0 || this.read(this.modeKey) === true
     this.render()
   }
 
@@ -25,6 +22,8 @@ export default class extends Controller {
 
   // O botão fica dentro do turbo frame e é recriado a cada filtro
   modeButtonTargetConnected() {
+    // Guarda o rótulo do servidor ("Comparar deputados") para voltar a ele ao cancelar
+    this.modeLabelTarget.dataset.idleLabel ??= this.modeLabelTarget.textContent
     this.renderMode()
   }
 
@@ -32,7 +31,7 @@ export default class extends Controller {
     this.active = !this.active
     // Sair do modo cancela a comparação
     if (!this.active) this.clear()
-    this.write(MODE_KEY, this.active)
+    this.write(this.modeKey, this.active)
     this.render()
   }
 
@@ -84,7 +83,7 @@ export default class extends Controller {
     if (!this.hasModeButtonTarget) return
 
     this.modeButtonTarget.setAttribute("aria-pressed", String(!!this.active))
-    this.modeLabelTarget.textContent = this.active ? "Cancelar comparação" : "Comparar deputados"
+    this.modeLabelTarget.textContent = this.active ? "Cancelar comparação" : this.modeLabelTarget.dataset.idleLabel
   }
 
   syncDisabled() {
@@ -94,12 +93,16 @@ export default class extends Controller {
     })
   }
 
+  get modeKey() {
+    return `${this.keyValue}-mode`
+  }
+
   load() {
-    return this.read(STORAGE_KEY) || []
+    return this.read(this.keyValue) || []
   }
 
   save() {
-    this.write(STORAGE_KEY, this.selected)
+    this.write(this.keyValue, this.selected)
   }
 
   read(key) {
