@@ -389,3 +389,16 @@ body {
   border-radius: 999px;
   padding: 2px 8px;
 }
+
+// Sigla como link dentro de cartões clicáveis (stretched-link): fica por cima do link do cartão
+a.party-badge {
+  position: relative;
+  z-index: 2;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    color: $navy-blue;
+    background-color: rgba($gold, 0.35);
+  }
+}

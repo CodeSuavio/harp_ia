@@ -8,6 +8,12 @@ module PartiesHelper
     party.logo_file ? image_path(party.logo_file) : party.logo_url.presence
   end
 
+  # Sigla do partido com link para a página dele. Nos cartões que já são um link
+  # (stretched-link), a classe party-badge fica por cima e recebe o clique
+  def party_badge_link(party, css: "party-badge mt-2")
+    link_to party.label, party_path(party), class: css, title: party.name, data: { turbo_frame: "_top" }
+  end
+
   def party_logo(party, css: "party-logo")
     return unless (source = party_logo_path(party))
 

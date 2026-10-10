@@ -1,43 +1,42 @@
 <% deputy = deputies[candidate.current_deputy_id] %>
 
 <div class="col-md-6 col-xl-4">
-  <%= link_to candidate_path(candidate), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
-    <div class="card inspiration-card h-100 bg-white">
-      <div class="card-body p-4 d-flex align-items-center gap-4">
-        <div class="d-flex flex-column align-items-center flex-shrink-0">
-          <div class="inspiration-photo-wrapper">
-            <% if candidate.photo_file.to_s.start_with?("http") %>
-              <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
-            <% elsif candidate.photo.attached? %>
-              <%= cl_image_tag candidate.photo.key, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
-            <% elsif deputy&.photo&.attached? %>
-              <%= cl_image_tag deputy.photo.key, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
-            <% else %>
-              <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fa-solid fa-user text-gold"></i>
-              </div>
-            <% end %>
-          </div>
-          <span class="party-badge mt-2" title="<%= candidate.party.name %>"><%= candidate.party.label %></span>
+  <div class="card inspiration-card h-100 bg-white">
+    <div class="card-body p-4 d-flex align-items-center gap-4">
+      <div class="d-flex flex-column align-items-center flex-shrink-0">
+        <div class="inspiration-photo-wrapper">
+          <% if candidate.photo_file.to_s.start_with?("http") %>
+            <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
+          <% elsif candidate.photo.attached? %>
+            <%= cl_image_tag candidate.photo.key, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
+          <% elsif deputy&.photo&.attached? %>
+            <%= cl_image_tag deputy.photo.key, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
+          <% else %>
+            <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
+              <i class="fa-solid fa-user text-gold"></i>
+            </div>
+          <% end %>
+        </div>
+        <%= party_badge_link(candidate.party) %>
+      </div>
+
+      <div class="inspiration-data flex-grow-1 min-w-0">
+        <h3 class="h6 fw-bold text-navy mb-1 text-truncate">
+          <%= link_to candidate.ballot_name.presence || candidate.name, candidate_path(candidate),
+                class: "text-reset text-decoration-none stretched-link", data: { turbo_frame: "_top" } %>
+        </h3>
+
+        <div class="d-flex align-items-center text-muted small mb-3">
+          <i class="fa-solid fa-location-dot me-2 text-gold"></i>
+          <%= candidate.state_label %>
+          <span class="ms-2">#<%= candidate.number %></span>
+          <% if candidate.reelection? %>
+            <span class="reelection-badge ms-2"><i class="fa-solid fa-rotate me-1"></i>Reeleição</span>
+          <% end %>
         </div>
 
-        <div class="inspiration-data flex-grow-1 min-w-0">
-          <h3 class="h6 fw-bold text-navy mb-1 text-truncate">
-            <%= candidate.ballot_name.presence || candidate.name %>
-          </h3>
-
-          <div class="d-flex align-items-center text-muted small mb-3">
-            <i class="fa-solid fa-location-dot me-2 text-gold"></i>
-            <%= candidate.state_label %>
-            <span class="ms-2">#<%= candidate.number %></span>
-            <% if candidate.reelection? %>
-              <span class="reelection-badge ms-2"><i class="fa-solid fa-rotate me-1"></i>Reeleição</span>
-            <% end %>
-          </div>
-
-          <%= render "painel/metrics", deputy: deputy, metrics: metrics %>
-        </div>
+        <%= render "painel/metrics", deputy: deputy, metrics: metrics %>
       </div>
     </div>
-  <% end %>
+  </div>
 </div>

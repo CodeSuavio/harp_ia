@@ -11,7 +11,7 @@
       <% [
            ["Nome de urna", @candidate.ballot_name],
            ["Número", @candidate.number],
-           ["Partido", @candidate.party&.label],
+           ["Partido", (link_to(@candidate.party.label, party_path(@candidate.party), class: "text-reset") if @candidate.party)],
            ["Estado", @candidate.state_label],
            ["Reeleição", @candidate.reelection? ? "Sim" : "Não"],
            ["Situação da candidatura", @candidate.candidacy_status],
@@ -30,7 +30,9 @@
     <% if @candidate.party_id != @deputy.party_id && @candidate.party %>
       <div class="alert alert-warning small mt-3 mb-0">
         <i class="fa-solid fa-right-left me-1"></i>
-        Concorre por um partido diferente do atual (<%= @deputy.party&.label %> → <%= @candidate.party.label %>).
+        Concorre por um partido diferente do atual
+        (<%= @deputy.party ? link_to(@deputy.party.label, party_path(@deputy.party), class: "alert-link") : "sem partido" %> →
+        <%= link_to @candidate.party.label, party_path(@candidate.party), class: "alert-link" %>).
       </div>
     <% end %>
 
