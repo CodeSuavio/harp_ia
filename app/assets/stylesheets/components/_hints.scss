@@ -1,0 +1,196 @@
+// Dicas localizadas (hints_controller.js): balão sobre o Popover do Bootstrap e ponto .hint-beacon
+
+:root {
+  --hint-navy: #0A1128;
+  --hint-navy-line: #27325A;
+  --hint-coral: #F08A5D;
+  --hint-coral-hover: #F4A07A;
+  --hint-coral-press: #E4703F;
+  --hint-ink: #E8ECF4;
+  --hint-ink-muted: #AEB7CC;
+}
+
+// Popovers e tooltips herdavam Work Sans; o resto do site é Inter
+.popover,
+.tooltip {
+  --bs-font-sans-serif: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+// ---------- Balão ----------
+.popover.hint-pop {
+  --bs-popover-zindex: 1040; // acima da navbar e do assistente, abaixo do modal
+  --bs-popover-max-width: 300px;
+  --bs-popover-bg: var(--hint-navy);
+  --bs-popover-border-width: 1px;
+  --bs-popover-border-color: var(--hint-navy-line);
+  --bs-popover-border-radius: 12px;
+  --bs-popover-inner-border-radius: 11px;
+  --bs-popover-box-shadow: 0 12px 32px rgba(10, 17, 40, .28), 0 2px 6px rgba(10, 17, 40, .18);
+  --bs-popover-body-padding-x: 16px;
+  --bs-popover-body-padding-y: 14px;
+  --bs-popover-body-color: var(--hint-ink);
+  --bs-popover-arrow-width: 18px;
+  --bs-popover-arrow-height: 9px;
+  --bs-popover-arrow-border: var(--hint-navy-line);
+
+  min-width: 240px;
+  font-size: .875rem;
+  line-height: 1.5;
+  text-align: left;
+  box-shadow: var(--bs-popover-box-shadow);
+}
+
+.hint-pop .popover-header { display: none; }
+.hint-pop .popover-body { position: relative; }
+.hint-pop.show { animation: hint-in .18s cubic-bezier(.2, .8, .2, 1) both; }
+
+@keyframes hint-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.hint-text {
+  margin: 0;
+  padding-right: 40px; // espaço do X
+  color: var(--hint-ink);
+}
+
+.hint-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 12px;
+}
+
+.hint-btn {
+  min-height: 36px;
+  padding: 0 18px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--hint-coral);
+  color: var(--hint-navy);
+  font-weight: 600;
+  font-size: .8125rem;
+  cursor: pointer;
+  transition: background-color .15s ease;
+
+  &:hover { background: var(--hint-coral-hover); }
+  &:active { background: var(--hint-coral-press); }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+}
+
+// X grande: desliga todas as dicas da página
+.hint-off {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 1px solid var(--hint-navy-line);
+  border-radius: 50%;
+  background: rgba(255, 255, 255, .06);
+  color: #fff;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: background-color .15s ease, border-color .15s ease;
+
+  &:hover { background: rgba(240, 138, 93, .22); border-color: var(--hint-coral); }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+}
+
+// ---------- Ponto (beacon) ----------
+.has-hint-beacon { position: relative; }
+
+.hint-beacon {
+  position: absolute;
+  z-index: 3;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  translate: -50% -50%;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  animation: hint-beacon-in .24s cubic-bezier(.2, .8, .2, 1) both;
+
+  &::before,
+  &::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 12px;
+    height: 12px;
+    margin: -6px 0 0 -6px;
+    border-radius: 50%;
+    background: var(--hint-coral);
+  }
+
+  &::before { box-shadow: 0 0 0 2px #fff, 0 0 0 3px rgba(10, 17, 40, .35); }
+  &::after { opacity: 0; pointer-events: none; }
+  &:hover::before { background: var(--hint-coral-press); }
+  &:focus-visible { outline: 2px solid var(--hint-navy); outline-offset: 0; }
+}
+
+// Só um ponto pulsa por vez, três vezes, e para
+.hint-beacon--pulse::after { animation: hint-pulse 2.4s cubic-bezier(.2, .8, .2, 1) .6s 3; }
+
+@keyframes hint-pulse {
+  0% { transform: scale(1); opacity: .55; }
+  70%, 100% { transform: scale(3); opacity: 0; }
+}
+
+@keyframes hint-beacon-in {
+  from { opacity: 0; scale: .4; }
+  to { opacity: 1; scale: 1; }
+}
+
+// Destaque do elemento apontado, só enquanto o balão está aberto
+.hint-target {
+  outline: 2px solid var(--hint-coral);
+  outline-offset: 3px;
+  box-shadow: 0 0 0 7px rgba(240, 138, 93, .18);
+  border-radius: .5rem;
+}
+
+// ---------- Celular ----------
+@media (max-width: 575.98px) {
+  .popover.hint-pop {
+    --bs-popover-max-width: calc(100vw - 24px);
+    min-width: 0;
+  }
+
+  .hint-text { font-size: .9375rem; }
+  .hint-btn { min-height: 44px; }
+  .hint-off { width: 44px; height: 44px; top: 4px; right: 4px; }
+  .hint-text { padding-right: 48px; }
+}
+
+@media (pointer: coarse) {
+  .hint-beacon { width: 44px; height: 44px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hint-pop.show,
+  .hint-beacon,
+  .hint-beacon--pulse::after { animation: none; }
+  .hint-btn,
+  .hint-off { transition: none; }
+}
+
+@media (forced-colors: active) {
+  .popover.hint-pop { border: 1px solid CanvasText; }
+  .hint-beacon::before { background: Highlight; }
+  .hint-target { outline-color: Highlight; box-shadow: none; }
+}
+
+@media print {
+  .hint-beacon,
+  .popover.hint-pop { display: none !important; }
+}
