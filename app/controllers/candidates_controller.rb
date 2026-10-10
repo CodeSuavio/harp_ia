@@ -30,7 +30,7 @@ class CandidatesController < ApplicationController
     @page = 1 if @page < 1
     @page = @total_pages if @page > @total_pages
 
-    @candidates = scope.includes(:party)
+    @candidates = scope.includes(:party).with_attached_photo
                        .order(SORTS[@sort])
                        .offset((@page - 1) * PER_PAGE)
                        .limit(PER_PAGE)

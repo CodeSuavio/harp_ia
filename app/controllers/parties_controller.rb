@@ -54,7 +54,7 @@ class PartiesController < ApplicationController
   private
 
   # Tudo o que o mapa precisa para trocar de estado sem ir ao servidor:
-  # { parties: { id => {label, name, url} }, national: { party_id => cadeiras },
+  # { parties: { id => {label, name, url, logo} }, national: { party_id => cadeiras },
   #   states: { "SP" => { name:, seats: { party_id => cadeiras } } } }
   def map_data(parties, seats)
     national = Hash.new(0)
@@ -65,7 +65,7 @@ class PartiesController < ApplicationController
     end
 
     {
-      parties: parties.to_h { |p| [p.id, { label: p.label, name: p.name, url: party_path(p) }] },
+      parties: parties.to_h { |p| [p.id, { label: p.label, name: p.name, url: party_path(p), logo: helpers.party_logo_path(p) }] },
       national: national,
       states: STATES.to_h { |uf, name| [uf, { name: name, seats: by_state[uf] }] }
     }

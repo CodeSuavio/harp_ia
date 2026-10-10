@@ -39,6 +39,15 @@ class DeputyStatsTest < ActiveSupport::TestCase
     assert concentration[:alert]
   end
 
+  test "concentração agrupa o fornecedor pelo CNPJ, não pelo nome" do
+    deputies(:ana).expenses.create!(year: 2025, month: 4, expense_type: "COMBUSTÍVEIS E LUBRIFICANTES.",
+                                    supplier: "POSTO CENTRAL LTDA", supplier_cnpj_cpf: "00.000.000/0001-00",
+                                    document_amount: 800, net_amount: 800)
+    concentration = @stats.supplier_concentration(year: 2025)
+    assert_equal 1100, concentration[:value] # 300 + 800, mesmo CNPJ
+    assert_equal 61, concentration[:pct]
+  end
+
   test "participação conta só as votações do período em que o deputado votou" do
     participation = @stats.vote_participation
     # A votação 3 é depois do último voto de Ana: não conta contra ela

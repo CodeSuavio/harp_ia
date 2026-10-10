@@ -8,6 +8,11 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-deputy-compare-target=checkbox]", 4
   end
 
+  test "sigla do partido nos cartões leva à página do partido" do
+    get deputies_path
+    assert_select ".candidate-card a[href=?]", party_path(parties(:mdb)), text: "MDB"
+  end
+
   test "botão abaixo dos filtros ativa a comparação e avisa o limite" do
     get deputies_path
     assert_select "button[data-action='deputy-compare#toggleMode']", text: /Comparar deputados/
@@ -133,6 +138,16 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
 
     get deputy_path(deputies(:ana), tab: "expenses")
     assert_match "Nenhum gasto fora do padrão em 2025", response.body
+  end
+
+  test "gasto fora do padrão leva à nota e à página de gastos da Câmara" do
+    expenses(:bruno_fuel).update!(document_url: "https://camara.leg.br/nota/bruno")
+    get deputy_path(deputies(:bruno), tab: "expenses")
+
+    assert_select "ul a[href='https://camara.leg.br/nota/bruno'][target=_blank]"
+    camara = "https://www.camara.leg.br/transparencia/gastos-parlamentares?" \
+             "ano=2025&deputado=#{deputies(:bruno).json_id}&legislatura=57&por=deputado"
+    assert_select "ul a[href='#{camara}']", text: /Ver na Câmara/
   end
 
   test "mascara CPF de fornecedor pessoa física" do

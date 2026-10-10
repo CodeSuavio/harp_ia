@@ -129,12 +129,15 @@ class DeputiesController < ApplicationController
     @concentration = @stats.supplier_concentration(year: @year)
     @anomalies = ExpenseAnomalies.new(@deputy).for_year(@year)
     @anomaly_expense_ids = @anomalies.flat_map { |row| row[:expense_ids].to_a }.to_set
+    @anomaly_documents = expenses.where(id: @anomaly_expense_ids.to_a).where.not(document_url: [nil, ""])
+                                 .pluck(:id, :document_url).to_h
     @monthly = expenses.group(:month).sum(:net_amount)
     @by_type = @stats.expenses_by_type(year: @year)
-    @top_suppliers = expenses.group(:supplier, :supplier_cnpj_cpf)
+    @top_suppliers = expenses.group(Expense::SUPPLIER_KEY)
                              .order(Arel.sql("SUM(net_amount) DESC"))
                              .limit(10)
-                             .pluck(:supplier, :supplier_cnpj_cpf, Arel.sql("SUM(net_amount)"), Arel.sql("COUNT(*)"))
+                             .pluck(Expense::SUPPLIER_NAME, Arel.sql("MAX(supplier_cnpj_cpf)"),
+                                    Arel.sql("SUM(net_amount)"), Arel.sql("COUNT(*)"))
 
     @expense_type = params[:expense_type].presence
     @month = params[:month].presence&.to_i

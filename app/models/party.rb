@@ -34,4 +34,31 @@ class Party < ApplicationRecord
   def leader
     Deputy.find_by(json_id: leader_json_id) if leader_json_id
   end
+
+  # Logos em app/assets/images/logo-<partido>.<ext>. O arquivo pode levar a sigla
+  # ("logo-pt") ou o nome ("logo-progressistas", "logo-uniaobrasil"), em qualquer caixa e sem acento.
+  # { "pt" => "logo-pt.png", "uniaobrasil" => "logo-uniaobrasil.png", ... }
+  # Em desenvolvimento a pasta é lida de novo a cada vez, para logo nova aparecer sem reiniciar o servidor
+  def self.logo_files
+    return scan_logo_files if Rails.application.config.enable_reloading
+
+    @logo_files ||= scan_logo_files
+  end
+
+  def self.scan_logo_files
+    Dir[Rails.root.join("app/assets/images/logo-*")].to_h do |path|
+      file = File.basename(path)
+      [logo_key(file.delete_prefix("logo-").sub(/\.\w+\z/, "")), file]
+    end
+  end
+  private_class_method :scan_logo_files
+
+  def self.logo_key(text)
+    I18n.transliterate(text.to_s).downcase.gsub(/[^a-z0-9]/, "")
+  end
+
+  # Nome do arquivo da logo, procurado pela sigla e depois pelo nome do partido
+  def logo_file
+    self.class.logo_files.values_at(self.class.logo_key(label), self.class.logo_key(name)).compact.first
+  end
 end

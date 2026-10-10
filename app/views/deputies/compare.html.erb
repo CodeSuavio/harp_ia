@@ -40,8 +40,11 @@
                     </div>
                   <% end %>
                   <div class="text-navy fw-bold"><%= deputy.name %></div>
-                  <div class="small text-brand fw-bold text-uppercase"><%= deputy.party&.label %> · <%= deputy.state_label %></div>
                 <% end %>
+                <div class="small text-brand fw-bold text-uppercase">
+                  <% if deputy.party %><%= link_to deputy.party.label, party_path(deputy.party), class: "text-reset", title: deputy.party.name %> ·<% end %>
+                  <%= deputy.state_label %>
+                </div>
               </th>
             <% end %>
           </tr>
