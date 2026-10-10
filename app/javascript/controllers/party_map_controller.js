@@ -75,6 +75,10 @@ export default class extends Controller {
 
     field("link").href = party.url
     field("label").textContent = party.label
+    if (party.logo) {
+      field("logo").src = party.logo
+      field("logo").hidden = false
+    }
     field("name").textContent = party.name
     field("pct").textContent = percent.format(count / total)
     field("seats").textContent = `${count} ${count === 1 ? "dep." : "deps."}`
