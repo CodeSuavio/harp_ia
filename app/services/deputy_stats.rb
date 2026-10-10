@@ -68,7 +68,8 @@ class DeputyStats
     CONCENTRATION_IGNORED_TYPES.each { |type| scope = scope.where.not("expense_type LIKE ?", type) }
     total = scope.sum(:net_amount)
     scope = scope.where.not(supplier: [nil, ""])
-    supplier, value = scope.group(:supplier).order(Arel.sql("SUM(net_amount) DESC")).limit(1).sum(:net_amount).first
+    supplier, value = scope.group(Expense::SUPPLIER_KEY).order(Arel.sql("SUM(net_amount) DESC")).limit(1)
+                           .pluck(Expense::SUPPLIER_NAME, Arel.sql("SUM(net_amount)")).first
     return unless supplier && total.positive?
 
     pct = (value / total * 100).round
