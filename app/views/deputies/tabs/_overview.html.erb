@@ -4,7 +4,7 @@
        ["fa-wallet",        brl(@total_expenses, precision: 0), (@expense_year ? "em gastos em #{@expense_year}" : "em gastos declarados"), "expenses",
                             "Soma do valor líquido das despesas da cota parlamentar (CEAP) no ano, já descontados estornos."],
        ["fa-file-lines",    @bills_count,                       "projetos de lei", "bills",
-                            "Proposições apresentadas pelo deputado como autor principal."],
+                            "Proposições em que o deputado é autor principal ou coautor."],
        ["fa-check-to-slot", percent(@participation[:pct]),      "de participação nas votações", "votes",
                             "Votações em que votou, entre as registradas no período do seu primeiro ao último voto (não penaliza suplentes nem licenciados)."],
        ["fa-people-group",  percent(@alignment[:pct]),          "de alinhamento com o partido", "votes",

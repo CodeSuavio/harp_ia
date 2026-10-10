@@ -44,6 +44,17 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_equal "Ana Souza", css_select(".candidate-card h3").first.text
   end
 
+  test "projetos de lei contam coautorias" do
+    BillAuthor.create!(bill: bills(:ana_bill), deputy: deputies(:bruno))
+
+    get deputy_path(deputies(:bruno), tab: "bills")
+    assert_match "Coautoria", response.body
+    assert_select ".list-group-item", count: 1
+
+    row = DeputyComparison.new([deputies(:ana), deputies(:bruno)]).rows.find { |r| r.label == "Projetos de lei" }
+    assert_equal [1, 1], row.values.values.map { |v| v[:value] }
+  end
+
   test "ignora ordenação inválida" do
     get deputies_path(sort: "drop table")
     assert_response :success

@@ -34,11 +34,11 @@ class DeputyOverview
   end
 
   def bills_count
-    @bills_count ||= @deputy.bills.count
+    @bills_count ||= @deputy.authored_bills.count
   end
 
   def recent_bills(limit = 5)
-    @deputy.bills.order(submission_date: :desc, id: :desc).limit(limit)
+    @deputy.authored_bills.order(submission_date: :desc, id: :desc).limit(limit)
   end
 
   def vote_breakdown
