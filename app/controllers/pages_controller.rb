@@ -2,9 +2,23 @@ class PagesController < ApplicationController
   # Adicione :about e :contact na lista de páginas públicas
   skip_before_action :authenticate_user!, only: [ :home, :about, :contact ]
 
+  PER_PAGE = 20
+
   def home
-    @candidates = policy_scope(Candidate).includes(:party).with_attached_photo.order(:ballot_name)
-    @states = @candidates.map(&:state_label).compact.uniq.sort
+    scope = policy_scope(Candidate).search(params[:q])
+    scope = scope.where(state_label: params[:state]) if params[:state].present?
+
+    @total = scope.count
+    @total_pages = [(@total / PER_PAGE.to_f).ceil, 1].max
+    @page = params[:page].to_i
+    @page = 1 if @page < 1
+    @page = @total_pages if @page > @total_pages
+
+    @candidates = scope.includes(:party).with_attached_photo
+                       .order(:ballot_name, :id)
+                       .offset((@page - 1) * PER_PAGE)
+                       .limit(PER_PAGE)
+    @states = Candidate.distinct.pluck(:state_label).compact.sort
 
     # Agregados por deputado (indexados pelo json_id, que é o current_deputy_id do candidato)
     deputy_ids = Deputy.pluck(:json_id, :id).to_h
