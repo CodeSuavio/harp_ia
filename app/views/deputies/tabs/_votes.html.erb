@@ -128,7 +128,7 @@
                 <% end %>
                 <div class="text-muted">
                   <%= poll.label_comission %>
-                  <% if poll.bill %> · <%= proposicao_label(poll.bill) %><% end %>
+                  <% poll.bills.each do |bill| %> · <%= proposicao_label(bill) %><% end %>
                 </div>
               </td>
               <td class="text-center">
