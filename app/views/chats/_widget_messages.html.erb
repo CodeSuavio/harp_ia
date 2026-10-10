@@ -57,6 +57,10 @@
                 "turbo:submit-end->chat-widget#enableForm"
               } do %>
 
+  <!-- Preenchido pelo Stimulus com a página atual, para a Harpia
+     saber o que o usuário está vendo ao fazer a pergunta. -->
+  <%= hidden_field_tag "message[page_path]", nil, id: nil %>
+
   <%= text_field_tag "message[content]",
       nil,
       placeholder: "Pergunte à Harpia...",
