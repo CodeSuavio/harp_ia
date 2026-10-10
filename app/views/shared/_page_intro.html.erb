@@ -1,0 +1,10 @@
+<% if (intro = page_intro) %>
+  <% key, text = intro %>
+  <div class="container pt-3 d-none" data-controller="page-intro" data-page-intro-key-value="<%= key %>">
+    <div class="alert alert-light border rounded-4 small d-flex align-items-start gap-2 mb-0" role="note">
+      <i class="fa-solid fa-circle-info text-gold mt-1" aria-hidden="true"></i>
+      <span class="flex-grow-1"><%= text %></span>
+      <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0 ms-2" data-action="page-intro#dismiss">Entendi</button>
+    </div>
+  </div>
+<% end %>
