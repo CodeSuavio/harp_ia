@@ -1,4 +1,29 @@
 module PartiesHelper
+  NO_PARTY_LABEL = "S.PART.".freeze
+
+  # Sigla de uma filiação: "Sem partido" no lugar do "S.PART." da Câmara, com link quando o partido existe
+  def affiliation_party(affiliation)
+    return "Sem partido" if affiliation.party_label == NO_PARTY_LABEL
+    return affiliation.party_label unless affiliation.party
+
+    link_to affiliation.party_label, party_path(affiliation.party), class: "text-reset", title: affiliation.party.name
+  end
+
+  # O que aconteceu na data da filiação (previous: a filiação anterior)
+  def affiliation_event(affiliation, previous)
+    legislature = "#{affiliation.legislature}ª legislatura"
+    case affiliation.kind
+    when "first" then "Primeiro registro na Câmara (#{legislature})"
+    when "rename" then "#{previous.party_label} mudou de nome ou foi incorporado"
+    when "switch" then affiliation.party_label == NO_PARTY_LABEL ? "Saiu do partido" : "Troca de partido"
+    else
+      start = PartyHistory.legislature_period(affiliation.legislature).begin
+      return "Início da #{legislature}, por outro partido" if affiliation.started_on == start
+
+      "Volta à Câmara na #{legislature}, por outro partido"
+    end
+  end
+
   def party_tab_path(party, tab, extra = {})
     party_path(party, { tab: tab }.merge(extra.compact))
   end
