@@ -200,7 +200,7 @@
               <th scope="row" class="sticky-col">
                 <div class="d-flex align-items-center gap-2">
                   <span class="bloc-swatch bloc-<%= row.bloc.to_s.dasherize %>" title="<%= bloc_labels[row.bloc] %>"></span>
-                  <%= party_logo(row.party, css: "party-logo-sm") %>
+                  <%= party_logo(row.party, css: "party-logo-xs") %>
                   <div>
                     <%= link_to row.label, party_path(row.party), class: "fw-bold text-navy text-decoration-none" %>
                     <span class="d-block small text-muted fw-normal"><%= bloc_labels[row.bloc] %></span>

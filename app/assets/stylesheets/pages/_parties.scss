@@ -292,17 +292,21 @@ $bloc-opposition: #c27c00;
   }
 }
 
-// Tabela de indicadores: primeira coluna fixa ao rolar na horizontal
+// Tabela de indicadores: compacta para caber na página sem rolar no desktop.
+// Cabeçalhos quebram linha; em telas estreitas a primeira coluna fica fixa ao rolar
 .party-compare-table {
-  th, td { padding: 0.75rem; }
-  thead th { font-size: 0.7rem; letter-spacing: 0.04em; white-space: nowrap; vertical-align: bottom; }
+  font-size: 0.875rem;
+
+  th, td { padding: 0.6rem 0.4rem; }
+  thead th { font-size: 0.65rem; letter-spacing: 0.02em; line-height: 1.3; vertical-align: bottom; }
+  td.small { min-width: 6rem; }
 
   .sticky-col {
     position: sticky;
     left: 0;
     z-index: 1;
     background-color: #fff;
-    padding-left: 1.5rem;
+    padding-left: 1rem;
   }
 
   tbody tr:hover > * { background-color: rgba($gold, 0.05); }
