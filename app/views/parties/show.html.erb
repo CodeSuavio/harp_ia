@@ -32,9 +32,7 @@
 
       <div class="flex-grow-1 text-center text-md-start min-w-0">
         <div class="d-flex align-items-center justify-content-center justify-content-md-start gap-3 mb-1">
-          <% if @party.logo_url.present? %>
-            <%= image_tag @party.logo_url, class: "party-logo", alt: "Logo do #{@party.label}", loading: "lazy" %>
-          <% end %>
+          <%= party_logo(@party) %>
           <h1 class="h2 fw-bold text-navy mb-0"><%= @party.label %></h1>
         </div>
         <p class="text-muted mb-3"><%= @party.name %></p>

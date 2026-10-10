@@ -125,11 +125,29 @@
   object-fit: cover;
 }
 
-// Logo da API da Câmara: arquivo pequeno (57×47), mostrado no tamanho natural
-.party-logo {
-  height: 40px;
+// Logos (app/assets/images/logo-*): proporções variam muito (UNIÃO é 8:1, PL é quase
+// quadrado), então a altura é fixa e a largura tem teto para as logos horizontais
+.party-logo,
+.party-logo-sm,
+.party-logo-xs {
   width: auto;
+  object-fit: contain;
   flex-shrink: 0;
+}
+
+.party-logo {
+  height: 56px;
+  max-width: 160px;
+}
+
+.party-logo-sm {
+  height: 24px;
+  max-width: 64px;
+}
+
+.party-logo-xs {
+  height: 16px;
+  max-width: 44px;
 }
 
 // Mapa da bancada (página do partido): estados são links, sem destaque fixo

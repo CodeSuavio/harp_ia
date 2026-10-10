@@ -3,6 +3,17 @@ module PartiesHelper
     party_path(party, { tab: tab }.merge(extra.compact))
   end
 
+  # Logo do partido: o arquivo de app/assets/images (ver Party#logo_file) ou, sem ele, o da API da Câmara
+  def party_logo_path(party)
+    party.logo_file ? image_path(party.logo_file) : party.logo_url.presence
+  end
+
+  def party_logo(party, css: "party-logo")
+    return unless (source = party_logo_path(party))
+
+    image_tag source, class: css, alt: "Logo do #{party.label}", loading: "lazy"
+  end
+
   # Opacidade do estado no mapa da bancada: vazio quase apagado, o maior estado cheio
   def bench_map_weight(seats, max_seats)
     seats.zero? ? 0.06 : 0.2 + 0.8 * seats / max_seats
