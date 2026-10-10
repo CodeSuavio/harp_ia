@@ -162,7 +162,7 @@
 // ---------- Celular ----------
 @media (max-width: 575.98px) {
   .popover.hint-pop {
-    --bs-popover-max-width: calc(100vw - 24px);
+    --bs-popover-max-width: calc(100vw - 40px);
     min-width: 0;
   }
 
@@ -194,3 +194,17 @@
   .hint-beacon,
   .popover.hint-pop { display: none !important; }
 }
+
+// Ponto colado ao texto de títulos e do "Como votou cada estado"
+.hint-beacon.hint-beacon--inline {
+  position: relative;
+  display: inline-block;
+  width: 28px;
+  height: 28px;
+  margin: -6px 0 -6px .25rem;
+  vertical-align: middle;
+  translate: none;
+}
+
+// Enquanto o balão está aberto, o ponto some para não cobrir o recurso
+.hint-beacon.is-open { visibility: hidden; }

@@ -93,12 +93,17 @@ export default class extends Controller {
     })
 
     const inside = item.target.matches(INSIDE)
-    const host = inside ? item.target : item.target.parentElement
-    if (getComputedStyle(host).position === "static") {
-      host.classList.add("has-hint-beacon")
-      item.host = host
+    if (inside) {
+      beacon.classList.add("hint-beacon--inline")
+      item.target.appendChild(beacon)
+    } else {
+      const host = item.target.parentElement
+      if (getComputedStyle(host).position === "static") {
+        host.classList.add("has-hint-beacon")
+        item.host = host
+      }
+      item.target.insertAdjacentElement("afterend", beacon)
     }
-    inside ? item.target.appendChild(beacon) : item.target.insertAdjacentElement("afterend", beacon)
 
     item.beacon = beacon
     item.inside = inside
@@ -116,10 +121,10 @@ export default class extends Controller {
 
   place(item) {
     const { target, beacon, inside } = item
-    if (!beacon) return
+    if (!beacon || inside) return
 
-    const left = (inside ? 0 : target.offsetLeft) + target.offsetWidth - 4
-    const top = (inside ? 0 : target.offsetTop) + 4
+    const left = target.offsetLeft + target.offsetWidth + 2
+    const top = target.offsetTop + 6
     beacon.style.left = `${left}px`
     beacon.style.top = `${top}px`
   }
@@ -152,6 +157,7 @@ export default class extends Controller {
       })
     })
     item.beacon?.setAttribute("aria-expanded", "true")
+    item.beacon?.classList.add("is-open")
     this.current = { item, popover }
     this.remember(item.id)
 
