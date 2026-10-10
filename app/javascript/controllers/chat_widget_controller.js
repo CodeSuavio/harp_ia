@@ -44,6 +44,11 @@ export default class extends Controller {
     // Guarda a pergunta antes de limpar o campo.
     const question = input.value.trim()
 
+    // Informa a página atual, para a Harpia entender perguntas como
+    // "o que significa esse alerta?" sem o usuário dizer de onde fala.
+    const pagePath = event.currentTarget.querySelector('input[name="message[page_path]"]')
+    if (pagePath) pagePath.value = window.location.pathname + window.location.search
+
     // Localiza a área onde as mensagens da conversa são exibidas.
     const messages = this.windowTarget.querySelector(".chat-widget-messages")
 

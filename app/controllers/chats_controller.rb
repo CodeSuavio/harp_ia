@@ -31,7 +31,8 @@ class ChatsController < ApplicationController
       if params.dig(:message, :content).present?
         MessageProcessorService.new(
           @chat,
-          params[:message][:content]
+          params[:message][:content],
+          page_path: params.dig(:message, :page_path)
         ).call
       end
 

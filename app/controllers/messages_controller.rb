@@ -24,7 +24,8 @@ class MessagesController < ApplicationController
     # - gera o título do chat, quando necessário
     MessageProcessorService.new(
       @chat,
-      message_params[:content]
+      message_params[:content],
+      page_path: message_params[:page_path]
     ).call
 
     # O mesmo endpoint atende dois fluxos:
@@ -88,7 +89,7 @@ class MessagesController < ApplicationController
   end
 
   def message_params
-    # Permite somente o conteúdo da mensagem enviado pelo formulário.
-    params.require(:message).permit(:content)
+    # Permite o conteúdo da mensagem e a página em que o usuário está.
+    params.require(:message).permit(:content, :page_path)
   end
 end
