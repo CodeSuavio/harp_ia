@@ -45,7 +45,7 @@
         </div>
         <div class="col-6 col-lg panel-filter-col">
           <%= select_tag :type,
-                options_for_select([["Todos os tipos", ""]] + @types.map { |t| [t, t] }, params[:type]),
+                options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.map { |t| [t, t] }), params[:type]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
           <%= hidden_field_tag :author, params[:author] if params[:author].present? %>
         </div>

@@ -3,6 +3,7 @@
 
   <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-2">
     <span class="data-label text-muted"><%= @poll.date&.strftime("%d/%m/%Y") %></span>
+    <span class="data-label text-muted">· <%= legislatura_em(@poll.date) %> · <%= governo_em(@poll.date) %></span>
     <% if @poll.label_comission.present? %>
       <span class="panel-chip"><%= @poll.label_comission %></span>
     <% end %>
@@ -30,6 +31,13 @@
       <div class="card-body p-4">
 <%= render "polls/bills", poll: @poll %>
         <h2 class="h6 fw-bold text-navy mb-3">Resultado geral</h2>
+        <% if (gov = @breakdown.government_orientation) %>
+<p class="small text-muted mb-2">
+  Orientação do <%= governo_em(@poll.date) %>: <strong class="text-navy"><%= gov %></strong>
+  <% if (lider = lider_do_governo_em(@poll.date)) %>· liderança na Câmara: <%= lider %><% end %>
+  <%= selo_do_governo(@poll, gov) %>
+</p>
+        <% end %>
         <div class="progress rounded-pill mb-3" style="height: 12px;">
           <% @breakdown.tally.each do |label, count| %>
             <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
@@ -48,15 +56,16 @@
 
     <h2 class="h5 fw-bold text-navy mb-3">
       Como cada partido votou
-      <%= info_tip("Mostra como cada bancada votou de fato. A orientação oficial do partido e o fechamento de questão não estão nos dados carregados.") %>
+      <%= info_tip("Mostra como cada bancada votou de fato. Quando a Câmara registra, mostra também a orientação da liderança do partido (ou da federação de que ele faz parte) e se a maioria da bancada a seguiu.") %>
     </h2>
 
     <div class="card inspiration-card bg-white">
       <div class="card-body p-4">
+        <% parties = Party.where(id: @breakdown.by_party.map { |r| r[:party_id] }).index_by(&:id) %>
         <% @breakdown.by_party.each do |row| %>
           <div class="mb-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-              <%= link_to row[:label], party_path(row[:party_id]), class: "fw-bold text-navy text-decoration-none" %>
+              <%= link_to party_path(row[:party_id]), class: "fw-bold text-navy text-decoration-none d-inline-flex align-items-center gap-2" do %><%= party_logo(parties[row[:party_id]], css: "party-logo-xs") if parties[row[:party_id]] %><%= row[:label] %><% end %>
               <span class="small text-muted">
                 <%= row[:total] %> <%= row[:total] == 1 ? "deputado" : "deputados" %>
                 <% if row[:unanimous] %>
@@ -73,6 +82,17 @@
                 <% end %>
               </span>
             </div>
+<% if row[:orientation] %>
+  <% decided = PollOrientation::DECISIVE.include?(row[:orientation]) && Vote::DECISIVE.include?(row[:majority]) %>
+  <div class="small mb-1">
+    Orientação da liderança: <strong class="text-navy"><%= row[:orientation] %></strong>
+    <% if decided && row[:majority] == row[:orientation] %>
+      <span class="badge text-bg-light border ms-1">bancada seguiu</span>
+    <% elsif decided %>
+      <span class="badge text-bg-warning ms-1">bancada não seguiu</span>
+    <% end %>
+  </div>
+<% end %>
             <div class="progress rounded-pill" style="height: 8px;">
               <% row[:votes].each do |label, count| %>
                 <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
@@ -87,6 +107,7 @@
         <% end %>
       </div>
     </div>
+    <%= render "polls/states", breakdown: @breakdown %>
     <%= render "polls/dissidents", poll: @poll, breakdown: @breakdown %>
   <% end %>
 </section>

@@ -11,7 +11,8 @@ class PollsController < ApplicationController
     filters = {
       year:     params[:year].presence,
       theme:    params[:theme].presence,
-      approval: params[:approval].presence
+      approval: params[:approval].presence,
+      government: params[:governo].presence
     }.compact
 
     scope = apply(base, filters)
@@ -30,6 +31,8 @@ class PollsController < ApplicationController
                   .to_a
 
     @tallies = Vote.where(poll_id: @polls.map(&:id)).group(:poll_id, :vote).count
+
+    @government = PollOrientation.where(label: "Governo", poll_id: @polls.map(&:id)).pluck(:poll_id, :orientation).to_h
     @years = Poll.where.not(date: nil).distinct.pluck(Arel.sql("EXTRACT(YEAR FROM date)::int")).sort.reverse
     @themes = Theme.all
   end
@@ -42,12 +45,24 @@ class PollsController < ApplicationController
 
   private
 
+  # Votações em que o resultado oficial coincidiu (venceu) ou não (perdeu) com a orientação do Governo
+  def government_polls(value)
+    comparison = value == "perdeu" ? "<>" : "="
+    PollOrientation.joins(:poll)
+                   .where(label: "Governo", orientation: %w[Sim Não])
+                   .where.not(polls: { approval: nil })
+                   .where("polls.description NOT LIKE 'Mantido o texto%'")
+                   .where("(poll_orientations.orientation = 'Sim') #{comparison} polls.approval")
+                   .select(:poll_id)
+  end
+
   def apply(scope, filters)
     filters.reduce(scope) do |current, (key, value)|
       case key
       when :year     then current.where("EXTRACT(YEAR FROM polls.date) = ?", value.to_i)
       when :theme    then current.where(id: PollTheme.where(theme_id: value).select(:poll_id))
       when :approval then current.where(approval: value == "1")
+      when :government then current.where(id: government_polls(value))
       else current
       end
     end

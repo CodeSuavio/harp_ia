@@ -44,6 +44,12 @@
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
 
+<div class="col-6 col-lg panel-filter-col">
+  <%= select_tag :governo,
+        options_for_select([["Governo: todas", ""], ["Governo venceu", "venceu"], ["Governo perdeu", "perdeu"]], params[:governo]),
+        class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+</div>
+
         <div class="col-6 col-lg panel-filter-col">
           <div class="form-check">
             <%= check_box_tag :all, "1", params[:all] == "1", class: "form-check-input" %>

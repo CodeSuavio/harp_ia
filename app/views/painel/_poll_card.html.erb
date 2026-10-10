@@ -7,11 +7,12 @@
     <div class="card inspiration-card h-100 bg-white">
       <div class="card-body p-4">
         <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-          <span class="data-label text-muted"><%= poll.date&.strftime("%d/%m/%Y") %></span>
+          <span class="data-label text-muted" title="<%= governo_em(poll.date) %> · <%= legislatura_em(poll.date) %>"><%= poll.date&.strftime("%d/%m/%Y") %></span>
           <% if poll.label_comission.present? %>
             <span class="panel-chip"><%= poll.label_comission %></span>
           <% end %>
           <%= poll_result_badge(poll) %>
+          <%= selo_do_governo(poll, local_assigns[:government]&.dig(poll.id)) %>
           <% if unanimous %>
             <span class="badge bg-navy">UNANIMIDADE: <%= unanimous %></span>
           <% end %>

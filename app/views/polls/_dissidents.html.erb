@@ -14,11 +14,13 @@
           <li class="d-flex flex-wrap justify-content-between gap-2 py-2 border-bottom">
             <span>
               <%= link_to vote.deputy.name, deputy_path(vote.deputy), class: "text-navy fw-semibold text-decoration-none" %>
-              <span class="small text-muted"><%= link_to vote.deputy.party.label, party_path(vote.deputy.party), class: "text-reset", title: vote.deputy.party.name %>-<%= vote.deputy.state_label %></span>
+              <span class="small text-muted"><%= party_logo(vote.deputy.party, css: "party-logo-xs") %><%= link_to vote.deputy.party.label, party_path(vote.deputy.party), class: "text-reset", title: vote.deputy.party.name %>-<%= vote.deputy.state_label %></span>
             </span>
             <span class="small">
               <span class="badge <%= vote_color(vote.vote) %>"><%= vote.vote %></span>
               <span class="text-muted ms-1">bancada: <%= majority %></span>
+              <% orientation = breakdown.orientation_for(vote.deputy.party_id, vote.deputy.party.label) %>
+              <% if PollOrientation::DECISIVE.include?(orientation) && orientation != vote.vote %><span class="badge text-bg-warning ms-1">contra a orientação</span><% end %>
             </span>
           </li>
         <% end %>

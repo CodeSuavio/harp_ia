@@ -9,7 +9,7 @@ class DeputyMetrics
   # https://www2.camara.leg.br/transparencia/acesso-a-informacao/copy_of_perguntas-frequentes/cota-para-o-exercicio-da-atividade-parlamentar
   CEAP_MONTHLY = {
     "AC" => 50_426.26, "AL" => 46_737.90, "AM" => 49_363.92, "AP" => 49_168.58,
-    "BA" => 44_804.65, "CE" => 48_245.57, "DF" => 36_582.46, "ES" => 42_837.33,
+    "BA" => 44_804.65, "CE" => 48_245.57, "DF" => 36_582.46, "ES" => 43_217.71,
     "GO" => 41_300.86, "MA" => 47_945.49, "MG" => 41_886.51, "MS" => 46_336.64,
     "MT" => 45_162.42, "PA" => 48_021.25, "PB" => 47_826.36, "PE" => 47_470.60,
     "PI" => 46_765.57, "PR" => 44_665.66, "RJ" => 41_553.77, "RN" => 48_525.79,

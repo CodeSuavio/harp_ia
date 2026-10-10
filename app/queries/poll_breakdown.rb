@@ -37,7 +37,8 @@ class PollBreakdown
         total: ordered.sum { |_, count| count },
         majority: majority(ordered),
         unanimous: self.class.unanimous_label(ordered),
-        cohesion: cohesion(ordered)
+        cohesion: cohesion(ordered),
+        orientation: orientation_for(id, label)
       }
     end.sort_by { |row| [-row[:total], row[:label]] }
   end
@@ -53,6 +54,29 @@ class PollBreakdown
         .sort_by { |vote, _| [vote.deputy.party.label, vote.deputy.name] }
   end
 
+  # [[UF, { "Sim" => n, "Não" => n }]] em ordem alfabética
+  def by_state
+    @by_state ||= Vote.where(poll_id: @poll.id, vote: Vote::DECISIVE).joins(:deputy)
+                      .group("deputies.state_label", "votes.vote").count
+                      .each_with_object(Hash.new { |hash, uf| hash[uf] = { "Sim" => 0, "Não" => 0 } }) { |((uf, vote), count), acc| acc[uf][vote] = count }
+                      .sort_by { |uf, _| uf.to_s }
+  end
+
+def government_orientation
+  orientation_rows.find { |label, _, _| label == "Governo" }&.dig(1)
+end
+
+# Orientação do próprio partido ou, se ele não orientou sozinho, da federação de que faz parte
+def orientation_for(party_id, label)
+  own = orientation_rows.find { |_, _, row_party_id| row_party_id == party_id }
+  return own[1] if own
+
+  orientation_rows.find do |row_label, _, _|
+    row_label.start_with?(PollOrientation::FEDERATION_PREFIX) &&
+      PollOrientation.federation_members(row_label).include?(label.to_s.upcase)
+  end&.dig(1)
+end
+
   private
 
   def majority(pairs)
@@ -67,6 +91,10 @@ class PollBreakdown
     total = considered.sum { |_, count| count }
     top = considered.map { |_, count| count }.max.to_i
     DeputyMetrics.percentage(top, total)
+  end
+
+  def orientation_rows
+    @orientation_rows ||= PollOrientation.where(poll_id: @poll.id).pluck(:label, :orientation, :party_id)
   end
 
   def counts

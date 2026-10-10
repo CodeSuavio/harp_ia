@@ -17,6 +17,8 @@
     </div>
   <% end %>
 
+  <%= render "deputies/aviso_gastos", deputy: @deputy, year: @year %>
+
   <!-- Destaques do ano -->
   <div class="row g-3 mb-3">
     <div class="col-md-4">
@@ -59,7 +61,7 @@
       <div class="p-4 bg-white rounded-4 shadow-sm h-100">
         <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
           <i class="fa-solid fa-ranking-star text-gold me-1"></i> Ranking de gastos
-          <%= info_tip("Posição pelo gasto médio mensal em #{@year} (1º = quem mais gasta), entre os deputados com despesas no ano.") %>
+          <%= info_tip("Posição pelo gasto médio mensal em #{@year} (1º = quem mais gasta), entre os deputados com despesas no ano. A base traz no máximo #{GastosHelper::LIMITE_DA_FONTE} lançamentos por deputado, os de maior valor, então quem tem muitas despesas pequenas pode aparecer abaixo da posição real.") %>
         </span>
         <% if @rank %>
           <span class="h3 fw-bold text-navy d-block"><%= @rank[:position] %>º <small class="fs-6 text-muted fw-normal">de <%= @rank[:total] %></small></span>
