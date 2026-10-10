@@ -25,6 +25,14 @@ module DeputiesHelper
     MONTHS[month.to_i - 1] if month.to_i.between?(1, 12)
   end
 
+  # Página de gastos da Câmara já filtrada pelo deputado, ano e (opcional) mês.
+  # Legislaturas de 4 anos: a 57ª começou em 2023
+  def camara_expenses_url(deputy, year, month = nil)
+    params = { legislatura: 57 + ((year - 2023) / 4), ano: year, mes: month_label(month)&.upcase,
+               por: "deputado", deputado: deputy.json_id }.compact
+    "https://www.camara.leg.br/transparencia/gastos-parlamentares?#{params.to_query}"
+  end
+
   def vote_badge_class(vote)
     VOTE_BADGES.fetch(vote, "text-bg-light border")
   end

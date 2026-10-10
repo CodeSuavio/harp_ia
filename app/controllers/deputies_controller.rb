@@ -129,6 +129,8 @@ class DeputiesController < ApplicationController
     @concentration = @stats.supplier_concentration(year: @year)
     @anomalies = ExpenseAnomalies.new(@deputy).for_year(@year)
     @anomaly_expense_ids = @anomalies.flat_map { |row| row[:expense_ids].to_a }.to_set
+    @anomaly_documents = expenses.where(id: @anomaly_expense_ids.to_a).where.not(document_url: [nil, ""])
+                                 .pluck(:id, :document_url).to_h
     @monthly = expenses.group(:month).sum(:net_amount)
     @by_type = @stats.expenses_by_type(year: @year)
     @top_suppliers = expenses.group(Expense::SUPPLIER_KEY)
