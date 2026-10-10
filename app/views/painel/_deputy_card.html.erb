@@ -1,31 +1,31 @@
 <div class="col-md-6 col-xl-4">
-  <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
-    <div class="card inspiration-card h-100 bg-white">
-      <div class="card-body p-4 d-flex align-items-center gap-4">
-        <div class="d-flex flex-column align-items-center flex-shrink-0">
-          <div class="inspiration-photo-wrapper">
-            <% if deputy.photo_url.to_s.start_with?("http") %>
-              <%= image_tag deputy.photo_url, class: "inspiration-photo rounded-circle", alt: deputy.name, loading: "lazy" %>
-            <% else %>
-              <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
-                <i class="fa-solid fa-user text-gold"></i>
-              </div>
-            <% end %>
-          </div>
-          <span class="party-badge mt-2" title="<%= deputy.party.name %>"><%= deputy.party.label %></span>
+  <div class="card inspiration-card h-100 bg-white">
+    <div class="card-body p-4 d-flex align-items-center gap-4">
+      <div class="d-flex flex-column align-items-center flex-shrink-0">
+        <div class="inspiration-photo-wrapper">
+          <% if deputy.photo_url.to_s.start_with?("http") %>
+            <%= image_tag deputy.photo_url, class: "inspiration-photo rounded-circle", alt: deputy.name, loading: "lazy" %>
+          <% else %>
+            <div class="inspiration-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
+              <i class="fa-solid fa-user text-gold"></i>
+            </div>
+          <% end %>
+        </div>
+        <%= party_badge_link(deputy.party) %>
+      </div>
+
+      <div class="inspiration-data flex-grow-1 min-w-0">
+        <h3 class="h6 fw-bold text-navy mb-1 text-truncate">
+          <%= link_to deputy.name, deputy_path(deputy), class: "text-reset text-decoration-none stretched-link", data: { turbo_frame: "_top" } %>
+        </h3>
+
+        <div class="d-flex align-items-center text-muted small mb-3">
+          <i class="fa-solid fa-location-dot me-2 text-gold"></i>
+          <%= deputy.state_label %>
         </div>
 
-        <div class="inspiration-data flex-grow-1 min-w-0">
-          <h3 class="h6 fw-bold text-navy mb-1 text-truncate"><%= deputy.name %></h3>
-
-          <div class="d-flex align-items-center text-muted small mb-3">
-            <i class="fa-solid fa-location-dot me-2 text-gold"></i>
-            <%= deputy.state_label %>
-          </div>
-
-          <%= render "painel/metrics", deputy: deputy, metrics: metrics %>
-        </div>
+        <%= render "painel/metrics", deputy: deputy, metrics: metrics %>
       </div>
     </div>
-  <% end %>
+  </div>
 </div>

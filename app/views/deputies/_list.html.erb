@@ -65,49 +65,48 @@
             Comparar
           </label>
 
-          <%= link_to deputy_path(deputy), class: "text-decoration-none text-reset", data: { turbo_frame: "_top" } do %>
-            <div class="card candidate-card h-100 text-center border-0 shadow-sm">
-              <div class="card-body compare-card-body">
-                <% if deputy.photo.attached? %>
-                  <%= cl_image_tag deputy.photo.key, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
-                <% else %>
-                  <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
-                    <i class="fa-solid fa-user text-muted"></i>
-                  </div>
-                <% end %>
-
-                <h3 class="h6 mb-1"><%= deputy.name %></h3>
-                <p class="text-brand small fw-bold text-uppercase mb-2">
-                  <%= deputy.party&.label %> &middot; <%= deputy.state_label %>
-                </p>
-
-                <% if @reelection_ids.include?(deputy.id) %>
-                  <span class="badge badge-wrap text-bg-light border text-navy fw-medium mb-2">
-                    <i class="fa-solid fa-check-to-slot text-gold me-1"></i>Candidato à reeleição
-                  </span>
-                <% end %>
-
-                <div class="row g-0 border-top pt-2 mt-2 small">
-                  <div class="col-4 border-end">
-                    <div class="fw-bold text-navy"><%= @expenses.dig(deputy.id, :monthly) ? brl(@expenses.dig(deputy.id, :monthly), precision: 0) : "—" %></div>
-                    <div class="text-muted">por mês<span class="visually-hidden"> em gastos em <%= @expense_year %></span></div>
-                  </div>
-                  <div class="col-4 border-end">
-                    <div class="fw-bold text-navy"><%= @bill_counts[deputy.id].to_i %></div>
-                    <div class="text-muted"><%= "projeto".pluralize(@bill_counts[deputy.id].to_i) %></div>
-                  </div>
-                  <div class="col-4">
-                    <div class="fw-bold text-navy"><%= percent(@participation.dig(deputy.id, :pct)) %></div>
-                    <div class="text-muted">presença<span class="visually-hidden"> nas votações</span></div>
-                  </div>
+          <div class="card candidate-card h-100 text-center border-0 shadow-sm">
+            <div class="card-body compare-card-body">
+              <% if deputy.photo.attached? %>
+                <%= cl_image_tag deputy.photo.key, class: "candidate-photo rounded-circle mb-3", alt: deputy.name %>
+              <% else %>
+                <div class="candidate-photo candidate-photo-placeholder rounded-circle mb-3 mx-auto d-flex align-items-center justify-content-center">
+                  <i class="fa-solid fa-user text-muted"></i>
                 </div>
+              <% end %>
 
-                <% if deputy.electoral_status.present? %>
-                  <div class="small text-muted mt-2"><%= deputy.electoral_status %></div>
-                <% end %>
+              <h3 class="h6 mb-1"><%= link_to deputy.name, deputy_path(deputy), class: "text-reset text-decoration-none stretched-link", data: { turbo_frame: "_top" } %></h3>
+              <p class="text-brand small fw-bold text-uppercase mb-2">
+                <% if deputy.party %><%= link_to deputy.party.label, party_path(deputy.party), class: "text-reset position-relative z-2 link-underline-opacity-0 link-underline-opacity-100-hover", title: deputy.party.name, data: { turbo_frame: "_top" } %> &middot;<% end %>
+                <%= deputy.state_label %>
+              </p>
+
+              <% if @reelection_ids.include?(deputy.id) %>
+                <span class="badge badge-wrap text-bg-light border text-navy fw-medium mb-2">
+                  <i class="fa-solid fa-check-to-slot text-gold me-1"></i>Candidato à reeleição
+                </span>
+              <% end %>
+
+              <div class="row g-0 border-top pt-2 mt-2 small">
+                <div class="col-4 border-end">
+                  <div class="fw-bold text-navy"><%= @expenses.dig(deputy.id, :monthly) ? brl(@expenses.dig(deputy.id, :monthly), precision: 0) : "—" %></div>
+                  <div class="text-muted">por mês<span class="visually-hidden"> em gastos em <%= @expense_year %></span></div>
+                </div>
+                <div class="col-4 border-end">
+                  <div class="fw-bold text-navy"><%= @bill_counts[deputy.id].to_i %></div>
+                  <div class="text-muted"><%= "projeto".pluralize(@bill_counts[deputy.id].to_i) %></div>
+                </div>
+                <div class="col-4">
+                  <div class="fw-bold text-navy"><%= percent(@participation.dig(deputy.id, :pct)) %></div>
+                  <div class="text-muted">presença<span class="visually-hidden"> nas votações</span></div>
+                </div>
               </div>
+
+              <% if deputy.electoral_status.present? %>
+                <div class="small text-muted mt-2"><%= deputy.electoral_status %></div>
+              <% end %>
             </div>
-          <% end %>
+          </div>
         </div>
       </div>
     <% end %>

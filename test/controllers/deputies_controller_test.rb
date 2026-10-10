@@ -8,6 +8,11 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "input[data-deputy-compare-target=checkbox]", 4
   end
 
+  test "sigla do partido nos cartões leva à página do partido" do
+    get deputies_path
+    assert_select ".candidate-card a[href=?]", party_path(parties(:mdb)), text: "MDB"
+  end
+
   test "botão abaixo dos filtros ativa a comparação e avisa o limite" do
     get deputies_path
     assert_select "button[data-action='deputy-compare#toggleMode']", text: /Comparar deputados/
