@@ -68,6 +68,30 @@ class ChatsController < ApplicationController
       redirect_to chats_path,
                   alert: "Nao foi possivel criar a conversa."
     end
+
+  rescue MessageProcessorService::AIError
+    # Se a IA falhar, mantém o erro técnico no backend
+    # e apresenta uma mensagem amigável para o usuário.
+    @chats = policy_scope(Chat)
+
+    respond_to do |format|
+      # Fluxo tradicional.
+      format.html do
+        redirect_to @chat,
+                    alert: "Não foi possível gerar a resposta. Tente novamente."
+      end
+
+      # Fluxo do widget.
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update(
+          "chat_widget_messages",
+          partial: "chats/widget_messages",
+          locals: {
+            error_message: "Não foi possível gerar a resposta. Tente novamente."
+          }
+        )
+      end
+    end
   end
 
   def destroy

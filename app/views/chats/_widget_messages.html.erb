@@ -28,6 +28,13 @@
 
   <% end %>
 
+   <!-- Exibe uma mensagem amigável quando a IA não consegue responder. -->
+   <% if local_assigns[:error_message].present? %>
+      <div class="chat-widget-error">
+        <%= error_message %>
+      </div>
+   <% end %>
+
 </div>
 
 <!--

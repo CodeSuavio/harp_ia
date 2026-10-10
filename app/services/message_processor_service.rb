@@ -1,4 +1,6 @@
 class MessageProcessorService
+  class AIError < StandardError; end
+
   def initialize(chat, content)
     @chat = chat
     @content = content
@@ -13,7 +15,15 @@ class MessageProcessorService
 
     # Envia a mensagem para a IA
     chatbot = ChatbotService.new(user_message)
-    assistant_response = chatbot.call
+    begin
+      assistant_response = chatbot.call
+    rescue StandardError => e
+      Rails.logger.error(
+          "[MessageProcessorService] Erro ao gerar resposta da IA: #{e.class} - #{e.message}"
+      )
+
+      raise AIError, "Não foi possível gerar a resposta da IA."
+    end
 
     # Salva a resposta da IA na mesma conversa
     @chat.messages.create!(
