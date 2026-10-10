@@ -3,7 +3,7 @@ class PagesController < ApplicationController
   skip_before_action :authenticate_user!, only: [ :home, :about, :contact ]
 
   def home
-    @candidates = policy_scope(Candidate).includes(:party).order(:ballot_name)
+    @candidates = policy_scope(Candidate).includes(:party).with_attached_photo.order(:ballot_name)
     @states = @candidates.map(&:state_label).compact.uniq.sort
 
     # Agregados por deputado (indexados pelo json_id, que é o current_deputy_id do candidato)
