@@ -30,6 +30,9 @@
       <div class="card-body p-4">
 <%= render "polls/bills", poll: @poll %>
         <h2 class="h6 fw-bold text-navy mb-3">Resultado geral</h2>
+        <% if (gov = @breakdown.government_orientation) %>
+          <p class="small text-muted mb-2">Orientação do Governo: <strong class="text-navy"><%= gov %></strong></p>
+        <% end %>
         <div class="progress rounded-pill mb-3" style="height: 12px;">
           <% @breakdown.tally.each do |label, count| %>
             <div class="progress-bar <%= vote_color(label) %>" role="progressbar"
@@ -48,7 +51,7 @@
 
     <h2 class="h5 fw-bold text-navy mb-3">
       Como cada partido votou
-      <%= info_tip("Mostra como cada bancada votou de fato. A orientação oficial do partido e o fechamento de questão não estão nos dados carregados.") %>
+      <%= info_tip("Mostra como cada bancada votou de fato. Quando a Câmara registra, mostra também a orientação da liderança do partido (ou da federação de que ele faz parte) e se a maioria da bancada a seguiu.") %>
     </h2>
 
     <div class="card inspiration-card bg-white">
@@ -73,6 +76,17 @@
                 <% end %>
               </span>
             </div>
+<% if row[:orientation] %>
+  <% decided = PollOrientation::DECISIVE.include?(row[:orientation]) && Vote::DECISIVE.include?(row[:majority]) %>
+  <div class="small mb-1">
+    Orientação da liderança: <strong class="text-navy"><%= row[:orientation] %></strong>
+    <% if decided && row[:majority] == row[:orientation] %>
+      <span class="badge text-bg-light border ms-1">bancada seguiu</span>
+    <% elsif decided %>
+      <span class="badge text-bg-warning ms-1">bancada não seguiu</span>
+    <% end %>
+  </div>
+<% end %>
             <div class="progress rounded-pill" style="height: 8px;">
               <% row[:votes].each do |label, count| %>
                 <div class="progress-bar <%= vote_color(label) %>" role="progressbar"

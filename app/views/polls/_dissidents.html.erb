@@ -19,6 +19,8 @@
             <span class="small">
               <span class="badge <%= vote_color(vote.vote) %>"><%= vote.vote %></span>
               <span class="text-muted ms-1">bancada: <%= majority %></span>
+              <% orientation = breakdown.orientation_for(vote.deputy.party_id, vote.deputy.party.label) %>
+              <% if PollOrientation::DECISIVE.include?(orientation) && orientation != vote.vote %><span class="badge text-bg-warning ms-1">contra a orientação</span><% end %>
             </span>
           </li>
         <% end %>
