@@ -19,8 +19,12 @@
 
     <% else %>
 
-      <!-- Resposta gerada pela Harpia -->
-      <div class="chat-widget-assistant-message">
+      <!--
+        Resposta gerada pela Harpia.
+        Quando a pergunta está fora do escopo, adiciona uma classe
+        específica para diferenciá-la visualmente.
+      -->
+      <div class="chat-widget-assistant-message <%= 'chat-widget-assistant-message--out-of-scope' if message.out_of_scope? %>">
         <%= render_markdown(message.content) %>
       </div>
 
