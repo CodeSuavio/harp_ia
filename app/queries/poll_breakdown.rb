@@ -54,6 +54,14 @@ class PollBreakdown
         .sort_by { |vote, _| [vote.deputy.party.label, vote.deputy.name] }
   end
 
+  # [[UF, { "Sim" => n, "Não" => n }]] em ordem alfabética
+  def by_state
+    @by_state ||= Vote.where(poll_id: @poll.id, vote: Vote::DECISIVE).joins(:deputy)
+                      .group("deputies.state_label", "votes.vote").count
+                      .each_with_object(Hash.new { |hash, uf| hash[uf] = { "Sim" => 0, "Não" => 0 } }) { |((uf, vote), count), acc| acc[uf][vote] = count }
+                      .sort_by { |uf, _| uf.to_s }
+  end
+
 def government_orientation
   orientation_rows.find { |label, _, _| label == "Governo" }&.dig(1)
 end

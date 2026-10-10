@@ -16,6 +16,11 @@
   </div>
 
   <p class="fs-5 fw-semibold text-navy"><%= @bill.summary %></p>
+<% if @bill.submission_date %>
+  <p class="small text-muted">
+    Apresentado em <%= @bill.submission_date.strftime("%d/%m/%Y") %>, na <%= legislatura_em(@bill.submission_date) %>, durante o <%= governo_em(@bill.submission_date) %>.
+  </p>
+<% end %>
 
   <% if @bill.deputy %>
     <p class="text-muted mb-1">
@@ -40,6 +45,7 @@
             <span class="data-label text-muted me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
             <%= poll_result_badge(poll) %>
             <%= poll_summary(poll).truncate(140) %>
+            <% if @bill.submission_date && legislatura_numero(poll.date) != legislatura_numero(@bill.submission_date) %><span class="small text-muted"> · votado na <%= legislatura_em(poll.date) %>, <%= poll.date.year - @bill.submission_date.year %> anos depois</span><% end %>
           <% end %>
         </li>
       <% end %>

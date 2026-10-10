@@ -3,6 +3,7 @@
      "year"     => params[:year].presence,
      "theme"    => (@themes.find { |t| t.id.to_s == params[:theme].to_s }&.name if params[:theme].present?),
      "approval" => ({ "1" => "Aprovadas", "0" => "Rejeitadas" }[params[:approval]]),
+     "governo"  => ({ "venceu" => "Governo venceu", "perdeu" => "Governo perdeu" }[params[:governo]]),
      "all"      => (params[:all] == "1" ? "Com e sem votos nominais" : nil)
    }.compact %>
 
@@ -31,7 +32,7 @@
 <% else %>
   <div class="row g-4">
     <%= render partial: "painel/poll_card", collection: @polls, as: :poll,
-               locals: { tallies: @tallies } %>
+               locals: { tallies: @tallies, government: @government } %>
   </div>
 
   <%= render "painel/pagination", path_helper: :polls_path %>

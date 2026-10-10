@@ -3,6 +3,7 @@
 
   <div class="d-flex flex-wrap align-items-center gap-2 mt-3 mb-2">
     <span class="data-label text-muted"><%= @poll.date&.strftime("%d/%m/%Y") %></span>
+    <span class="data-label text-muted">· <%= legislatura_em(@poll.date) %> · <%= governo_em(@poll.date) %></span>
     <% if @poll.label_comission.present? %>
       <span class="panel-chip"><%= @poll.label_comission %></span>
     <% end %>
@@ -31,7 +32,11 @@
 <%= render "polls/bills", poll: @poll %>
         <h2 class="h6 fw-bold text-navy mb-3">Resultado geral</h2>
         <% if (gov = @breakdown.government_orientation) %>
-          <p class="small text-muted mb-2">Orientação do Governo: <strong class="text-navy"><%= gov %></strong></p>
+<p class="small text-muted mb-2">
+  Orientação do <%= governo_em(@poll.date) %>: <strong class="text-navy"><%= gov %></strong>
+  <% if (lider = lider_do_governo_em(@poll.date)) %>· liderança na Câmara: <%= lider %><% end %>
+  <%= selo_do_governo(@poll, gov) %>
+</p>
         <% end %>
         <div class="progress rounded-pill mb-3" style="height: 12px;">
           <% @breakdown.tally.each do |label, count| %>
@@ -102,6 +107,7 @@
         <% end %>
       </div>
     </div>
+    <%= render "polls/states", breakdown: @breakdown %>
     <%= render "polls/dissidents", poll: @poll, breakdown: @breakdown %>
   <% end %>
 </section>

@@ -1,0 +1,22 @@
+<% states = breakdown.by_state %>
+<% if states.any? %>
+  <details class="card inspiration-card bg-white mt-4">
+    <summary class="card-body p-4 fw-bold text-navy" style="cursor: pointer;">
+      Como votou cada estado
+      <%= info_tip("Votos Sim e Não dos deputados de cada estado nesta votação.") %>
+    </summary>
+    <div class="px-4 pb-4">
+      <% states.each do |uf, votes| %>
+        <% total = votes["Sim"] + votes["Não"] %>
+        <div class="d-flex align-items-center gap-3 mb-2 small">
+          <span class="fw-bold text-navy" style="width: 2.5rem;"><%= uf %></span>
+          <div class="progress rounded-pill flex-grow-1" style="height: 8px;">
+            <div class="progress-bar <%= vote_color("Sim") %>" style="width: <%= bar_percent(votes["Sim"], total) %>%"></div>
+            <div class="progress-bar <%= vote_color("Não") %>" style="width: <%= bar_percent(votes["Não"], total) %>%"></div>
+          </div>
+          <span class="text-muted text-nowrap">Sim <%= votes["Sim"] %> · Não <%= votes["Não"] %></span>
+        </div>
+      <% end %>
+    </div>
+  </details>
+<% end %>
