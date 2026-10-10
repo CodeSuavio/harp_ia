@@ -1,5 +1,5 @@
 <%= render "painel/hero", title: "Projetos", highlight: "e propostas",
-      subtitle: "Projetos de lei, leis complementares, decretos legislativos e PECs apresentados em 2026 e projetos que foram a votação." %>
+      subtitle: "Propostas apresentadas na Câmara em 2026 e as de anos anteriores que foram a votação." %>
 
 <section class="container search-container pb-5">
   <%= turbo_frame_tag "bills_list", data: { turbo_action: "advance" } do %>
@@ -17,7 +17,7 @@
             </span>
             <%= text_field_tag :q, params[:q],
                   id: "bill-search",
-                  placeholder: "Assunto ou palavra-chave...",
+                  placeholder: "Assunto ou número (ex.: PL 1822)...",
                   class: "form-control border-0 shadow-none bg-transparent fw-medium",
                   data: { turbo_permanent: true } %>
           </div>

@@ -6,7 +6,7 @@ module HintsHelper
   HINTS = {
     "polls#index" => [
       { id: "polls-governo", selector: "#governo", label: "filtro Governo venceu ou perdeu",
-        text: "Governo venceu: o resultado foi o que o governo orientou. Governo perdeu: foi o contrário." },
+        text: "Governo venceu: o resultado foi o que o governo orientou. Governo perdeu: foi o contrário. Só entram votações em que o governo orientou Sim ou Não." },
       { id: "polls-nominais", selector: "label[for='all']", label: "votações sem voto nominal",
         text: "Nas votações simbólicas só o resultado fica registrado, sem o voto de cada deputado. Marque para incluí-las." },
       { id: "polls-texto-mantido", selector: ".badge", contains: "Texto mantido", label: "selo Texto mantido",
