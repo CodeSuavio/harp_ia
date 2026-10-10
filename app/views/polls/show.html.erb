@@ -56,10 +56,11 @@
 
     <div class="card inspiration-card bg-white">
       <div class="card-body p-4">
+        <% parties = Party.where(id: @breakdown.by_party.map { |r| r[:party_id] }).index_by(&:id) %>
         <% @breakdown.by_party.each do |row| %>
           <div class="mb-3">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-1">
-              <%= link_to row[:label], party_path(row[:party_id]), class: "fw-bold text-navy text-decoration-none" %>
+              <%= link_to party_path(row[:party_id]), class: "fw-bold text-navy text-decoration-none d-inline-flex align-items-center gap-2" do %><%= party_logo(parties[row[:party_id]], css: "party-logo-xs") if parties[row[:party_id]] %><%= row[:label] %><% end %>
               <span class="small text-muted">
                 <%= row[:total] %> <%= row[:total] == 1 ? "deputado" : "deputados" %>
                 <% if row[:unanimous] %>
