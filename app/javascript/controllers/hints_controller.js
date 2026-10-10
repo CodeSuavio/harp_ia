@@ -131,11 +131,13 @@ export default class extends Controller {
     const { target, beacon, inline } = item
     if (!beacon || inline) return
 
+    // Em selo e legenda (baixos), o ponto vai acima do texto, como expoente, para não cobrir o número
     const half = beacon.offsetWidth / 2
     const room = document.documentElement.clientWidth - target.getBoundingClientRect().right
-    const shift = Math.min(2, room - half - 4)
+    const small = target.offsetHeight < 28
+    const shift = Math.min(small ? 6 : 2, room - half - 4)
     beacon.style.left = `${target.offsetLeft + target.offsetWidth + shift}px`
-    beacon.style.top = `${target.offsetTop + 6}px`
+    beacon.style.top = `${target.offsetTop + (small ? 0 : 6)}px`
   }
 
   pulseFirst() {
