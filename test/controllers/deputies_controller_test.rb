@@ -135,6 +135,16 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Nenhum gasto fora do padrão em 2025", response.body
   end
 
+  test "gasto fora do padrão leva à nota e à página de gastos da Câmara" do
+    expenses(:bruno_fuel).update!(document_url: "https://camara.leg.br/nota/bruno")
+    get deputy_path(deputies(:bruno), tab: "expenses")
+
+    assert_select "ul a[href='https://camara.leg.br/nota/bruno'][target=_blank]"
+    camara = "https://www.camara.leg.br/transparencia/gastos-parlamentares?" \
+             "ano=2025&deputado=#{deputies(:bruno).json_id}&legislatura=57&por=deputado"
+    assert_select "ul a[href='#{camara}']", text: /Ver na Câmara/
+  end
+
   test "mascara CPF de fornecedor pessoa física" do
     get deputy_path(deputies(:ana), tab: "expenses")
     assert_match "***.456.789-**", response.body
