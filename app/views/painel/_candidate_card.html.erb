@@ -8,6 +8,8 @@
           <div class="inspiration-photo-wrapper">
             <% if candidate.photo_file.to_s.start_with?("http") %>
               <%= image_tag candidate.photo_file, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
+            <% elsif candidate.photo.attached? %>
+              <%= cl_image_tag candidate.photo.key, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
             <% elsif deputy&.photo&.attached? %>
               <%= cl_image_tag deputy.photo.key, class: "inspiration-photo rounded-circle", alt: candidate.ballot_name, loading: "lazy" %>
             <% else %>
