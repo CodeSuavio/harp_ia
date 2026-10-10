@@ -1,10 +1,11 @@
-<% if (intro = page_intro) %>
-  <% key, text = intro %>
-  <div class="container pt-3 d-none" data-controller="page-intro" data-page-intro-key-value="<%= key %>">
-    <div class="alert alert-light border rounded-4 small d-flex align-items-start gap-2 mb-0" role="note">
-      <i class="fa-solid fa-circle-info text-gold mt-1" aria-hidden="true"></i>
-      <span class="flex-grow-1"><%= text %></span>
-      <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0 ms-2" data-action="page-intro#dismiss">Entendi</button>
-    </div>
-  </div>
+<% if (tour = page_tour) %>
+  <% key, steps = tour %>
+  <div data-controller="page-tour"
+       data-page-tour-key-value="<%= key %>"
+       data-page-tour-steps-value="<%= steps.to_json %>"></div>
+  <style>
+    .tour-target { outline: 3px solid #f2b705; outline-offset: 4px; border-radius: .5rem; transition: outline-color .2s; }
+    .tour-popover { max-width: 290px; box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .18); border: 0; }
+    .tour-popover .popover-body { padding: .85rem 1rem; }
+  </style>
 <% end %>
