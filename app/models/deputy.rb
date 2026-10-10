@@ -15,5 +15,8 @@ class Deputy < ApplicationRecord
   validates :cpf, uniqueness: true, length: { is: 11 }, numericality: { only_integer: true }
   validates :json_id, uniqueness: true, presence: true
 
+  # Projetos de autoria ou coautoria
+  def authored_bills = Bill.authored_by(id)
+
   scope :running_for_reelection, -> { where(json_id: Candidate.reelection.select(:current_deputy_id)) }
 end

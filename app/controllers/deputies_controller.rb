@@ -19,7 +19,10 @@ class DeputiesController < ApplicationController
   }.freeze
   AGAINST_PARTY = "against_party".freeze
 
-  BILLS_COUNT_SQL = "(SELECT COUNT(*) FROM bills WHERE bills.deputy_id = deputies.id)".freeze
+  BILLS_COUNT_SQL = <<~SQL.squish.freeze
+    (SELECT COUNT(*) FROM bills WHERE bills.deputy_id = deputies.id
+       OR bills.id IN (SELECT bill_id FROM bill_authors WHERE bill_authors.deputy_id = deputies.id))
+  SQL
   # Ordenações por SQL ou por indicador calculado (DeputyMetrics), ordenadas em Ruby
   SORTS = {
     "name"          => { label: "Ordenar por nome",            order: "deputies.name ASC" },
@@ -108,7 +111,7 @@ class DeputiesController < ApplicationController
     @total_expenses = @stats.total_expenses(year: @expense_year)
     @participation = @stats.vote_participation
     @alignment = @stats.party_alignment
-    @bills_count = @deputy.bills.count
+    @bills_count = @deputy.authored_bills.count
   end
 
   def load_expenses
@@ -148,7 +151,7 @@ class DeputiesController < ApplicationController
   end
 
   def load_bills
-    all_bills = @deputy.bills
+    all_bills = @deputy.authored_bills
     @bills_total = all_bills.count
     @average_bills = DeputyMetrics.average_bills
     @bill_years = all_bills.distinct.order(year: :desc).pluck(:year).compact

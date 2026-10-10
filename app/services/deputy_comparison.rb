@@ -76,7 +76,7 @@ class DeputyComparison
   def expenses = @expenses ||= DeputyMetrics.expenses(year)
   def participation = @participation ||= DeputyMetrics.participation
   def alignment = @alignment ||= DeputyMetrics.alignment
-  def bill_counts = @bill_counts ||= Bill.where(deputy_id: deputies.map(&:id)).group(:deputy_id).count
+  def bill_counts = @bill_counts ||= Bill.count_by_author(deputies.map(&:id))
   def reelection_ids = @reelection_ids ||= Deputy.running_for_reelection.where(id: deputies.map(&:id)).pluck(:id)
   def profiles = @profiles ||= deputies.to_h { |deputy| [deputy.id, DeputyThemeProfile.new(deputy)] }
 end

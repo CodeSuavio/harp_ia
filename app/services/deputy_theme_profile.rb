@@ -20,7 +20,7 @@ class DeputyThemeProfile
   end
 
   def bills_by_theme
-    @bills_by_theme ||= BillTheme.joins(:bill).where(bills: { deputy_id: @deputy.id }).group(:theme_id).count
+    @bills_by_theme ||= BillTheme.where(bill_id: @deputy.authored_bills.select(:id)).group(:theme_id).count
   end
 
   def votes_by_theme
