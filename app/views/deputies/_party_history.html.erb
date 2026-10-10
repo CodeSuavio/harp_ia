@@ -1,0 +1,38 @@
+<%# Linha do tempo de partidos (histórico da Câmara). Na página do candidato, fecha com a candidatura de 2026 %>
+<% candidate = local_assigns[:candidate] %>
+<% affiliations = affiliations.to_a %>
+<% if affiliations.any? %>
+  <% changes = affiliations.count { |a| a.change? && a.party_label != PartiesHelper::NO_PARTY_LABEL } %>
+  <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
+    <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
+      <i class="fa-solid fa-clock-rotate-left me-2 text-gold"></i>Histórico de partidos
+      <%= info_tip("Partido em cada período como deputado federal, segundo o histórico da Câmara. Mudanças de nome e fusões de partido não contam como troca.") %>
+    </h2>
+    <p class="small text-muted mb-3">
+      <% if changes.zero? %>
+        Sempre no mesmo partido na Câmara desde <%= affiliations.first.started_on.year %>.
+      <% else %>
+        <%= changes %> <%= changes == 1 ? "troca" : "trocas" %> de partido na Câmara desde <%= affiliations.first.started_on.year %>.
+      <% end %>
+    </p>
+
+    <ol class="party-timeline list-unstyled mb-0">
+      <% affiliations.each_with_index do |affiliation, index| %>
+        <li class="party-timeline-item <%= "is-#{affiliation.kind.dasherize}" %>">
+          <span class="small text-muted"><%= affiliation.started_on.strftime("%d/%m/%Y") %></span>
+          <strong class="text-navy ms-2"><%= affiliation_party(affiliation) %></strong>
+          <span class="d-block small text-muted"><%= affiliation_event(affiliation, affiliations[index - 1]) %></span>
+        </li>
+      <% end %>
+
+      <% if candidate&.party %>
+        <% same = candidate.party.label.casecmp?(affiliations.last.party_label) %>
+        <li class="party-timeline-item is-candidacy">
+          <span class="small text-muted">2026</span>
+          <strong class="text-navy ms-2"><%= link_to candidate.party.label, party_path(candidate.party), class: "text-reset", title: candidate.party.name %></strong>
+          <span class="d-block small text-muted">Candidatura a deputado federal<%= " pelo mesmo partido" if same %></span>
+        </li>
+      <% end %>
+    </ol>
+  </div>
+<% end %>

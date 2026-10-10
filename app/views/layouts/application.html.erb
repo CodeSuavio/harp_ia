@@ -32,11 +32,14 @@
 
     <!-- Conteúdo Principal da Página -->
     <main>
+      <%= render "shared/hints" %>
       <%= yield %>
     </main>
 
      <!-- Chat Widget -->
     <%= render "shared/chat_widget" %>
+
+    <%= render "shared/onboarding" %>
 
     <!-- Footer Partilhado -->
     <%= render "shared/footer" %>

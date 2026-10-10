@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_10_181245) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_11_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -198,6 +198,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_181245) do
     t.string "succeeded_by"
     t.datetime "updated_at", null: false
     t.string "url"
+  end
+
+  create_table "party_affiliations", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "deputy_id", null: false
+    t.string "kind", null: false
+    t.integer "legislature", null: false
+    t.bigint "party_id"
+    t.string "party_label", null: false
+    t.date "started_on", null: false
+    t.datetime "updated_at", null: false
+    t.index ["deputy_id", "started_on"], name: "index_party_affiliations_on_deputy_id_and_started_on"
+    t.index ["deputy_id"], name: "index_party_affiliations_on_deputy_id"
+    t.index ["party_id"], name: "index_party_affiliations_on_party_id"
   end
 
   create_table "poll_bills", force: :cascade do |t|
@@ -441,6 +455,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_181245) do
   end
 
   create_table "users", force: :cascade do |t|
+    t.boolean "admin", default: false, null: false
     t.datetime "created_at", null: false
     t.string "email", default: "", null: false
     t.string "encrypted_password", default: "", null: false
@@ -479,6 +494,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_10_181245) do
   add_foreign_key "deputies", "parties"
   add_foreign_key "expenses", "deputies"
   add_foreign_key "messages", "chats"
+  add_foreign_key "party_affiliations", "deputies"
+  add_foreign_key "party_affiliations", "parties"
   add_foreign_key "poll_bills", "bills"
   add_foreign_key "poll_bills", "polls"
   add_foreign_key "poll_orientations", "parties"

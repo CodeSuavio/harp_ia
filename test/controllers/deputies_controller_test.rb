@@ -203,4 +203,16 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     get compare_deputies_path(ids: [deputies(:ana).id])
     assert_match "Selecione de 2", response.body
   end
+
+  test "visão geral mostra o histórico de partidos" do
+    get deputy_path(deputies(:ana))
+    assert_select ".party-timeline-item", 2
+    assert_select ".party-timeline-item.is-switch a[href=?]", party_path(parties(:mdb)), text: "MDB"
+    assert_match "1 troca de partido na Câmara desde 2019", response.body
+  end
+
+  test "sem histórico importado, não mostra a seção" do
+    get deputy_path(deputies(:bruno))
+    assert_select ".party-timeline", 0
+  end
 end

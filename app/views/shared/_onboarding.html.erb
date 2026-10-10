@@ -1,0 +1,51 @@
+<% passos = [
+     ["fa-user-tie", "Deputados", "Perfil de cada deputado em exercício: como votou, que projetos apresentou e quanto gastou da cota parlamentar, com alerta para gastos fora do padrão.", deputies_path, "Ver deputados"],
+     ["fa-check-to-slot", "Candidatos 2026", "Candidaturas a deputado federal por estado e partido. Para quem já é deputado, o histórico do mandato aparece junto.", candidates_path, "Ver candidatos"],
+     ["fa-flag", "Partidos", "Bancada de cada partido por estado, como cada um vota e comparação entre partidos.", parties_path, "Ver partidos"],
+     ["fa-landmark", "Votações", "Resultado de cada votação, a orientação do governo e dos partidos, quem votou contra o próprio partido e como votou cada estado.", polls_path, "Ver votações"],
+     ["fa-file-lines", "Projetos", "Projetos de lei e propostas com número oficial, autores e as votações em que entraram.", bills_path, "Ver projetos"],
+     ["fa-comments", "Assistente Harpia", "Faça perguntas sobre os dados em linguagem comum. Exige cadastro. As respostas são geradas por IA e podem conter erros.", chats_path, "Abrir o assistente"]
+   ] %>
+
+<div class="modal fade" id="onboarding-modal" tabindex="-1" aria-labelledby="onboarding-title" aria-hidden="true"
+     data-controller="onboarding" data-action="hidden.bs.modal->onboarding#remember">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 rounded-4 shadow">
+      <div class="modal-header border-0 pb-0">
+        <h2 class="modal-title h5 fw-bold text-navy" id="onboarding-title">Como funciona o Harpia</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fechar"></button>
+      </div>
+
+      <div class="modal-body pt-2">
+        <div id="onboarding-steps" class="carousel slide" data-bs-ride="false" data-bs-touch="true" data-bs-interval="false">
+          <div class="carousel-inner">
+            <% passos.each_with_index do |(icone, titulo, texto, caminho, acao), index| %>
+              <div class="carousel-item <%= 'active' if index.zero? %>">
+                <div class="p-2" style="min-height: 11rem;">
+                  <p class="small text-muted mb-2"><%= index + 1 %> de <%= passos.size %></p>
+                  <h3 class="h6 fw-bold text-navy mb-2">
+                    <i class="fa-solid <%= icone %> text-gold me-2" aria-hidden="true"></i><%= titulo %>
+                  </h3>
+                  <p class="mb-3"><%= texto %></p>
+                  <%= link_to acao, caminho, class: "small fw-semibold text-gold text-decoration-none", data: { bs_dismiss: "modal", turbo_frame: "_top" } %>
+                </div>
+              </div>
+            <% end %>
+          </div>
+        </div>
+
+        <p class="small text-muted border-top pt-3 mb-0">
+          Dados públicos da Câmara dos Deputados e do TSE. Use o ícone <i class="fa-solid fa-circle-info" aria-hidden="true"></i> ao lado dos números para ver como cada um é calculado. Os pontos laranja nas páginas abrem dicas; o X do balão desliga as dicas daquela página.
+        </p>
+      </div>
+
+      <div class="modal-footer border-0 pt-0 justify-content-between">
+        <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none" data-bs-target="#onboarding-steps" data-bs-slide="prev">Voltar</button>
+        <div class="d-flex gap-2">
+          <button type="button" class="btn btn-sm btn-outline-secondary rounded-pill px-3" data-bs-dismiss="modal">Fechar</button>
+          <button type="button" class="btn btn-sm btn-auth rounded-pill px-3" data-bs-target="#onboarding-steps" data-bs-slide="next">Próximo</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
