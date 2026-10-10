@@ -21,6 +21,7 @@ class Party < ApplicationRecord
   has_many :bills, dependent: :destroy
   has_many :proposals, dependent: :destroy
   has_many :poll_orientations, dependent: :nullify
+  has_many :party_affiliations, dependent: :nullify
 
   validates :name, :label, presence: true
   validates :label, uniqueness: { case_sensitive: false }

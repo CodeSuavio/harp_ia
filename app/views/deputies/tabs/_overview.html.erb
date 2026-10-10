@@ -24,6 +24,8 @@
   <% end %>
 </div>
 
+<%= render "deputies/party_history", affiliations: @deputy.party_affiliations.includes(:party) %>
+
 <!-- Dados pessoais e de contato (apenas os disponíveis) -->
 <% info = [
      ["Situação", nil, @deputy.status],

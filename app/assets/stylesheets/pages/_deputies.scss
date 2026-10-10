@@ -115,3 +115,46 @@ $compare-worst: #dc3545;
   .compare-card-body { padding-top: 3rem; }
   .compare-mode-hint { display: inline; }
 }
+
+// Histórico de partidos: linha vertical com um ponto por filiação
+.party-timeline {
+  position: relative;
+  padding-left: 1.5rem;
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0.5rem;
+    bottom: 0.5rem;
+    left: 0.35rem;
+    border-left: 2px solid rgba($navy-blue, 0.1);
+  }
+}
+
+.party-timeline-item {
+  position: relative;
+  padding-bottom: 1rem;
+
+  &:last-child { padding-bottom: 0; }
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0.35rem;
+    left: -1.5rem;
+    width: 0.8rem;
+    height: 0.8rem;
+    border-radius: 50%;
+    background-color: #fff;
+    border: 2px solid $gold;
+  }
+
+  // Troca por decisão do deputado: ponto cheio
+  &.is-switch::before,
+  &.is-new-term::before { background-color: $gold; }
+
+  // Mudança de nome ou fusão: ponto menor e neutro
+  &.is-rename::before { border-color: rgba($navy-blue, 0.3); }
+
+  &.is-candidacy::before { border-style: dashed; }
+}
