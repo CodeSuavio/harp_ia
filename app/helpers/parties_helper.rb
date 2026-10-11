@@ -6,7 +6,8 @@ module PartiesHelper
     return "Sem partido" if affiliation.party_label == NO_PARTY_LABEL
     return affiliation.party_label unless affiliation.party
 
-    link_to affiliation.party_label, party_path(affiliation.party), class: "text-reset", title: affiliation.party.name
+    link_to affiliation.party_label, party_path(affiliation.party), class: "text-reset", title: affiliation.party.name,
+                                                                    data: { turbo_frame: "_top" }
   end
 
   # O que aconteceu na data da filiação (previous: a filiação anterior)
@@ -47,7 +48,7 @@ module PartiesHelper
 
   # Opacidade do estado no mapa da bancada: vazio quase apagado, o maior estado cheio
   def bench_map_weight(seats, max_seats)
-    seats.zero? ? 0.06 : 0.2 + 0.8 * seats / max_seats
+    seats.zero? ? 0.06 : 0.2 + (0.8 * seats / max_seats)
   end
 
   # "Sim", "Não" ou "Dividida" para a maioria da bancada numa votação
@@ -73,12 +74,12 @@ module PartiesHelper
     y_min = [((rows.map(&:cohesion).min.to_i - 2) / 5) * 5, 0].max
     max_seats = rows.map(&:seats).max.to_f
 
-    x = ->(pct) { chart[:left] + plot_w * pct / 100.0 }
-    y = ->(pct) { chart[:top] + plot_h * (100 - pct) / (100.0 - y_min) }
+    x = ->(pct) { chart[:left] + (plot_w * pct / 100.0) }
+    y = ->(pct) { chart[:top] + (plot_h * (100 - pct) / (100.0 - y_min)) }
 
     points = rows.sort_by { |row| -row.seats }.map do |row|
-      { row: row, cx: x.(row.governism_pct).round(1), cy: y.(row.cohesion).round(1),
-        r: (4 + 20 * Math.sqrt(row.seats / max_seats)).round(1) }
+      { row: row, cx: x.call(row.governism_pct).round(1), cy: y.call(row.cohesion).round(1),
+        r: (4 + (20 * Math.sqrt(row.seats / max_seats))).round(1) }
     end
     bounds = [chart[:left], chart[:top], chart[:width] - chart[:right], chart[:top] + plot_h]
     bubbles = points.map { |p| [p[:cx] - p[:r], p[:cy] - p[:r], p[:cx] + p[:r], p[:cy] + p[:r]] }
@@ -97,24 +98,28 @@ module PartiesHelper
 
     {
       chart: chart, plot_w: plot_w, plot_h: plot_h,
-      x_ticks: (0..100).step(25).map { |pct| [pct, x.(pct).round(1)] },
-      y_ticks: (y_min..100).step(5).map { |pct| [pct, y.(pct).round(1)] },
-      government_x: x.(PartyComparison::BLOCS[:government][:min]).round(1),
-      center_x: x.(PartyComparison::BLOCS[:center][:min]).round(1),
+      x_ticks: (0..100).step(25).map { |pct| [pct, x.call(pct).round(1)] },
+      y_ticks: (y_min..100).step(5).map { |pct| [pct, y.call(pct).round(1)] },
+      government_x: x.call(PartyComparison::BLOCS[:government][:min]).round(1),
+      center_x: x.call(PartyComparison::BLOCS[:center][:min]).round(1),
       points: points
     }
   end
 
   # Fundo da célula da matriz de afinidade: azul mais forte = mais votos iguais
   def affinity_cell_style(pct)
-    alpha = (0.05 + 0.85 * pct / 100.0).round(2)
+    alpha = (0.05 + (0.85 * pct / 100.0)).round(2)
     "background-color: rgba(28, 59, 135, #{alpha}); color: #{alpha > 0.5 ? '#fff' : 'inherit'}"
   end
 
   def party_sort_link(label, key, sort, direction)
     active = key == sort
     default = PartyComparison::SORTS[key][:default]
-    next_direction = active ? (direction == :desc ? :asc : :desc) : default
+    next_direction = if active
+                       direction == :desc ? :asc : :desc
+                     else
+                       default
+                     end
     arrow = { asc: "fa-arrow-up-short-wide", desc: "fa-arrow-down-wide-short" }[direction] if active
     link_to compare_parties_path(sort: key, dir: next_direction, anchor: "indicadores"),
             class: "text-reset text-decoration-none" do
@@ -136,7 +141,7 @@ module PartiesHelper
     width = point[:row].label.size * LABEL_CHAR_WIDTH
     cx, cy, r = point.values_at(:cx, :cy, :r)
     gap = r + 3
-    diagonal = r * 0.7 + 2
+    diagonal = (r * 0.7) + 2
     spots = []
     spots << [cx, cy + 4, "middle", true] if width <= 2 * r
     spots += [
@@ -146,8 +151,9 @@ module PartiesHelper
       [cx + diagonal, cy + diagonal + LABEL_HEIGHT - 2, "start"], [cx - diagonal, cy + diagonal + LABEL_HEIGHT - 2, "end"]
     ]
     spots.map do |lx, ly, anchor, inside|
-      left = { "start" => lx, "end" => lx - width, "middle" => lx - width / 2 }[anchor]
-      { x: lx.round(1), y: ly.round(1), anchor: anchor, inside: inside, box: [left, ly - LABEL_HEIGHT + 2, left + width, ly + 2] }
+      left = { "start" => lx, "end" => lx - width, "middle" => lx - (width / 2) }[anchor]
+      { x: lx.round(1), y: ly.round(1), anchor: anchor, inside: inside,
+        box: [left, ly - LABEL_HEIGHT + 2, left + width, ly + 2] }
     end
   end
 

@@ -45,7 +45,8 @@ class DeputyDetailsTool < ApplicationTool
         media_por_deputado_na_camara: DeputyMetrics.average_bills,
         temas_principais: profile.top_themes,
         recentes: deputy.bills.order(Arel.sql("submission_date DESC NULLS LAST")).limit(5).map do |bill|
-          { id: bill.id, numero: "#{bill.bill_type} #{bill.number}/#{bill.year}", ementa: bill.summary.to_s.truncate(200) }
+          { id: bill.id, numero: "#{bill.bill_type} #{bill.number}/#{bill.year}",
+            ementa: bill.summary.to_s.truncate(200) }
         end
       },
       promessas_x_atuacao: {
@@ -54,7 +55,9 @@ class DeputyDetailsTool < ApplicationTool
                     "(dele e do partido). Com menos de #{DeputyThemeProfile::MIN_EVIDENCE} votos avaliados, " \
                     "o indicador é pouco conclusivo."
       },
-      candidatura_2026: deputy.candidates.first&.then { |c| { id: c.id, nome_de_urna: c.ballot_name, situacao: c.candidacy_status } }
+      candidatura_2026: deputy.candidates.first&.then do |c|
+        { id: c.id, nome_de_urna: c.ballot_name, situacao: c.candidacy_status }
+      end
     }
   end
 

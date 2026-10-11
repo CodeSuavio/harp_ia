@@ -58,8 +58,10 @@ module ContextoHelper
 
   def selo_do_governo(poll, orientacao)
     case resultado_do_governo(poll, orientacao)
-    when :venceu then tag.span("Governo venceu", class: "badge text-bg-light border", title: "#{governo_em(poll.date)} orientou #{orientacao}")
-    when :perdeu then tag.span("Governo perdeu", class: "badge text-bg-warning", title: "#{governo_em(poll.date)} orientou #{orientacao}")
+    when :venceu then tag.span("Governo venceu", class: "badge text-bg-light border",
+                                                 title: "#{governo_em(poll.date)} orientou #{orientacao}")
+    when :perdeu then tag.span("Governo perdeu", class: "badge text-bg-warning",
+                                                 title: "#{governo_em(poll.date)} orientou #{orientacao}")
     end
   end
 end

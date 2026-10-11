@@ -26,7 +26,8 @@ class CandidateDetailsTool < ApplicationTool
         concorre_a_reeleicao: candidate.reelection?,
         pagina: routes.candidate_path(candidate)
       },
-      deputado_em_exercicio: deputy && { id: deputy.id, nome: deputy.name, observacao: "Use deputy_details para ver a atuação." }
+      deputado_em_exercicio: deputy && { id: deputy.id, nome: deputy.name,
+                                         observacao: "Use deputy_details para ver a atuação." }
     }
   end
 end

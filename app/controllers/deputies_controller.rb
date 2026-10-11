@@ -1,15 +1,15 @@
 class DeputiesController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:index, :show, :compare]
+  skip_before_action :authenticate_user!, only: %i[index show compare]
 
   PER_PAGE = 24
   TAB_PER_PAGE = 20
   COMPARE_LIMIT = 3
   TABS = {
-    "overview"  => "Visão geral",
-    "expenses"  => "Gastos",
-    "bills"     => "Projetos de lei",
-    "votes"     => "Votações",
-    "promises"  => "Promessas × Atuação",
+    "overview" => "Visão geral",
+    "expenses" => "Gastos",
+    "bills" => "Projetos de lei",
+    "votes" => "Votações",
+    "promises" => "Promessas × Atuação",
     "elections" => "Eleições 2026"
   }.freeze
   # Chaves antigas (em português) de links já compartilhados
@@ -25,13 +25,13 @@ class DeputiesController < ApplicationController
   SQL
   # Ordenações por SQL ou por indicador calculado (DeputyMetrics), ordenadas em Ruby
   SORTS = {
-    "name"          => { label: "Ordenar por nome",            order: "deputies.name ASC" },
-    "state"         => { label: "Ordenar por estado",          order: "deputies.state_label ASC, deputies.name ASC" },
-    "party"         => { label: "Ordenar por partido",         order: "parties.label ASC, deputies.name ASC" },
-    "expenses"      => { label: "Maior gasto mensal",          metric: :monthly_expense_values },
-    "bills"         => { label: "Mais projetos de lei",        order: "#{BILLS_COUNT_SQL} DESC, deputies.name ASC" },
-    "participation" => { label: "Maior participação",          metric: :participation_values },
-    "alignment"     => { label: "Mais alinhado ao partido",    metric: :alignment_values },
+    "name" => { label: "Ordenar por nome", order: "deputies.name ASC" },
+    "state" => { label: "Ordenar por estado",          order: "deputies.state_label ASC, deputies.name ASC" },
+    "party" => { label: "Ordenar por partido",         order: "parties.label ASC, deputies.name ASC" },
+    "expenses" => { label: "Maior gasto mensal", metric: :monthly_expense_values },
+    "bills" => { label: "Mais projetos de lei", order: "#{BILLS_COUNT_SQL} DESC, deputies.name ASC" },
+    "participation" => { label: "Maior participação", metric: :participation_values },
+    "alignment" => { label: "Mais alinhado ao partido", metric: :alignment_values },
     "against_party" => { label: "Mais votos contra o partido", metric: :against_party_values }
   }.freeze
 
@@ -46,8 +46,8 @@ class DeputiesController < ApplicationController
     base = apply_search(policy_scope(Deputy))
 
     filters = {
-      state_label:      params[:state].presence,
-      party_id:         params[:party].presence,
+      state_label: params[:state].presence,
+      party_id: params[:party].presence,
       electoral_status: params[:electoral_status].presence
     }.compact
 
@@ -98,7 +98,9 @@ class DeputiesController < ApplicationController
     authorize Deputy
 
     ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT)
-    @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by { |d| d.id.to_s }.values_at(*ids).compact
+    @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by do |d|
+      d.id.to_s
+    end.values_at(*ids).compact
     @comparison = DeputyComparison.new(@deputies)
   end
 
@@ -235,9 +237,9 @@ class DeputiesController < ApplicationController
                      .sort_by { |id, name| [values[id] ? 0 : 1, -values[id].to_f, name] }
                      .map(&:first)
       page_ids = ordered.slice(offset, PER_PAGE) || []
-      Deputy.includes(:party).where(id: page_ids).index_by(&:id).values_at(*page_ids)
+      Deputy.includes(:party).with_attached_photo.where(id: page_ids).index_by(&:id).values_at(*page_ids)
     else
-      scope.includes(:party).references(:party)
+      scope.includes(:party).with_attached_photo.references(:party)
            .order(Arel.sql(sort[:order]))
            .offset(offset).limit(PER_PAGE).to_a
     end

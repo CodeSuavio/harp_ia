@@ -1,7 +1,7 @@
 class Proposal < ApplicationRecord
   SOURCE_KINDS = {
-    "campanha"         => "Proposta de campanha",
-    "plano_executivo"  => "Plano de governo do partido",
+    "campanha" => "Proposta de campanha",
+    "plano_executivo" => "Plano de governo do partido",
     "programa_partido" => "Programa do partido"
   }.freeze
 
@@ -17,7 +17,7 @@ class Proposal < ApplicationRecord
   validate :belongs_to_deputy_or_party
 
   # Propostas do próprio deputado e as do partido dele (as estaduais só valem para a bancada do estado)
-  scope :for_deputy, ->(deputy) {
+  scope :for_deputy, lambda { |deputy|
     where(deputy_id: deputy.id).or(
       where(deputy_id: nil, party_id: deputy.party_id, state_label: [nil, deputy.state_label])
     )

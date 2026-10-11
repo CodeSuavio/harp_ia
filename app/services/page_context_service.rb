@@ -31,7 +31,8 @@ class PageContextService
     when %w[deputies show]
       deputy = Deputy.includes(:party).find_by(id: id)
       deputy && "Perfil do deputado #{deputy.name} (#{deputy.party&.label}-#{deputy.state_label}, deputy_id #{deputy.id}), " \
-                "aba \"#{tab_label(DeputiesController::TABS, DeputiesController::LEGACY_TABS.fetch(query['tab'], query['tab']))}\"" \
+                "aba \"#{tab_label(DeputiesController::TABS,
+                                   DeputiesController::LEGACY_TABS.fetch(query['tab'], query['tab']))}\"" \
                 "#{year_text(query)}"
     when %w[deputies compare]
       names = Deputy.where(id: Array(query["ids"])).map { |d| "#{d.name} (deputy_id #{d.id})" }

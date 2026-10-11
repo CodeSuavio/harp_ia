@@ -30,15 +30,15 @@ class PartySelectionComparison
         { value: p.governism_pct, detail: bloc_label(p.bloc) }
       end,
       row("Coesão", :percent, nil, value: :cohesion,
-          info: "Quão unida a bancada vota: 100% quando todos votam igual."),
+                                   info: "Quão unida a bancada vota: 100% quando todos votam igual."),
       row("Segue a liderança", :percent, nil, value: :adherence,
-          info: "Votações em que a maioria da bancada seguiu a orientação do próprio líder."),
+                                              info: "Votações em que a maioria da bancada seguiu a orientação do próprio líder."),
       row("Participação em votações", :percent, :higher, value: :participation,
-          info: "Média da participação dos deputados do partido nas votações nominais."),
+                                                         info: "Média da participação dos deputados do partido nas votações nominais."),
       row("Gasto médio mensal", :currency, :lower, value: :monthly,
-          info: "Média do gasto mensal da cota parlamentar (CEAP) dos deputados em #{@comparison.year}."),
+                                                   info: "Média do gasto mensal da cota parlamentar (CEAP) dos deputados em #{@comparison.year}."),
       row("Projetos por deputado", :decimal, :higher, value: :bills_per_deputy,
-          info: "Projetos de lei do partido divididos pelos deputados da bancada atual."),
+                                                      info: "Projetos de lei do partido divididos pelos deputados da bancada atual."),
       row("Tema principal", :text, nil, info: "Tema com mais projetos de lei do partido.") do |p|
         { value: p.top_theme&.name }
       end,
@@ -47,7 +47,7 @@ class PartySelectionComparison
         { value: p.candidates, detail: ("#{p.reelection} à reeleição" if p.reelection.positive?) }
       end,
       row("Mulheres candidatas", :percent, :higher, value: :women_pct,
-          info: "Mulheres entre os candidatos do partido a deputado federal em 2026.")
+                                                    info: "Mulheres entre os candidatos do partido a deputado federal em 2026.")
     ]
   end
 
@@ -59,7 +59,7 @@ class PartySelectionComparison
     value = row.values.dig(party.party.id, :value)
     return if value.nil? || numbers.size < 2 || numbers.uniq.size < 2
 
-    best, worst = row.better == :higher ? [numbers.max, numbers.min] : [numbers.min, numbers.max]
+    best, worst = row.better == :higher ? [numbers.max, numbers.min] : numbers.minmax
     return :best if value == best
 
     :worst if value == worst

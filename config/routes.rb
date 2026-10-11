@@ -22,30 +22,13 @@ Rails.application.routes.draw do
   resources :bills, only: [:index, :show]
   resources :candidates, only: [:index, :show]
 
-  resources :polls, only: [:index, :show] do
-    # Rota aninhada para ver os votos de um projeto específico (/polls/:poll_id/votes)
-    resources :votes, only: [:index]
-  end
+  resources :polls, only: [:index, :show]
 
   # ==========================================
   # ÁREA LOGADA (Utilizadores Autenticados)
   # ==========================================
   resources :chats, only: [:index, :show, :create, :destroy] do
     resources :messages, only: [:create]
-  end
-
-  # ==========================================
-  # ÁREA ADMINISTRATIVA (CRUD Completo)
-  # ==========================================
-  # URLs geradas: /admin/deputies/new, /admin/parties/1/edit, etc.
-  namespace :admin do
-    resources :deputies
-    resources :expenses
-    resources :parties
-    resources :bills
-    resources :polls
-    resources :votes
-    resources :candidates
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

@@ -42,9 +42,7 @@ class MessageProcessorService
 
     # Gera um título somente quando a conversa ainda não possui título
     # e a pergunta está dentro do escopo da Harpia.
-    if @chat.title.blank? && !result[:out_of_scope]
-      @chat.update!(title: chatbot.generate_title)
-    end
+    @chat.update!(title: chatbot.generate_title) if @chat.title.blank? && !result[:out_of_scope]
 
     # Retorna a mensagem criada pelo usuário
     user_message

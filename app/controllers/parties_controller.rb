@@ -1,13 +1,13 @@
 class PartiesController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:index, :show, :compare]
+  skip_before_action :authenticate_user!, only: %i[index show compare]
 
   COMPARE_LIMIT = 4
 
   TABS = {
-    "overview"   => "Visão geral",
-    "votes"      => "Votações",
-    "expenses"   => "Gastos",
-    "bills"      => "Projetos de lei",
+    "overview" => "Visão geral",
+    "votes" => "Votações",
+    "expenses" => "Gastos",
+    "bills" => "Projetos de lei",
     "candidates" => "Candidatos 2026"
   }.freeze
 
@@ -76,7 +76,9 @@ class PartiesController < ApplicationController
     end
 
     {
-      parties: parties.to_h { |p| [p.id, { label: p.label, name: p.name, url: party_path(p), logo: helpers.party_logo_path(p) }] },
+      parties: parties.to_h do |p|
+        [p.id, { label: p.label, name: p.name, url: party_path(p), logo: helpers.party_logo_path(p) }]
+      end,
       national: national,
       states: STATES.to_h { |uf, name| [uf, { name: name, seats: by_state[uf] }] }
     }

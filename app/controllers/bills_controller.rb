@@ -1,5 +1,5 @@
 class BillsController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:index, :show]
+  skip_before_action :authenticate_user!, only: %i[index show]
 
   PER_PAGE = 20
   NUMBER_QUERY = %r{\A\s*(PL|PLP|PEC|PDL|PRC|MPV)\s*(?:n[ºo°.]?\s*)?([\d.]+)(?:\s*/\s*(\d{4}))?\s*\z}i
@@ -8,10 +8,10 @@ class BillsController < ApplicationController
     base = search(policy_scope(Bill))
 
     filters = {
-      year:  params[:year].presence,
+      year: params[:year].presence,
       theme: params[:theme].presence,
       party: params[:party].presence,
-      type:  params[:type].presence,
+      type: params[:type].presence,
       author: params[:author].presence
     }.compact
 

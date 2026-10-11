@@ -1,16 +1,19 @@
 class PollsController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:index, :show]
+  skip_before_action :authenticate_user!, only: %i[index show]
 
   PER_PAGE = 20
 
   def index
     base = policy_scope(Poll)
-    base = base.where("polls.description ILIKE ?", "%#{Poll.sanitize_sql_like(params[:q].strip)}%") if params[:q].present?
+    if params[:q].present?
+      base = base.where("polls.description ILIKE ?",
+                        "%#{Poll.sanitize_sql_like(params[:q].strip)}%")
+    end
     base = base.where(id: Vote.select(:poll_id)) unless params[:all] == "1"
 
     filters = {
-      year:     params[:year].presence,
-      theme:    params[:theme].presence,
+      year: params[:year].presence,
+      theme: params[:theme].presence,
       approval: params[:approval].presence,
       government: params[:governo].presence
     }.compact

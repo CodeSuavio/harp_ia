@@ -28,7 +28,9 @@ class PartyStats
 
   # [[UF, deputados]] do maior para o menor
   def state_bench
-    @state_bench ||= deputies.group_by(&:state_label).transform_values(&:size).sort_by { |state, count| [-count, state] }
+    @state_bench ||= deputies.group_by(&:state_label).transform_values(&:size).sort_by do |state, count|
+      [-count, state]
+    end
   end
 
   # Variação desde a posse da legislatura (trocas de partido, licenças e suplências)
@@ -128,9 +130,12 @@ class PartyStats
     end
     return if rows.empty?
 
-    against = rows.reject(&:last).sort_by { |poll_id, _, _| -poll_id }.first(limit).map { |poll_id, row, _| [poll_id, row] }
+    against = rows.reject(&:last).sort_by do |poll_id, _, _|
+      -poll_id
+    end.first(limit).map { |poll_id, row, _| [poll_id, row] }
     followed = rows.count(&:last)
-    { followed: followed, total: rows.size, pct: DeputyMetrics.percentage(followed, rows.size), against: with_polls(against) }
+    { followed: followed, total: rows.size, pct: DeputyMetrics.percentage(followed, rows.size),
+      against: with_polls(against) }
   end
 
   # { label: "PT-PCdoB-PV", parties: [Party] } da federação que orientou recentemente na Câmara

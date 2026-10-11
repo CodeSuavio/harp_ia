@@ -1,10 +1,10 @@
 class Candidate < ApplicationRecord
   belongs_to :party
   belongs_to :current_deputy,
-              class_name: 'Deputy',
-              optional: true,
-              foreign_key: :current_deputy_id,
-              primary_key: :json_id
+             class_name: 'Deputy',
+             optional: true,
+             foreign_key: :current_deputy_id,
+             primary_key: :json_id
 
   has_one_attached :photo
 

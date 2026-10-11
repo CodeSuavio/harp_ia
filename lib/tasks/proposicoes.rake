@@ -30,7 +30,8 @@ namespace :proposicoes do
 
         pl = rows.first
         ano = pl["data_apresentacao"].to_s[0, 4].to_i
-        Bill.where(id: bill_id).update_all(bill_type: pl["sigla_tipo"], number: pl["numero"].to_i, year: ano > 1900 ? ano : pl["ano"].to_i)
+        Bill.where(id: bill_id).update_all(bill_type: pl["sigla_tipo"], number: pl["numero"].to_i,
+                                           year: ano > 1900 ? ano : pl["ano"].to_i)
         numerados += 1
 
         rows.map { |row| deputados[row["deputado_id"].to_i] }.compact.uniq.each do |deputy_id|
@@ -65,7 +66,9 @@ namespace :proposicoes do
           url: "https://www.camara.leg.br/proposicoesWeb/fichadetramitacao?idProposicao=#{camara_id}"
         )
         por_json_id = Deputy.where(json_id: json_ids).index_by(&:json_id)
-        json_ids.uniq.filter_map { |json_id| por_json_id[json_id] }.each { |deputy| BillAuthor.create!(bill: bill, deputy: deputy) }
+        json_ids.uniq.filter_map do |json_id|
+          por_json_id[json_id]
+        end.each { |deputy| BillAuthor.create!(bill: bill, deputy: deputy) }
         bill
       end
     end
