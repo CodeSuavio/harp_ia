@@ -33,7 +33,9 @@ class DeputyThemeProfile
       votes = @deputy.votes.where(vote: Vote::DECISIVE).pluck(:poll_id, :vote).to_h
       ProposalPoll.where(proposal_id: proposals.map(&:id), poll_id: votes.keys)
                   .pluck(:proposal_id, :poll_id, :favorable_vote)
-                  .each_with_object(Hash.new { |h, k| h[k] = { coherent: 0, contrary: 0 } }) do |(proposal_id, poll_id, favorable), result|
+                  .each_with_object(Hash.new do |h, k|
+                                      h[k] = { coherent: 0, contrary: 0 }
+                                    end) do |(proposal_id, poll_id, favorable), result|
                     result[proposal_id][votes[poll_id] == favorable ? :coherent : :contrary] += 1
                   end
     end
@@ -43,7 +45,8 @@ class DeputyThemeProfile
     coherent = coherence_by_proposal.values.sum { |row| row[:coherent] }
     contrary = coherence_by_proposal.values.sum { |row| row[:contrary] }
     total = coherent + contrary
-    { coherent: coherent, total: total, pct: DeputyMetrics.percentage(coherent, total), conclusive: total >= MIN_EVIDENCE }
+    { coherent: coherent, total: total, pct: DeputyMetrics.percentage(coherent, total),
+      conclusive: total >= MIN_EVIDENCE }
   end
 
   # Temas com alguma proposta, projeto ou voto, começando pelos que têm propostas

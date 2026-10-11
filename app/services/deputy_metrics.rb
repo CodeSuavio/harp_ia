@@ -48,7 +48,9 @@ class DeputyMetrics
     own = data.dig(deputy.id, :monthly)
     return unless own
 
-    state_ids = cached("state-ids/#{deputy.state_label}", Deputy) { Deputy.where(state_label: deputy.state_label).pluck(:id) }
+    state_ids = cached("state-ids/#{deputy.state_label}", Deputy) do
+      Deputy.where(state_label: deputy.state_label).pluck(:id)
+    end
     state_values = data.values_at(*state_ids).compact.map { |row| row[:monthly] }
 
     {
@@ -73,7 +75,8 @@ class DeputyMetrics
     quota = monthly_quota * exercise_months
     total = expenses(year).dig(deputy.id, :total).to_f
 
-    { total: total, quota: quota, monthly_quota: monthly_quota, months: exercise_months, pct: (total / quota * 100).round }
+    { total: total, quota: quota, monthly_quota: monthly_quota, months: exercise_months,
+      pct: (total / quota * 100).round }
   end
 
   # ----- VOTAÇÕES -----
@@ -248,9 +251,9 @@ class DeputyMetrics
   end
 
   # A chave muda quando a tabela de origem muda (inclusão, remoção ou edição)
-  def self.cached(name, *models, &block)
+  def self.cached(name, *models, &)
     versions = Versions.by_model ||= {}
     version = models.flat_map { |model| versions[model] ||= [model.count, model.maximum(:updated_at)&.to_f] }.join("-")
-    Rails.cache.fetch(["deputy-metrics", name, version], &block)
+    Rails.cache.fetch(["deputy-metrics", name, version], &)
   end
 end

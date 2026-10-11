@@ -1,6 +1,6 @@
 class ChatsController < ApplicationController
   before_action :authenticate_user!
-  before_action :set_chat, only: [:show, :destroy]
+  before_action :set_chat, only: %i[show destroy]
 
   def index
     @chats = policy_scope(Chat)
@@ -69,7 +69,6 @@ class ChatsController < ApplicationController
       redirect_to chats_path,
                   alert: "Nao foi possivel criar a conversa."
     end
-
   rescue MessageProcessorService::AIError
     # Se a IA falhar, mantém o erro técnico no backend
     # e apresenta uma mensagem amigável para o usuário.

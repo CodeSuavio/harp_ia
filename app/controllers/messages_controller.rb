@@ -32,7 +32,6 @@ class MessagesController < ApplicationController
     # HTML → chat tradicional
     # Turbo Stream → widget, sem trocar de página
     respond_to do |format|
-
       # Fluxo tradicional:
       # retorna para a página completa da conversa.
       format.html { redirect_to @chat }
@@ -45,37 +44,35 @@ class MessagesController < ApplicationController
 
         render turbo_stream: [
           turbo_stream.update(
-          "chat_widget_messages",
-          partial: "chats/widget_messages"
-        ),
+            "chat_widget_messages",
+            partial: "chats/widget_messages"
+          ),
 
           turbo_stream.update(
             "chats_list",
             partial: "chats/chats_list",
-            locals: { chats: @chats}
+            locals: { chats: @chats }
           )
         ]
       end
     end
-
   rescue MessageProcessorService::AIError
     respond_to do |format|
       format.html do
         redirect_to @chat,
-                  alert: "Não foi possível gerar a resposta. Tente novamente."
-    end
+                    alert: "Não foi possível gerar a resposta. Tente novamente."
+      end
 
-    format.turbo_stream do
-      render turbo_stream: turbo_stream.update(
-        "chat_widget_messages",
-        partial: "chats/widget_messages",
-        locals: {
-          error_message: "Não foi possível gerar a resposta. Tente novamente."
-        }
-      )
+      format.turbo_stream do
+        render turbo_stream: turbo_stream.update(
+          "chat_widget_messages",
+          partial: "chats/widget_messages",
+          locals: {
+            error_message: "Não foi possível gerar a resposta. Tente novamente."
+          }
+        )
+      end
     end
-  end
-
   rescue ActiveRecord::RecordInvalid
     redirect_to @chat,
                 alert: "Nao foi possivel enviar a mensagem."

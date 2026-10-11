@@ -1,10 +1,10 @@
 class CandidatesController < ApplicationController
-  skip_before_action :authenticate_user!, only: [:index, :show]
+  skip_before_action :authenticate_user!, only: %i[index show]
 
   PER_PAGE = 24
   SORTS = {
-    "name"   => { ballot_name: :asc, id: :asc },
-    "state"  => { state_label: :asc, ballot_name: :asc, id: :asc },
+    "name" => { ballot_name: :asc, id: :asc },
+    "state" => { state_label: :asc, ballot_name: :asc, id: :asc },
     "number" => { number: :asc, id: :asc }
   }.freeze
 
@@ -13,8 +13,8 @@ class CandidatesController < ApplicationController
 
     filters = {
       state_label: params[:state].presence,
-      party_id:    params[:party].presence,
-      gender:      params[:gender].presence
+      party_id: params[:party].presence,
+      gender: params[:gender].presence
     }.compact
 
     scope = apply(base, filters)

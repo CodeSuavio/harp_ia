@@ -26,7 +26,8 @@ class SearchPlatformTool < ApplicationTool
 
   def search_deputado(_term, like)
     Deputy.includes(:party).where("deputies.name ILIKE ?", like).order(:name).limit(LIST_LIMIT).map do |deputy|
-      { id: deputy.id, nome: deputy.name, partido: party_label(deputy), uf: deputy.state_label, situacao: deputy.status }
+      { id: deputy.id, nome: deputy.name, partido: party_label(deputy), uf: deputy.state_label,
+        situacao: deputy.status }
     end
   end
 
@@ -40,7 +41,7 @@ class SearchPlatformTool < ApplicationTool
   def search_projeto(term, like)
     scope = Bill.all
     # "PL 2630/2020", "PL 2630" ou só o número
-    if (match = term.match(/\A(?:(?<type>[a-z]+)\s*)?(?<number>\d+)(?:\s*\/\s*(?<year>\d{4}))?\z/i))
+    if (match = term.match(%r{\A(?:(?<type>[a-z]+)\s*)?(?<number>\d+)(?:\s*/\s*(?<year>\d{4}))?\z}i))
       scope = scope.where(number: match[:number].to_i)
       scope = scope.where("bill_type ILIKE ?", match[:type]) if match[:type]
       scope = scope.where(year: match[:year].to_i) if match[:year]

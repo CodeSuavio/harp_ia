@@ -37,7 +37,8 @@ class DeputyComparison
       row("Coerência com as propostas", :percent, :higher,
           info: "Votos no sentido das propostas cadastradas para o deputado e o partido.") do |d|
         coherence = profiles[d.id].coherence
-        { value: coherence[:pct], detail: ("#{coherence[:coherent]}/#{coherence[:total]} votos" if coherence[:total].positive?) }
+        { value: coherence[:pct],
+          detail: ("#{coherence[:coherent]}/#{coherence[:total]} votos" if coherence[:total].positive?) }
       end,
       row("Temas prioritários", :text, nil, info: "Temas com mais projetos de lei apresentados.") do |d|
         { value: profiles[d.id].top_themes.map(&:first).join(", ").presence }
@@ -55,7 +56,7 @@ class DeputyComparison
     value = row.values.dig(deputy.id, :value)
     return if value.nil? || numbers.size < 2 || numbers.uniq.size < 2
 
-    best, worst = row.better == :higher ? [numbers.max, numbers.min] : [numbers.min, numbers.max]
+    best, worst = row.better == :higher ? [numbers.max, numbers.min] : numbers.minmax
     return :best if value == best
 
     :worst if value == worst

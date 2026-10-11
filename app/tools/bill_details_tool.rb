@@ -22,7 +22,8 @@ class BillDetailsTool < ApplicationTool
         pagina: routes.bill_path(bill)
       },
       votacoes: bill.votings.order(date: :desc).limit(LIST_LIMIT).map do |poll|
-        { id: poll.id, data: poll.date&.to_date, descricao: poll.description.to_s.truncate(200), aprovada: poll.approval }
+        { id: poll.id, data: poll.date&.to_date, descricao: poll.description.to_s.truncate(200),
+          aprovada: poll.approval }
       end
     }
   end

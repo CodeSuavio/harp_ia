@@ -11,7 +11,9 @@ class Bill < ApplicationRecord
   has_many :votings, through: :poll_bills, source: :poll
 
   # Projetos em que o deputado é autor principal (deputy_id) ou coautor (bill_authors)
-  scope :authored_by, ->(deputies) { where(deputy_id: deputies).or(where(id: BillAuthor.where(deputy_id: deputies).select(:bill_id))) }
+  scope :authored_by, lambda { |deputies|
+    where(deputy_id: deputies).or(where(id: BillAuthor.where(deputy_id: deputies).select(:bill_id)))
+  }
 
   validates :bill_number, :year, presence: true
   validates :year, numericality: { only_integer: true, greater_than: 1900 }

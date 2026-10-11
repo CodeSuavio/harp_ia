@@ -123,8 +123,8 @@ class ChatbotService
     # Busque as mensagens desse chat, exclua a mensagem
     # atual e coloque as mensagens em ordem de criação
     previous_messages = @message.chat.messages
-      .where.not(id: @message.id)
-      .order(:created_at)
+                                .where.not(id: @message.id)
+                                .order(:created_at)
 
     # Adiciona cada mensagem anterior ao contexto da LLM,
     # preservando quem enviou a mensagem, seu conteúdo e
@@ -146,7 +146,6 @@ class ChatbotService
     }
   end
 
-
   # ----- PÁGINA ATUAL -----
   # Informado a cada pergunta, porque o usuário pode trocar de página
   # no meio da conversa
@@ -160,7 +159,6 @@ class ChatbotService
 
     "[Pergunta feita na página: #{message.page_context}]\n#{message.content}"
   end
-
 
   # ----- TÍTULO DO CHAT -----
   # Gera um título curto para identificar a conversa no histórico de chats

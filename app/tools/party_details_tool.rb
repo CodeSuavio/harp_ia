@@ -25,7 +25,9 @@ class PartyDetailsTool < ApplicationTool
                  variacao: stats.bench_change, por_estado: stats.state_bench },
       gastos: expenses && expenses.except(:top).merge(
         total: money(expenses[:total]), monthly: money(expenses[:monthly]), chamber_monthly: money(expenses[:chamber_monthly]),
-        maiores_gastos_mensais: expenses[:top].map { |deputy, value| { deputado: deputy.name, media_mensal: money(value) } }
+        maiores_gastos_mensais: expenses[:top].map do |deputy, value|
+          { deputado: deputy.name, media_mensal: money(value) }
+        end
       ),
       votacoes: {
         coesao_pct: stats.cohesion&.dig(:pct),
@@ -35,7 +37,9 @@ class PartyDetailsTool < ApplicationTool
         ),
         votacoes_mais_divididas: stats.divided_polls.map { |poll, row| poll_row(poll, row) },
         afinidade: affinity&.transform_values { |rows| rows.map { |p, row| row.merge(partido: p.label) } },
-        quem_mais_vota_contra_o_partido: stats.dissidents.map { |deputy, row| row.merge(deputado: deputy.name, id: deputy.id) }
+        quem_mais_vota_contra_o_partido: stats.dissidents.map do |deputy, row|
+          row.merge(deputado: deputy.name, id: deputy.id)
+        end
       },
       projetos_de_lei: {
         total: stats.bills.count,

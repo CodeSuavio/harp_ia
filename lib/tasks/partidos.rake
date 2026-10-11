@@ -80,7 +80,8 @@ namespace :partidos do
 
       now = Time.current
       rows = PartyHistory.new(dados, predecessors: predecessors).entries.map do |entry|
-        entry.to_h.merge(deputy_id: deputy.id, party_id: parties[entry.party_label]&.id, created_at: now, updated_at: now)
+        entry.to_h.merge(deputy_id: deputy.id, party_id: parties[entry.party_label]&.id, created_at: now,
+                         updated_at: now)
       end
       PartyAffiliation.transaction do
         deputy.party_affiliations.delete_all

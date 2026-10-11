@@ -19,22 +19,23 @@ class PartyComparison
   # Faixas de governismo (% de votações em que a maioria da bancada seguiu o Governo)
   BLOCS = {
     government: { label: "Governista", min: 90, description: "segue o Governo em 90% ou mais das votações" },
-    center:     { label: "Centro",     min: 50, description: "segue o Governo na maior parte das votações, mas não sempre" },
-    opposition: { label: "Oposição",   min: 0,  description: "vota contra o Governo na maior parte das votações" }
+    center: { label: "Centro", min: 50,
+              description: "segue o Governo na maior parte das votações, mas não sempre" },
+    opposition: { label: "Oposição", min: 0, description: "vota contra o Governo na maior parte das votações" }
   }.freeze
   NO_DATA = :no_data
 
   SORTS = {
-    "seats"         => { label: "Cadeiras",           value: :seats,          default: :desc },
-    "label"         => { label: "Partido",            value: :label,          default: :asc },
-    "states"        => { label: "Estados",            value: :states,         default: :desc },
-    "governism"     => { label: "Governismo",         value: :governism_pct,  default: :desc },
-    "cohesion"      => { label: "Coesão",             value: :cohesion,       default: :desc },
-    "adherence"     => { label: "Segue a liderança",  value: :adherence,      default: :desc },
-    "participation" => { label: "Participação",       value: :participation,  default: :desc },
-    "expenses"      => { label: "Gasto mensal",       value: :monthly,        default: :desc },
-    "bills"         => { label: "Projetos/deputado",  value: :bills_per_deputy, default: :desc },
-    "women"         => { label: "Mulheres em 2026",   value: :women_pct,      default: :desc }
+    "seats" => { label: "Cadeiras",           value: :seats,          default: :desc },
+    "label" => { label: "Partido",            value: :label,          default: :asc },
+    "states" => { label: "Estados", value: :states, default: :desc },
+    "governism" => { label: "Governismo", value: :governism_pct, default: :desc },
+    "cohesion" => { label: "Coesão", value: :cohesion, default: :desc },
+    "adherence" => { label: "Segue a liderança", value: :adherence, default: :desc },
+    "participation" => { label: "Participação", value: :participation, default: :desc },
+    "expenses" => { label: "Gasto mensal", value: :monthly, default: :desc },
+    "bills" => { label: "Projetos/deputado",  value: :bills_per_deputy, default: :desc },
+    "women" => { label: "Mulheres em 2026",   value: :women_pct, default: :desc }
   }.freeze
 
   Row = Struct.new(:party, :seats, :seats_at_start, :states, :top_state, :cohesion, :governism,
@@ -188,12 +189,16 @@ class PartyComparison
   def seats = @seats ||= Deputy.group(:party_id).count
 
   def deputy_ids_by_party
-    @deputy_ids_by_party ||= Deputy.pluck(:party_id, :id).group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
+    @deputy_ids_by_party ||= Deputy.pluck(:party_id, :id).group_by(&:first).transform_values do |pairs|
+      pairs.map(&:last)
+    end
   end
 
   def state_seats
     @state_seats ||= Deputy.group(:party_id, :state_label).count
-                           .each_with_object(Hash.new { |hash, key| hash[key] = {} }) do |((party_id, state), count), result|
+                           .each_with_object(Hash.new do |hash, key|
+                                               hash[key] = {}
+                                             end) do |((party_id, state), count), result|
                              result[party_id][state] = count
                            end
   end
@@ -242,30 +247,33 @@ class PartyComparison
     ranked = rows.select(&:governism).sort_by { |row| [-row.governism_pct, -row.seats] }
     return if ranked.size < 2
 
-    top, bottom = ranked.first, ranked.last
+    top = ranked.first
+    bottom = ranked.last
     ["fa-arrows-left-right", "Do mais governista ao mais oposicionista",
      "#{top.label} acompanhou o Governo em #{top.governism_pct}% das votações; #{bottom.label}, em apenas " \
-       "#{bottom.governism_pct}%. É a maior distância de comportamento entre bancadas na Câmara."]
+     "#{bottom.governism_pct}%. É a maior distância de comportamento entre bancadas na Câmara."]
   end
 
   def center_insight
     center = blocs[:center][:parties].sort_by { |row| [-row.governism_pct, -row.seats] }
     return if center.size < 2
 
-    closest, farthest = center.first, center.last
+    closest = center.first
+    farthest = center.last
     ["fa-arrows-to-dot", "O centro não é um bloco só",
      "Entre os #{center.size} partidos de centro, #{closest.label} é o mais próximo do Governo (#{closest.governism_pct}%) " \
-       "e #{farthest.label} o mais distante (#{farthest.governism_pct}%). São esses partidos que o Governo e a oposição disputam voto a voto."]
+     "e #{farthest.label} o mais distante (#{farthest.governism_pct}%). São esses partidos que o Governo e a oposição disputam voto a voto."]
   end
 
   def cohesion_insight
     ranked = rows.select(&:cohesion).sort_by { |row| [-row.cohesion, -row.seats] }
     return if ranked.size < 2
 
-    top, bottom = ranked.first, ranked.last
+    top = ranked.first
+    bottom = ranked.last
     ["fa-people-group", "Bancadas unidas e divididas",
      "#{top.label} é a bancada que mais vota unida (#{top.cohesion}% de coesão). #{bottom.label} é a mais dividida " \
-       "(#{bottom.cohesion}%): seus deputados se separam com frequência na mesma votação."]
+     "(#{bottom.cohesion}%): seus deputados se separam com frequência na mesma votação."]
   end
 
   # O par de partidos de blocos diferentes que mais vota igual
@@ -282,7 +290,7 @@ class PartyComparison
 
     ["fa-handshake", "Afinidade além do bloco",
      "#{a.label} (#{BLOCS[a.bloc][:label].downcase}) e #{b.label} (#{BLOCS[b.bloc][:label].downcase}) votaram do mesmo lado " \
-       "em #{cell[:pct]}% das #{cell[:common]} votações em comum, a maior afinidade entre partidos de blocos diferentes."]
+     "em #{cell[:pct]}% das #{cell[:common]} votações em comum, a maior afinidade entre partidos de blocos diferentes."]
   end
 
   def adherence_insight
@@ -293,11 +301,11 @@ class PartyComparison
     if row.adherence < LOW_ADHERENCE
       ["fa-bullhorn", "Quem menos segue a própria liderança",
        "No partido #{row.label}, a maioria da bancada seguiu a orientação do líder em #{row.adherence}% das votações, " \
-         "o menor índice entre os partidos."]
+       "o menor índice entre os partidos."]
     else
       ["fa-bullhorn", "Lideranças são obedecidas",
        "Nos #{ranked.size} partidos com orientação de liderança registrada, a maioria da bancada seguiu o líder em " \
-         "#{row.adherence}% ou mais das votações. As divergências aparecem no voto de deputados isolados, não da bancada."]
+       "#{row.adherence}% ou mais das votações. As divergências aparecem no voto de deputados isolados, não da bancada."]
     end
   end
 
@@ -308,8 +316,14 @@ class PartyComparison
     grew = changes.max_by(&:bench_change)
     shrank = changes.min_by(&:bench_change)
     parts = []
-    parts << "#{grew.label} foi o que mais ganhou deputados desde a posse (#{format('%+d', grew.bench_change)})" if grew.bench_change.positive?
-    parts << "#{shrank.label} o que mais perdeu (#{format('%+d', shrank.bench_change)})" if shrank.bench_change.negative?
+    if grew.bench_change.positive?
+      parts << "#{grew.label} foi o que mais ganhou deputados desde a posse (#{format('%+d',
+                                                                                      grew.bench_change)})"
+    end
+    if shrank.bench_change.negative?
+      parts << "#{shrank.label} o que mais perdeu (#{format('%+d',
+                                                            shrank.bench_change)})"
+    end
     return if parts.empty?
 
     ["fa-people-arrows", "Trocas de partido", "#{parts.join(', e ')}, com trocas de legenda, licenças e suplências."]
@@ -321,10 +335,11 @@ class PartyComparison
     return unless average && row
 
     diff = DeputyMetrics.percentage(row.monthly - average, average)
-    amount = ActiveSupport::NumberHelper.number_to_currency(row.monthly, unit: "R$ ", separator: ",", delimiter: ".", precision: 0)
+    amount = ActiveSupport::NumberHelper.number_to_currency(row.monthly, unit: "R$ ", separator: ",", delimiter: ".",
+                                                                         precision: 0)
     ["fa-wallet", "Gasto da cota parlamentar",
      "Os deputados do partido #{row.label} gastam em média #{amount} por mês em #{year}, " \
-       "#{diff}% acima da média da Câmara, o maior gasto entre as bancadas."]
+     "#{diff}% acima da média da Câmara, o maior gasto entre as bancadas."]
   end
 
   def women_insight

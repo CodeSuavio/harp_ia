@@ -43,7 +43,8 @@ class ExpenseAnomalies
 
   # { tipo => valor da nota no percentil NOTE_PERCENTILE } na Câmara toda
   def self.note_limits(year)
-    percentile = ActiveRecord::Base.sanitize_sql_array(["PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY net_amount)", NOTE_PERCENTILE])
+    percentile = ActiveRecord::Base.sanitize_sql_array(["PERCENTILE_CONT(?) WITHIN GROUP (ORDER BY net_amount)",
+                                                        NOTE_PERCENTILE])
     DeputyMetrics.cached("note-limits/#{year}", Expense) do
       Expense.where(year: year).where("net_amount > 0").group(:expense_type)
              .pluck(:expense_type, Arel.sql(percentile))
@@ -122,7 +123,9 @@ class ExpenseAnomalies
 
     expenses.group(:expense_type).sum(:net_amount).filter_map do |type, value|
       previous = before[type].to_d
-      next unless previous.positive? && value >= previous * TYPE_JUMP_FACTOR && value - previous >= TYPE_JUMP_MIN_INCREASE
+      unless previous.positive? && value >= previous * TYPE_JUMP_FACTOR && value - previous >= TYPE_JUMP_MIN_INCREASE
+        next
+      end
 
       { kind: :type_jump, severity: :low, expense_type: type, value: value, reference: previous }
     end
@@ -143,13 +146,17 @@ class ExpenseAnomalies
 
   # Fornecedores que não atendiam o deputado no ano anterior e já receberam muito
   def new_suppliers
-    previous = @deputy.expenses.where(year: @year - 1).where.not(supplier_cnpj_cpf: [nil, ""]).distinct.pluck(:supplier_cnpj_cpf)
+    previous = @deputy.expenses.where(year: @year - 1).where.not(supplier_cnpj_cpf: [nil,
+                                                                                     ""]).distinct.pluck(:supplier_cnpj_cpf)
     return [] if previous.empty?
 
     with_supplier_document.where.not(supplier_cnpj_cpf: previous)
                           .group(:supplier_cnpj_cpf).having("SUM(net_amount) >= ?", NEW_SUPPLIER_MIN)
                           .pluck(Arel.sql("MIN(supplier)"), Arel.sql("SUM(net_amount)"))
-                          .map { |supplier, value| { kind: :new_supplier, severity: :low, supplier: supplier, value: value } }
+                          .map do |supplier, value|
+      { kind: :new_supplier, severity: :low, supplier: supplier,
+        value: value }
+    end
   end
 
   def median(values)

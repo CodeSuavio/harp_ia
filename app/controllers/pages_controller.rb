@@ -1,6 +1,6 @@
 class PagesController < ApplicationController
   # Adicione :about e :contact na lista de páginas públicas
-  skip_before_action :authenticate_user!, only: [ :home, :about, :contact ]
+  skip_before_action :authenticate_user!, only: %i[home about contact]
 
   PER_PAGE = 20
 
@@ -24,12 +24,12 @@ class PagesController < ApplicationController
     deputy_ids = Deputy.pluck(:json_id, :id).to_h
     by_json_id = ->(counts) { deputy_ids.transform_values { |id| counts[id] }.compact }
 
-    @expenses_by_deputy = by_json_id.(Expense.group(:deputy_id).sum(:net_amount))
+    @expenses_by_deputy = by_json_id.call(Expense.group(:deputy_id).sum(:net_amount))
     @max_expense = @expenses_by_deputy.values.max.to_f
 
-    @votes_by_deputy = by_json_id.(Vote.group(:deputy_id).count)
-    @bills_by_deputy = by_json_id.(Bill.group(:deputy_id).count)
-    @polls_by_deputy = by_json_id.(polls_during_term_by_deputy)
+    @votes_by_deputy = by_json_id.call(Vote.group(:deputy_id).count)
+    @bills_by_deputy = by_json_id.call(Bill.group(:deputy_id).count)
+    @polls_by_deputy = by_json_id.call(polls_during_term_by_deputy)
   end
 
   def about
