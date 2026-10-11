@@ -6,7 +6,7 @@
     <div class="p-4 bg-white rounded-4 shadow-sm border-start border-4 border-gold h-100">
       <span class="d-block text-muted small fw-bold text-uppercase mb-2 tracking-wider">
         Projetos apresentados
-        <%= info_tip("Proposições em que o deputado é o autor principal. Quantidade não mede qualidade: muitos projetos são homenagens ou datas comemorativas.") %>
+        <%= info_tip("Proposições em que o deputado é autor principal ou coautor. Quantidade não mede qualidade: muitos projetos são homenagens ou datas comemorativas.") %>
       </span>
       <span class="h3 fw-bold text-navy d-block"><%= @bills_total %></span>
       <% if (comparison = compared_to_average(@bills_total, @average_bills)) %>
@@ -81,9 +81,14 @@
       <% @bills.each do |bill| %>
         <div class="list-group-item px-0 py-3">
           <div class="d-flex flex-wrap justify-content-between gap-2 mb-1">
-            <%= link_to bill_path(bill), class: "fw-bold text-navy text-decoration-none", data: { turbo_frame: "_top" } do %>
-              <%= proposicao_label(bill) %>
-            <% end %>
+            <span>
+              <%= link_to bill_path(bill), class: "fw-bold text-navy text-decoration-none", data: { turbo_frame: "_top" } do %>
+                <%= proposicao_label(bill) %>
+              <% end %>
+              <% if bill.deputy_id != @deputy.id %>
+                <span class="badge text-bg-light border fw-normal ms-1">Coautoria</span>
+              <% end %>
+            </span>
             <span class="small text-muted">
               <% if bill.submission_date %>
                 Apresentado em <%= bill.submission_date.strftime("%d/%m/%Y") %>

@@ -6,7 +6,7 @@ class DirectoryMetrics
     @year = DeputyMetrics.reference_year
     @expenses = DeputyMetrics.expenses(@year)
     @participation = DeputyMetrics.participation
-    @bills = Bill.where(deputy_id: ids).group(:deputy_id).count
+    @bills = Bill.count_by_author(ids)
     @max_monthly = @expenses.values.map { |row| row[:monthly] }.max.to_f
   end
 

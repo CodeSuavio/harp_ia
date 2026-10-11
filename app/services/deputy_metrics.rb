@@ -213,9 +213,9 @@ class DeputyMetrics
   # ----- PROJETOS -----
 
   def self.average_bills
-    cached("average-bills", Bill) do
+    cached("average-bills", Bill, BillAuthor) do
       deputies = Deputy.count
-      deputies.zero? ? 0 : (Bill.where.not(deputy_id: nil).count.to_f / deputies).round(1)
+      deputies.zero? ? 0 : (Bill.count_by_author(Deputy.select(:id)).values.sum.to_f / deputies).round(1)
     end
   end
 
@@ -243,8 +243,8 @@ class DeputyMetrics
   end
 
   # A chave muda quando a tabela de origem muda (inclusão, remoção ou edição)
-  def self.cached(name, model, &block)
-    version = [model.count, model.maximum(:updated_at)&.to_f].join("-")
+  def self.cached(name, *models, &block)
+    version = models.flat_map { |model| [model.count, model.maximum(:updated_at)&.to_f] }.join("-")
     Rails.cache.fetch(["deputy-metrics", name, version], &block)
   end
 end
