@@ -155,7 +155,7 @@
               <div class="inspiration-data flex-grow-1 min-w-0">
                 <h3 class="h6 fw-bold text-navy mb-1 text-truncate">
                   <%= link_to candidate.ballot_name.presence || candidate.name, candidate_path(candidate),
-                        class: "text-reset text-decoration-none stretched-link" %>
+                        class: "text-reset text-decoration-none stretched-link", data: { turbo_frame: "_top" } %>
                 </h3>
 
                 <div class="d-flex align-items-center text-muted small mb-3">
