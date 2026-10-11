@@ -242,9 +242,15 @@ class DeputyMetrics
     last - first
   end
 
+  # Versão de cada tabela calculada uma vez por requisição (o Rails zera a cada uma)
+  class Versions < ActiveSupport::CurrentAttributes
+    attribute :by_model
+  end
+
   # A chave muda quando a tabela de origem muda (inclusão, remoção ou edição)
   def self.cached(name, *models, &block)
-    version = models.flat_map { |model| [model.count, model.maximum(:updated_at)&.to_f] }.join("-")
+    versions = Versions.by_model ||= {}
+    version = models.flat_map { |model| versions[model] ||= [model.count, model.maximum(:updated_at)&.to_f] }.join("-")
     Rails.cache.fetch(["deputy-metrics", name, version], &block)
   end
 end

@@ -235,9 +235,9 @@ class DeputiesController < ApplicationController
                      .sort_by { |id, name| [values[id] ? 0 : 1, -values[id].to_f, name] }
                      .map(&:first)
       page_ids = ordered.slice(offset, PER_PAGE) || []
-      Deputy.includes(:party).where(id: page_ids).index_by(&:id).values_at(*page_ids)
+      Deputy.includes(:party).with_attached_photo.where(id: page_ids).index_by(&:id).values_at(*page_ids)
     else
-      scope.includes(:party).references(:party)
+      scope.includes(:party).with_attached_photo.references(:party)
            .order(Arel.sql(sort[:order]))
            .offset(offset).limit(PER_PAGE).to_a
     end

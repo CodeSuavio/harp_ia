@@ -6,7 +6,8 @@ module PartiesHelper
     return "Sem partido" if affiliation.party_label == NO_PARTY_LABEL
     return affiliation.party_label unless affiliation.party
 
-    link_to affiliation.party_label, party_path(affiliation.party), class: "text-reset", title: affiliation.party.name
+    link_to affiliation.party_label, party_path(affiliation.party), class: "text-reset", title: affiliation.party.name,
+                                                                    data: { turbo_frame: "_top" }
   end
 
   # O que aconteceu na data da filiação (previous: a filiação anterior)

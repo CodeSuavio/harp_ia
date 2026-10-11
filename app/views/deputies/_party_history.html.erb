@@ -29,7 +29,7 @@
         <% same = candidate.party.label.casecmp?(affiliations.last.party_label) %>
         <li class="party-timeline-item is-candidacy">
           <span class="small text-muted">2026</span>
-          <strong class="text-navy ms-2"><%= link_to candidate.party.label, party_path(candidate.party), class: "text-reset", title: candidate.party.name %></strong>
+          <strong class="text-navy ms-2"><%= link_to candidate.party.label, party_path(candidate.party), class: "text-reset", title: candidate.party.name, data: { turbo_frame: "_top" } %></strong>
           <span class="d-block small text-muted">Candidatura a deputado federal<%= " pelo mesmo partido" if same %></span>
         </li>
       <% end %>
