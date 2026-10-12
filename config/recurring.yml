@@ -12,13 +12,20 @@
 production:
   # CNAE dos fornecedores: só consulta CNPJs novos ou com mais de 90 dias; ao
   # terminar, recalcula os alertas de gastos
+  #
+  # Todas na fila "maintenance", a única além da "harpia" com worker em
+  # produção (config/queue.yml). Tarefas com "command" precisam do "queue:":
+  # sem ele, rodam na fila "solid_queue_recurring", que não tem worker.
   refresh_suppliers:
     class: Suppliers::FetchJob
+    queue: maintenance
     schedule: every sunday at 3am
   # Alertas do ranking (/alertas) em dia mesmo sem fornecedores novos
   refresh_expense_alerts:
     command: "ExpenseAlerts::RefreshJob.refresh_all_later"
+    queue: maintenance
     schedule: every day at 5am
   clear_solid_queue_finished_jobs:
     command: "SolidQueue::Job.clear_finished_in_batches(sleep_between_batches: 0.3)"
+    queue: maintenance
     schedule: every hour at minute 12

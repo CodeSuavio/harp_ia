@@ -14,5 +14,20 @@ development:
 test:
   <<: *default
 
+# Em produção os jobs rodam dentro do Puma (Procfile, config/puma.rb) e só duas
+# filas têm worker, cada uma com threads próprias:
+# - harpia:      respostas do chat, que nunca esperam pelas rotinas
+# - maintenance: rotinas agendadas (config/recurring.yml) e jobs do projeto
+# A fila "default" fica sem worker (e pausada): guarda jobs antigos do Active
+# Storage que não devem rodar. Não use "*" nem "default" aqui.
 production:
-  <<: *default
+  dispatchers:
+    - polling_interval: 1
+      batch_size: 500
+  workers:
+    - queues: [harpia]
+      threads: 2
+      polling_interval: 0.1
+    - queues: [maintenance]
+      threads: 1
+      polling_interval: 1

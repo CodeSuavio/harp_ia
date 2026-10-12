@@ -6,7 +6,8 @@
 # resposta e o custo da IA. Em caso de falha, a pergunta fica como "failed"
 # e o usuário pode perguntar novamente.
 class ChatResponseJob < ApplicationJob
-  queue_as :default
+  # Fila exclusiva, com worker próprio: rotinas de manutenção nunca atrasam a resposta
+  queue_as :harpia
 
   # A conversa foi excluída antes de o job rodar
   discard_on ActiveJob::DeserializationError

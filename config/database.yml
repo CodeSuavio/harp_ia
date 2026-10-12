@@ -88,6 +88,12 @@ production:
   primary: &primary_production
     <<: *default
     url: <%= ENV["DATABASE_URL"] %>
+    # Os jobs rodam como threads dentro do Puma (Procfile e config/puma.rb) e
+    # seguram a conexão durante a execução (a resposta da Harpia espera a IA):
+    # 3 threads do Puma + 2 da fila harpia + 1 da maintenance (config/queue.yml)
+    # + folga para o WebSocket. Os pools abrem conexões sob demanda; o pico
+    # fica abaixo do limite de 20 do Heroku Postgres essential-0.
+    max_connections: <%= ENV.fetch("DB_MAX_CONNECTIONS", 8) %>
   cache:
     <<: *primary_production
     migrations_paths: db/cache_migrate

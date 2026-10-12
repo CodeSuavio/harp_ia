@@ -3,7 +3,7 @@ module ExpenseAlerts
   # deputados no ano. Os alertas de cada deputado são trocados numa transação,
   # então o ranking nunca vê um deputado pela metade.
   class RefreshJob < ApplicationJob
-    queue_as :default
+    queue_as :maintenance
     limits_concurrency to: 1, key: ->(year) { "expense-alerts-#{year}" }
 
     # Recálculo de todos os anos com despesas (fim do Suppliers::FetchJob, agendamento)
