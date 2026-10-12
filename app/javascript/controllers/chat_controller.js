@@ -106,12 +106,13 @@ export default class extends Controller {
     // visível (ex.: a resposta chegou abaixo da pergunta), nada se move.
     this.scrollToLatestInteraction()
 
-    // Cada nova renderização (resposta pelo WebSocket ou pela consulta
-    // abaixo) substitui a anterior; só a mais recente agenda a consulta.
+    // Conversa aguardando a Harpia: confere o estado na hora. Se a IA
+    // respondeu (ou falhou) muito rápido, a resposta pelo WebSocket pode ter
+    // chegado antes desta renderização, que então mostraria um estado antigo.
+    // Enquanto a Harpia responde, o servidor devolve 204 e a consulta se
+    // repete a cada REFRESH_DELAY.
     clearTimeout(this.refreshTimer)
-    if ("chatPending" in messages.dataset) {
-      this.refreshTimer = setTimeout(() => this.refresh(messages), REFRESH_DELAY)
-    }
+    if ("chatPending" in messages.dataset) this.refresh(messages)
   }
 
   connect() {
