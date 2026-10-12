@@ -6,6 +6,10 @@ class Expense < ApplicationRecord
   SUPPLIER_KEY = Arel.sql("COALESCE(NULLIF(supplier_cnpj_cpf, ''), supplier)")
   # Nome mais frequente do fornecedor dentro do grupo
   SUPPLIER_NAME = Arel.sql("MODE() WITHIN GROUP (ORDER BY supplier)")
+  # Só os dígitos do CNPJ/CPF (a base traz formatações variadas): 14 = CNPJ, 11 = CPF
+  DOCUMENT_DIGITS = Arel.sql("REGEXP_REPLACE(supplier_cnpj_cpf, '\\D', '', 'g')")
+
+  scope :with_cnpj, -> { where("LENGTH(#{DOCUMENT_DIGITS}) = 14") }
 
   validates :expense_type, :document_amount, :year, :month, presence: true # passagens aéreas vêm sem cnpj/cpf
   validates :month, numericality: { only_integer: true, greater_than_or_equal_to: 1, less_than_or_equal_to: 12 }

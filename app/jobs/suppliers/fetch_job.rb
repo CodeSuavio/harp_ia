@@ -11,8 +11,6 @@ module Suppliers
     # Espera maior quando a API responde 429
     RATE_LIMIT_PAUSE = 60
 
-    CNPJ_DIGITS = Arel.sql("REGEXP_REPLACE(supplier_cnpj_cpf, '\\D', '', 'g')")
-
     def perform(limit: nil, pause: PAUSE)
       pending = self.class.pending_cnpjs
       pending = pending.first(limit) if limit
@@ -29,9 +27,8 @@ module Suppliers
 
     # CNPJs (14 dígitos) das despesas sem cadastro ou com cadastro antigo
     def self.pending_cnpjs
-      cnpjs = Expense.where.not("expense_type LIKE ?", "PASSAGEM AÉREA%")
-                     .where("LENGTH(#{CNPJ_DIGITS}) = 14")
-                     .distinct.pluck(CNPJ_DIGITS)
+      cnpjs = Expense.with_cnpj.where.not("expense_type LIKE ?", "PASSAGEM AÉREA%")
+                     .distinct.pluck(Expense::DOCUMENT_DIGITS)
       fresh = Supplier.where(cnpj: cnpjs).where.not(id: Supplier.stale).pluck(:cnpj)
       cnpjs - fresh
     end

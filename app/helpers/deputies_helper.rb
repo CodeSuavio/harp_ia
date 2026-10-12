@@ -124,6 +124,18 @@ module DeputiesHelper
     when :type_jump
       ["#{expense_type_label(row[:expense_type])}: de #{brl(row[:reference], precision: 0)} para #{brl(row[:value], precision: 0)}",
        "Tipo de despesa que pelo menos dobrou em relação ao mesmo período do ano anterior."]
+    when :incompatible_supplier_activity
+      type = expense_type_label(row[:expense_type])
+      ["#{supplier}: #{brl(row[:value], precision: 0)} em #{type.downcase}, mas a empresa atua em outro ramo",
+       "Empresa com atividade principal #{cnae_label(row[:cnae])}, sem atividade (principal ou secundária) " \
+       "compatível com #{type} no cadastro da Receita Federal. Gravidade alta quando o fornecedor recebeu ao menos " \
+       "#{brl(ExpenseAnomalies::INCOMPATIBLE_HIGH_MIN, precision: 0)} no ano."]
+    when :inactive_supplier
+      ["#{supplier} estava com CNPJ #{row[:status].to_s.downcase} quando emitiu " \
+       "#{pluralize(row[:count], 'nota', plural: 'notas')} (#{brl(row[:value], precision: 0)})",
+       "Situação cadastral na Receita Federal diferente de ATIVA " \
+       "(#{row[:status_date] ? "desde #{row[:status_date].strftime('%d/%m/%Y')}" : 'sem data informada'}) " \
+       "na data da nota."]
     when :exclusive_supplier
       ["#{supplier} só aparece nas notas deste deputado e recebeu #{brl(row[:value], precision: 0)}",
        "Empresa que não atende nenhum outro deputado e recebeu ao menos #{brl(ExpenseAnomalies::EXCLUSIVE_SUPPLIER_MIN,
@@ -134,6 +146,13 @@ module DeputiesHelper
          ExpenseAnomalies::NEW_SUPPLIER_MIN, precision: 0
        )}."]
     end
+  end
+
+  # "01.11-3/01 (cultivo de arroz)"
+  def cnae_label(cnae)
+    return "não informada" if cnae.blank? || cnae[:code].blank?
+
+    [cnae[:code], ("(#{cnae[:description].to_s.downcase})" if cnae[:description].present?)].compact.join(" ")
   end
 
   def compare_value(row, cell)
