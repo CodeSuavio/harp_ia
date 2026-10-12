@@ -3,7 +3,8 @@
      "state"            => params[:state].presence,
      "party"            => (@parties.find { |p| p.id.to_s == params[:party].to_s }&.label if params[:party].present?),
      "electoral_status" => params[:electoral_status].presence,
-     "reelection"       => ("Candidatos à reeleição" if @reelection)
+     "reelection"       => ("Candidatos à reeleição" if @reelection),
+     "year"             => ("Gastos de #{@expense_year}" if params[:year].present?)
    }.compact %>
 
 <!-- Resumo do recorte filtrado -->
@@ -101,6 +102,10 @@
                   <div class="text-muted">presença<span class="visually-hidden"> nas votações</span></div>
                 </div>
               </div>
+
+              <% if (sort_value = deputy_sort_value(@sort, @sort_values&.dig(deputy.id))) %>
+                <div class="small fw-bold text-navy mt-2"><%= sort_value %></div>
+              <% end %>
 
               <% if deputy.electoral_status.present? %>
                 <div class="small text-muted mt-2"><%= deputy.electoral_status %></div>

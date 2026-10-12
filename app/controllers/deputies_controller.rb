@@ -23,17 +23,22 @@ class DeputiesController < ApplicationController
     (SELECT COUNT(*) FROM bills WHERE bills.deputy_id = deputies.id
        OR bills.id IN (SELECT bill_id FROM bill_authors WHERE bill_authors.deputy_id = deputies.id))
   SQL
-  # Ordenações por SQL ou por indicador calculado (DeputyMetrics), ordenadas em Ruby
+  # Ordenações por SQL ou por indicador calculado (DeputyMetrics), ordenadas em Ruby.
+  # Os indicadores são os mesmos do DeputyRankingTool, para o link que a Harpia
+  # envia mostrar a mesma lista da resposta do chat.
   SORTS = {
-    "name" => { label: "Ordenar por nome", order: "deputies.name ASC" },
-    "state" => { label: "Ordenar por estado",          order: "deputies.state_label ASC, deputies.name ASC" },
-    "party" => { label: "Ordenar por partido",         order: "parties.label ASC, deputies.name ASC" },
-    "expenses" => { label: "Maior gasto mensal", metric: :monthly_expense_values },
-    "bills" => { label: "Mais projetos de lei", order: "#{BILLS_COUNT_SQL} DESC, deputies.name ASC" },
-    "participation" => { label: "Maior participação", metric: :participation_values },
-    "alignment" => { label: "Mais alinhado ao partido", metric: :alignment_values },
-    "against_party" => { label: "Mais votos contra o partido", metric: :against_party_values }
+    "name" => { label: "Ordenar por nome", order: "deputies.name ASC", default: :asc },
+    "state" => { label: "Ordenar por estado", order: "deputies.state_label ASC, deputies.name ASC", default: :asc },
+    "party" => { label: "Ordenar por partido", order: "parties.label ASC, deputies.name ASC", default: :asc },
+    "expenses" => { label: "Gasto mensal", metric: :monthly_expense_values, default: :desc },
+    "expenses_total" => { label: "Gasto total no ano", metric: :total_expense_values, default: :desc },
+    "bills" => { label: "Projetos de lei", metric: :bill_count_values, default: :desc },
+    "participation" => { label: "Participação nas votações", metric: :participation_values, default: :desc },
+    "alignment" => { label: "Alinhamento ao partido", metric: :alignment_values, default: :desc },
+    "against_party" => { label: "Votos contra o partido", metric: :against_party_values, default: :desc }
   }.freeze
+  # Direção das ordenações por indicador
+  DIRECTIONS = { "desc" => "Maior primeiro", "asc" => "Menor primeiro" }.freeze
 
   # Termos genéricos que aparecem em quase toda indexação de projeto de lei
   GENERIC_KEYWORDS = %w[
@@ -62,18 +67,21 @@ class DeputiesController < ApplicationController
     @status_counts = apply(base, filters.except(:electoral_status)).group(:electoral_status).count
 
     @sort = SORTS.key?(params[:sort]) ? params[:sort] : "name"
+    @direction = DIRECTIONS.key?(params[:dir]) ? params[:dir] : "desc"
     @total = scope.count
     @total_pages = [(@total / PER_PAGE.to_f).ceil, 1].max
     @page = params[:page].to_i.clamp(1, @total_pages)
 
-    @expense_year = DeputyMetrics.reference_year
+    @expense_years = Expense.distinct.pluck(:year).sort.reverse
+    @expense_year = @expense_years.include?(params[:year].to_i) ? params[:year].to_i : DeputyMetrics.reference_year
     @expenses = DeputyMetrics.expenses(@expense_year)
     @participation = DeputyMetrics.participation
     @summary = summarize(scope.pluck(:id))
 
     @deputies = page_of(scope)
     ids = @deputies.map(&:id)
-    @bill_counts = Bill.where(deputy_id: ids).group(:deputy_id).count
+    # Autoria e coautoria, o mesmo critério da ordenação por projetos de lei
+    @bill_counts = bill_counts(Deputy.where(id: ids))
     @reelection_ids = Deputy.running_for_reelection.where(id: ids).pluck(:id).to_set
 
     @states = Deputy.distinct.pluck(:state_label).compact.sort
@@ -232,9 +240,11 @@ class DeputiesController < ApplicationController
     offset = (@page - 1) * PER_PAGE
 
     if sort[:metric]
-      values = send(sort[:metric])
+      values = @sort_values = send(sort[:metric])
+      sign = @direction == "asc" ? 1 : -1
+      # Quem não tem o dado fica por último, nas duas direções
       ordered = scope.pluck(:id, :name)
-                     .sort_by { |id, name| [values[id] ? 0 : 1, -values[id].to_f, name] }
+                     .sort_by { |id, name| [values[id] ? 0 : 1, sign * values[id].to_f, name] }
                      .map(&:first)
       page_ids = ordered.slice(offset, PER_PAGE) || []
       Deputy.includes(:party).with_attached_photo.where(id: page_ids).index_by(&:id).values_at(*page_ids)
@@ -246,6 +256,8 @@ class DeputiesController < ApplicationController
   end
 
   def monthly_expense_values = @expenses.transform_values { |row| row[:monthly] }
+  def total_expense_values = @expenses.transform_values { |row| row[:total] }
+  def bill_count_values = bill_counts(Deputy.all)
   def participation_values = @participation.transform_values { |row| row[:pct] }
   def alignment_values = DeputyMetrics.alignment.transform_values { |row| row[:pct] }
   def against_party_values = DeputyMetrics.alignment.transform_values { |row| row[:against] }
@@ -260,6 +272,11 @@ class DeputiesController < ApplicationController
       participation: participation.any? ? (participation.sum.to_f / participation.size).round : nil,
       reelection: Deputy.running_for_reelection.where(id: ids).count
     }
+  end
+
+  # { deputy_id => projetos de autoria ou coautoria }
+  def bill_counts(scope)
+    scope.pluck(:id, Arel.sql(BILLS_COUNT_SQL)).to_h
   end
 
   def apply(scope, filters)

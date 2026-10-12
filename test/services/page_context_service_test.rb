@@ -24,3 +24,14 @@ class PageContextServiceTest < ActiveSupport::TestCase
     assert_nil PageContextService.new(nil).call
   end
 end
+
+class PageContextServiceSortTest < ActiveSupport::TestCase
+  test "informa a ordenação das páginas de ranking" do
+    assert_equal "Comparação entre partidos, ordenada por \"Coesão\", do menor para o maior",
+                 PageContextService.new("/parties/compare?sort=cohesion&dir=asc").call
+    assert_equal "Lista de deputados, ordenada por \"Gasto mensal\"",
+                 PageContextService.new("/deputies?sort=expenses").call
+    assert_equal "Lista de deputados, ordenada por \"Participação nas votações\", do menor para o maior",
+                 PageContextService.new("/deputies?sort=participation&dir=asc").call
+  end
+end
