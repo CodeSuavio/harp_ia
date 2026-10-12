@@ -165,6 +165,48 @@ Passos:
    blocos, indicadores lado a lado, afinidade e frases de destaque geradas a
    partir dos números (ex.: cota de gênero de 30% nas candidaturas).
 
+## Etapa 7 — Alertas de gastos com atividade do fornecedor (12/10)
+
+A base da Câmara não traz os itens da nota fiscal, então não dá para saber
+*o que* foi comprado. O que dá para cruzar é o **tipo de despesa** com a
+**atividade econômica (CNAE) da empresa** na Receita Federal.
+
+1. **Cache de fornecedores.** `Supplier` guarda, por CNPJ (só dígitos), o
+   CNAE principal, os secundários e a situação cadastral (com a data).
+   `Suppliers::CnpjLookup` consulta `brasilapi.com.br/api/cnpj/v1/{cnpj}`
+   com timeout; erros ficam em `fetch_error` em vez de levantar exceção.
+   404/400 só voltam a ser consultados depois de 90 dias; 429, 5xx e falhas
+   de rede ficam sem `fetched_at` e entram na rodada seguinte.
+   `Suppliers::FetchJob` (Solid Queue) percorre os CNPJs das despesas sem
+   cadastro ou com mais de 90 dias, com pausa de 1,5 s entre chamadas (60 s
+   depois de um 429). CPFs, notas sem documento e passagens aéreas ficam de
+   fora. Comando: `bin/rails "harpia:suppliers[100]"` (limite opcional).
+2. **Duas regras novas em `ExpenseAnomalies`**, no mesmo formato das outras
+   (o chat usa sem mudança):
+   - `incompatible_supplier_activity`: nenhuma atividade da empresa
+     (principal **ou** secundária) está na lista de CNAEs compatíveis com o
+     tipo de despesa (`ExpenseAnomalies::ACTIVITY_RULES`, por divisão ou
+     grupo, ex.: combustíveis → 47.3, 46.8). Tipos sem regra não geram
+     alerta. Gravidade alta quando o deputado pagou ao menos R$ 5.000 ao
+     fornecedor no ano; abaixo disso, média.
+   - `inactive_supplier` (alta): nota emitida quando o CNPJ já não estava
+     ATIVO (baixado, inapto, suspenso).
+3. **Alertas gravados para o ranking.** `ExpenseAlert` (tabela
+   `expense_alerts`) guarda os alertas por deputado e ano;
+   `ExpenseAlerts::RefreshJob(year)` recalcula todos (≈20 s para a Câmara
+   inteira) e troca os de cada deputado numa transação. Roda no fim do
+   `Suppliers::FetchJob` e na carga das despesas (`db/seeds.rb`). A aba Gastos
+   continua calculando os alertas na hora.
+4. **Ranking em `/alertas`** (público): pontuação ponderada (alta = 5,
+   média = 2, baixa = 1) calculada em SQL, desempate pelo valor sinalizado,
+   filtros de ano, UF, partido e gravidade mínima. Link na navbar e atalho
+   na listagem de deputados. O aviso no topo deixa claro que alerta não é
+   prova de irregularidade.
+5. **Aba Gastos do deputado**: filtro "Só notas com alerta" (`alerts=1`) e
+   de período (`from`/`to`); cada nota marcada mostra o título e o critério
+   dos alertas e a atividade do fornecedor; CNPJ formatado e link "Ver nota
+   na Câmara".
+
 ---
 
 ## Onde fica cada coisa
@@ -174,7 +216,8 @@ app/
   controllers/   uma por recurso; páginas públicas pulam o login
   models/        entidades e associações (+ BrazilMap)
   policies/      regras do Pundit
-  services/      cálculos e integrações (IA, métricas, comparações, importação)
+  services/      cálculos e integrações (IA, métricas, comparações, importação, CNPJ)
+  jobs/          Solid Queue: consulta de CNPJ e recálculo dos alertas de gastos
   queries/       consultas de leitura para as páginas
   helpers/       formatação (moeda, rótulos, painéis)
   views/painel/  componentes reaproveitados (cards, métricas, paginação, hero)
@@ -194,6 +237,7 @@ bin/rails db:create db:migrate
 bin/rails db:seed            # baixa e importa todos os dados (demora)
 bin/rails harpia:themes      # classifica temas
 bin/rails proposicoes:cruzar partidos:tse partidos:camara partidos:orientacoes
+bin/rails harpia:suppliers   # CNAE dos fornecedores (horas: 1 consulta por CNPJ)
 bin/rails test
 bin/dev
 ```
