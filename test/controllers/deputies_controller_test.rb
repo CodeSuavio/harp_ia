@@ -193,6 +193,15 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "table.table-hover tbody td", text: /Posto Central/
   end
 
+  test "mês do gráfico fora do período é ignorado e o link do mês troca o período pelo mês" do
+    get deputy_path(deputies(:ana), tab: "expenses", year: 2025, from: 4, month: 3)
+    assert_select "table.table-hover tbody td", text: /Imobiliária X/
+    assert_select "a", text: /Mar ×/, count: 0
+
+    # Março está fora do período Abr–Dez: o link do mês leva sem o período
+    assert_select ".month-bar-wrap[href=?]", deputy_path(deputies(:ana), tab: "expenses", year: 2025, month: 3)
+  end
+
   test "mascara CPF de fornecedor pessoa física" do
     get deputy_path(deputies(:ana), tab: "expenses")
     assert_match "***.456.789-**", response.body

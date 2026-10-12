@@ -123,11 +123,13 @@ class ExpenseAnomaliesTest < ActiveSupport::TestCase
     expense(@carla, expense_type: OFFICE, supplier_cnpj_cpf: nil, net_amount: 6000)
     expense(@carla, expense_type: "PASSAGEM AÉREA - SIGEPA", supplier_cnpj_cpf: "33.937.681/0001-78", net_amount: 6000)
 
+    expense(@carla, expense_type: OFFICE, supplier_cnpj_cpf: "56.031.006/0001-80", net_amount: 100)
+
     assert_nil find(@carla, :incompatible_supplier_activity)
     pending = Suppliers::FetchJob.pending_cnpjs
     assert_not_includes pending, "98765432100"
     assert_not_includes pending, "33937681000178"
-    assert_includes pending, "00000000000100" # CNPJ das fixtures, ainda não consultado
+    assert_includes pending, "56031006000180" # empresa ainda não consultada
   end
 
   test "tipo de despesa sem regra de atividade não gera alerta" do

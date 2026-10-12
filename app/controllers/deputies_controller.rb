@@ -173,10 +173,17 @@ class DeputiesController < ApplicationController
 
   def read_expense_filters
     @expense_type = params[:expense_type].presence
-    @month = params[:month].presence&.to_i
-    @from, @to = [params[:from], params[:to]].map { |month| month.to_i if month.to_i.between?(1, 12) }
-    @from, @to = @to, @from if @from && @to && @from > @to
+    @from, @to = expense_period
+    # Mês do gráfico fora do período (só por URL montada à mão): vale o período
+    month = params[:month].presence&.to_i
+    @month = month if month && ((@from || 1)..(@to || 12)).cover?(month)
     @alerts_only = params[:alerts] == "1"
+  end
+
+  # [mês inicial, mês final] (nil = sem limite); invertidos são trocados
+  def expense_period
+    from, to = [params[:from], params[:to]].map { |month| month.to_i if month.to_i.between?(1, 12) }
+    from && to && from > to ? [to, from] : [from, to]
   end
 
   def load_bills

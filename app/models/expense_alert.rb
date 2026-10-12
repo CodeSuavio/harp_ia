@@ -7,12 +7,15 @@ class ExpenseAlert < ApplicationRecord
 
   belongs_to :deputy
 
-  enum :severity, { low: "low", medium: "medium", high: "high" }, validate: true
+  # Da menor para a maior: at_least depende desta ordem, não da declaração do enum
+  SEVERITY_ORDER = %w[low medium high].freeze
+
+  enum :severity, SEVERITY_ORDER.index_by(&:itself), validate: true
 
   validates :year, :kind, presence: true
 
-  # Gravidade igual ou acima da informada ("medium" → medium e high)
-  scope :at_least, ->(severity) { where(severity: severities.keys.drop(severities.keys.index(severity.to_s).to_i)) }
+  # Gravidade igual ou acima da informada ("medium" → medium e high); valor desconhecido = todas
+  scope :at_least, ->(severity) { where(severity: SEVERITY_ORDER.drop(SEVERITY_ORDER.index(severity.to_s).to_i)) }
 
   # Linha de ExpenseAnomalies#for_year → atributos (o resto vai para details)
   def self.attributes_from(row)

@@ -3,7 +3,8 @@
 <%= render "painel/hero", title: "Alertas", highlight: "de gastos",
       subtitle: "Deputados com mais gastos fora do padrão na cota parlamentar, pela gravidade dos alertas." %>
 
-<% filter_params = { year: @year, state: @state, party: @party&.id, severity: (@severity unless @severity == "low") }.compact %>
+<% filter_params = { year: @year, state: @state, party: @party&.id, severity: (@severity unless @severity == "low"),
+                    order: (@order unless @order == "score") }.compact %>
 <% severity_badges = { high: ["text-bg-danger", "alta"], medium: ["text-bg-warning", "média"], low: ["text-bg-secondary", "baixa"] } %>
 
 <section class="container search-container pb-5">
@@ -45,6 +46,11 @@
         <%= select_tag :severity, options_for_select(ExpenseAlertsController::SEVERITY_LABELS.invert, @severity),
               class: "form-select form-select-sm" %>
       </div>
+      <div class="col-12 col-lg">
+        <%= label_tag :order, "Ordenar por", class: "form-label small text-muted mb-1" %>
+        <%= select_tag :order, options_for_select(ExpenseAlertsController::ORDERS.invert, @order),
+              class: "form-select form-select-sm" %>
+      </div>
     </div>
     <noscript><button type="submit" class="btn btn-sm btn-dark mt-2">Filtrar</button></noscript>
   <% end %>
@@ -52,13 +58,25 @@
   <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <span class="text-muted small me-2"><%= @total %> <%= "deputado".pluralize(@total) %> com alertas</span>
     <span class="small text-muted">
-      Ordem: pontuação (alta = <%= ExpenseAlert::WEIGHTS["high"] %>, média = <%= ExpenseAlert::WEIGHTS["medium"] %>,
-      baixa = <%= ExpenseAlert::WEIGHTS["low"] %> pontos por alerta), depois o valor sinalizado.
-      <%= info_tip("Um mesmo gasto pode entrar em mais de um alerta (ex.: nota atípica e pico no mês), então o valor sinalizado pode somar mais que o total gasto.") %>
+      <% if @order == "share" %>
+        Ordem: parte do gasto do ano que está em notas com alerta, depois a pontuação.
+        <%= info_tip("Cada nota conta uma vez, mesmo que esteja em mais de um alerta. Alertas sem notas (pico mensal, salto por tipo) não entram nessa conta. Útil para comparar deputados com volumes de gasto diferentes.") %>
+      <% else %>
+        Ordem: pontuação (alta = <%= ExpenseAlert::WEIGHTS["high"] %>, média = <%= ExpenseAlert::WEIGHTS["medium"] %>,
+        baixa = <%= ExpenseAlert::WEIGHTS["low"] %> pontos por alerta), depois o valor sinalizado.
+        <%= info_tip("Quem tem mais notas tem mais chance de cair em alguma regra. Para comparar volumes diferentes, ordene pela parte do gasto em notas com alerta. O valor sinalizado soma o valor de cada alerta, e um mesmo gasto pode entrar em mais de um.") %>
+      <% end %>
     </span>
+    <% if @computed_at %>
+      <span class="small text-muted ms-md-auto">Alertas calculados em <%= @computed_at.strftime("%d/%m/%Y") %></span>
+    <% end %>
   </div>
 
-  <% if @page_rows.empty? %>
+  <% if @computed_at.nil? && @years.include?(@year) %>
+    <p class="text-muted text-center py-5">
+      Os alertas de <%= @year %> ainda não foram calculados. Eles são atualizados todos os dias; volte mais tarde.
+    </p>
+  <% elsif @page_rows.empty? %>
     <p class="text-muted text-center py-5">Nenhum deputado com alertas nesse recorte.</p>
   <% else %>
     <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
@@ -92,8 +110,11 @@
                 <dd class="col-5 text-end fw-bold text-navy mb-1"><%= brl(@expenses.dig(deputy.id, :total), precision: 0) %></dd>
                 <dt class="col-7 text-muted fw-normal">Notas no ano</dt>
                 <dd class="col-5 text-end text-navy mb-1"><%= @note_counts[deputy.id].to_i %></dd>
-                <dt class="col-7 text-muted fw-normal">Valor sinalizado</dt>
-                <dd class="col-5 text-end text-navy mb-1"><%= brl(row[:value], precision: 0) %></dd>
+                <dt class="col-7 text-muted fw-normal">Em notas com alerta</dt>
+                <dd class="col-5 text-end text-navy mb-1">
+                  <%= brl(row[:flagged], precision: 0) %>
+                  <% if row[:share] %><span class="d-block text-muted"><%= row[:share].to_s.tr(".", ",") %>% do gasto</span><% end %>
+                </dd>
                 <dt class="col-7 text-muted fw-normal">Alertas · pontuação</dt>
                 <dd class="col-5 text-end text-navy mb-0"><%= row[:count] %> · <%= row[:score] %> pts</dd>
               </dl>
