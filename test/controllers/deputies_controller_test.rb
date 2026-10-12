@@ -161,6 +161,38 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_select "ul a[href='#{camara}']", text: /Ver na Câmara/
   end
 
+  test "aba de gastos filtra só notas com alerta e mostra o critério na linha" do
+    get deputy_path(deputies(:ana), tab: "expenses", alerts: "1")
+    assert_match "0 registros", response.body # Ana não tem nota fora do padrão
+
+    get deputy_path(deputies(:bruno), tab: "expenses", alerts: "1")
+    assert_select "table.table-hover tbody td", text: /Posto Central/, count: 1
+    assert_select "tbody .alert.alert-danger", text: /acima de .*99,5% das notas do mesmo tipo/m
+    assert_select "a", text: /Só notas com alerta ×/
+  end
+
+  test "aba de gastos mostra a atividade (CNAE) do fornecedor no alerta" do
+    expenses(:bruno_fuel).update!(supplier_cnpj_cpf: "12.345.678/0001-90", document_date: "2025-03-10")
+    Supplier.create!(cnpj: "12345678000190", cnae_code: "0111301", cnae_description: "Cultivo de arroz",
+                     registration_status: "ATIVA", fetched_at: Time.current)
+    get deputy_path(deputies(:bruno), tab: "expenses", alerts: "1")
+
+    assert_select "tbody .alert-danger", text: /atua em outro ramo/
+    assert_select "tbody .alert-danger", text: %r{Atividade do fornecedor na Receita: 01.11-3/01 \(cultivo de arroz\)}
+    assert_match "12.345.678/0001-90", response.body
+  end
+
+  test "aba de gastos filtra por período dentro do ano" do
+    get deputy_path(deputies(:ana), tab: "expenses", from: 4, to: 12)
+    assert_select "table.table-hover tbody td", text: /Imobiliária X/
+    assert_select "table.table-hover tbody td", text: /Posto Central/, count: 0
+    assert_select "a", text: /Abr–Dez ×/
+
+    # Período invertido é corrigido
+    get deputy_path(deputies(:ana), tab: "expenses", from: 3, to: 1)
+    assert_select "table.table-hover tbody td", text: /Posto Central/
+  end
+
   test "mascara CPF de fornecedor pessoa física" do
     get deputy_path(deputies(:ana), tab: "expenses")
     assert_match "***.456.789-**", response.body
