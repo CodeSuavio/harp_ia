@@ -43,6 +43,12 @@ class Suppliers::CnpjLookupTest < ActiveSupport::TestCase
     assert_includes Supplier.stale, lookup.supplier
   end
 
+  test "instabilidade da API (5xx) não marca como consultado" do
+    supplier = with_response(Net::HTTPGatewayTimeout, "504", "") { Suppliers::CnpjLookup.call(CNPJ) }
+    assert_match "504", supplier.fetch_error
+    assert_includes Supplier.stale, supplier
+  end
+
   test "erro de rede não levanta exceção" do
     supplier = stub_http_start(->(*) { raise Net::OpenTimeout, "execution expired" }) { Suppliers::CnpjLookup.call(CNPJ) }
     assert_match "Net::OpenTimeout", supplier.fetch_error

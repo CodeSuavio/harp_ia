@@ -37,6 +37,9 @@ module Suppliers
         # Sem fetched_at: continua "stale" e entra na próxima rodada
         @rate_limited = true
         save_error("429: limite de requisições da API", fetched: false)
+      when Net::HTTPServerError
+        # Instabilidade da API (502, 504): tenta de novo na próxima rodada
+        save_error("#{response.code}: #{response.message}", fetched: false)
       else
         # 404 (não encontrado) e 400 (CNPJ inválido) só voltam a ser consultados depois de REFRESH_AFTER
         save_error("#{response.code}: #{error_message(response)}")
