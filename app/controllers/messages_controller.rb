@@ -1,4 +1,6 @@
 class MessagesController < ApplicationController
+  include ChatResponder
+
   before_action :authenticate_user!
   before_action :set_chat, only: [:create]
 
@@ -18,7 +20,7 @@ class MessagesController < ApplicationController
     authorize @message
 
     # Processa toda a interação com a IA:
-    # - salva a pergunta do usuário
+    # - salva a pergunta do usuário e a página em que foi feita
     # - envia a pergunta para a IA
     # - salva a resposta da IA
     # - gera o título do chat, quando necessário
@@ -28,54 +30,12 @@ class MessagesController < ApplicationController
       page_path: message_params[:page_path]
     ).call
 
-    # O mesmo endpoint atende dois fluxos:
-    # HTML → chat tradicional
-    # Turbo Stream → widget, sem trocar de página
-    respond_to do |format|
-      # Fluxo tradicional:
-      # retorna para a página completa da conversa.
-      format.html { redirect_to @chat }
-
-      # Fluxo do widget:
-      # atualiza somente as mensagens e o formulário
-      # dentro do widget.
-      format.turbo_stream do
-        @chats = policy_scope(Chat)
-
-        render turbo_stream: [
-          turbo_stream.update(
-            "chat_widget_messages",
-            partial: "chats/widget_messages"
-          ),
-
-          turbo_stream.update(
-            "chats_list",
-            partial: "chats/chats_list",
-            locals: { chats: @chats }
-          )
-        ]
-      end
-    end
+    # Atualiza o chat principal ou o widget, conforme a origem do envio.
+    respond_with_conversation
   rescue MessageProcessorService::AIError
-    respond_to do |format|
-      format.html do
-        redirect_to @chat,
-                    alert: "Não foi possível gerar a resposta. Tente novamente."
-      end
-
-      format.turbo_stream do
-        render turbo_stream: turbo_stream.update(
-          "chat_widget_messages",
-          partial: "chats/widget_messages",
-          locals: {
-            error_message: "Não foi possível gerar a resposta. Tente novamente."
-          }
-        )
-      end
-    end
+    respond_with_conversation(error_message: AI_ERROR_MESSAGE)
   rescue ActiveRecord::RecordInvalid
-    redirect_to @chat,
-                alert: "Nao foi possivel enviar a mensagem."
+    respond_with_conversation(error_message: INVALID_MESSAGE)
   end
 
   private
