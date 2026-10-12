@@ -199,8 +199,10 @@ A base da Câmara não traz os itens da nota fiscal, então não dá para saber
    `ExpenseAlerts::RefreshJob(year)` recalcula todos (≈20 s para a Câmara
    inteira) e troca os de cada deputado numa transação. Roda no fim do
    `Suppliers::FetchJob` (se algo foi consultado), na carga das despesas
-   (`db/seeds.rb`), todo dia às 5h e com `bin/rails harpia:expense_alerts`.
-   Em produção, `config/recurring.yml` também agenda o `FetchJob` aos domingos.
+   (`db/seeds.rb`), todo dia às 5h UTC e com `bin/rails harpia:expense_alerts`.
+   Em produção, `config/recurring.yml` também agenda o `FetchJob` aos domingos
+   (3h UTC). Esses agendamentos só rodam em produção a partir da Etapa 8, que
+   liga o Solid Queue no Heroku (fila `maintenance`).
    A aba Gastos continua calculando os alertas na hora.
 4. **Ranking em `/alertas`** (público): pontuação ponderada (alta = 5,
    média = 2, baixa = 1) calculada em SQL, desempate pelo valor sinalizado,
@@ -215,6 +217,155 @@ A base da Câmara não traz os itens da nota fiscal, então não dá para saber
    dos alertas e a atividade do fornecedor; CNPJ formatado e link "Ver nota
    na Câmara".
 
+## Etapa 8 — Respostas assíncronas da Harpia e jobs no Heroku (12/10)
+
+Até aqui a resposta da IA era gerada dentro da requisição: o usuário esperava
+tudo terminar (várias chamadas às ferramentas, depois o título) e uma thread
+do Puma ficava presa o tempo todo. E, no Heroku, nenhum job rodava: o
+template prevê o Solid Queue dentro do Puma pela variável
+`SOLID_QUEUE_IN_PUMA`, definida no `config/deploy.yml` do Kamal, mas o
+Heroku não lê esse arquivo e a variável nunca foi definida.
+
+### Fluxo do chat
+
+```
+Usuário envia pergunta
+  → MessagesController#create (ou ChatsController#create no widget)
+    → MessageProcessorService
+        1. salva a pergunta com status "pending"
+        2. enfileira ChatResponseJob (fila harpia)
+  → resposta imediata: pergunta + "Estamos de olho...", formulário bloqueado
+ChatResponseJob (em segundo plano)
+  → ChatbotService#call → salva a resposta → pergunta "answered" (ou "failed")
+  → envia a conversa pelo WebSocket (turbo_stream_from) às telas abertas
+  → gera o título depois que a resposta já está na tela
+```
+
+1. **`Message#status`** (`pending`, `answered`, `failed`): a falha fica
+   registrada junto à pergunta. Uma pergunta pendente há mais de 2 minutos
+   (`Message::RESPONSE_TIMEOUT`) aparece como falha e libera o formulário.
+2. **WebSocket com Solid Cable.** Os alvos usam o `dom_id` da conversa, para
+   uma conversa nunca aparecer na tela de outra. Só usuários logados abrem
+   conexão (`ApplicationCable::Connection`).
+3. **Respostas que não chegam pelo WebSocket.** Quando a conversa aparece
+   pendente, o `chat_controller.js` confere o estado na hora
+   (`ChatsController#show` em Turbo Stream) e depois a cada 10 s; enquanto a
+   Harpia responde, o servidor devolve 204 e nada muda na tela. Isso cobre a
+   resposta transmitida antes de a tela se inscrever no canal e as quedas de
+   conexão. A rolagem da conversa é preservada entre as atualizações.
+4. **Sem nova tentativa automática** no `ChatResponseJob`: repetir a chamada
+   poderia duplicar a resposta e o custo da IA.
+
+### Jobs no Heroku
+
+O `Procfile` define os dois processos do deploy:
+
+```
+release: bin/rails db:migrate
+web: SOLID_QUEUE_IN_PUMA=true bin/rails server -p ${PORT:-5000} -e $RAILS_ENV
+```
+
+- **`release`:** a cada deploy, o Heroku roda as migrations antes de liberar a
+  versão nova. Se uma migration falhar, o deploy é cancelado e a versão
+  anterior continua no ar. Antes, as migrations eram rodadas à mão.
+- **`web`:** o mesmo comando que o Heroku usava, mais `SOLID_QUEUE_IN_PUMA`,
+  que liga o Solid Queue dentro do Puma em modo `async` (`config/puma.rb`):
+  threads no próprio processo, sem dyno extra. No dyno Basic (512 MB), o modo
+  padrão (`fork`) foi de 208 MB para 430 MB; o `async`, 229 MB.
+- A tabela `solid_cable_messages` é criada por migration: em produção o banco
+  `cable` usa o mesmo `DATABASE_URL` do principal.
+
+### Filas em produção
+
+Só duas filas têm worker (`config/queue.yml`), cada uma com threads próprias:
+
+| Fila | Jobs | Worker |
+| --- | --- | --- |
+| `harpia` | `ChatResponseJob` | 2 threads, consulta a fila a cada 0,1 s |
+| `maintenance` | `Suppliers::FetchJob`, `ExpenseAlerts::RefreshJob`, tarefas do `config/recurring.yml` e o padrão do `ApplicationJob` | 1 thread |
+| `default` | jobs antigos do Active Storage | **nenhum** (fila pausada) |
+
+O dispatcher e o scheduler também rodam, então as tarefas agendadas
+(fornecedores aos domingos às 3h UTC, alertas todo dia às 5h UTC e limpeza
+dos jobs concluídos a cada hora) passam a rodar sozinhas em produção, sempre
+na fila `maintenance`. As rotinas nunca ocupam as threads da Harpia. Elas
+continuam dividindo com o site a CPU, a memória e o banco do mesmo dyno.
+
+O pool de conexões de produção tem 8 conexões (`config/database.yml`): 3
+threads do Puma + 2 da `harpia` + 1 da `maintenance` + folga para o WebSocket.
+
+### A fila `default` não é processada
+
+Em 12/10 a fila `default` de produção tinha **9.322 jobs parados desde 03/10**,
+gerados pelo Active Storage na importação das fotos (`db/seeds.rb`) e nunca
+executados, porque nenhum job rodava no Heroku:
+
+- 8.808 `ActiveStorage::AnalyzeJob`: leriam as dimensões de cada foto no
+  Cloudinary (metadado que o site não usa);
+- 514 `ActiveStorage::PurgeJob`: **apagariam do Cloudinary, sem volta**, 514
+  fotos sem anexo, criadas em 03/10 numa reimportação. Nenhuma tem a chave de
+  uma foto em uso.
+
+A decisão é deixá-los exatamente como estão: enfileirados, sem execução, sem
+exclusão e sem alteração. Para isso:
+
+1. **Nenhum worker lê a `default` nem usa `"*"`** em `config/queue.yml`.
+2. **A fila `default` é pausada em produção**, uma vez, antes do primeiro
+   deploy com jobs. A pausa grava uma linha em `solid_queue_pauses` e não toca
+   nos jobs. Ela exclui a fila até de um worker configurado com `"*"`:
+
+   ```bash
+   heroku run -a harp-ia "rails runner 'SolidQueue::Queue.find_by_name(\"default\").pause'"
+   ```
+
+   Para desfazer: `SolidQueue::Queue.find_by_name("default").resume`.
+3. **`test/jobs/queue_configuration_test.rb`** falha se um job do projeto ou
+   uma tarefa agendada for para uma fila sem worker, ou se um worker passar a
+   ler `"*"` ou `default`.
+
+Novas fotos anexadas em produção continuam gerando `AnalyzeJob` e `PurgeJob`
+na `default`, que também ficam parados (o mesmo de antes).
+
+**Nunca** rode, na fila `default`, `SolidQueue::Queue#clear` (descarta todos
+os jobs prontos), `discard` ou `perform_now` dos jobs parados, nem remova a
+pausa sem decidir antes o que fazer com os 514 `PurgeJob`.
+
+### Regras para jobs novos
+
+- Jobs do projeto herdam a fila `maintenance` do `ApplicationJob`. Use
+  `queue_as :harpia` só para respostas do chat.
+- **Não use `queue_as :default`:** em produção, o job ficaria parado para sempre.
+- Tarefas com `command:` no `config/recurring.yml` precisam de
+  `queue: maintenance`; sem isso, vão para a fila `solid_queue_recurring`, que
+  não tem worker.
+- Uma fila nova só é processada se ganhar um worker em `config/queue.yml`.
+
+### Verificação depois de um deploy
+
+Antes do deploy, guarde a foto da fila `default`; depois, compare. Todos os
+números devem ser iguais (jobs com `id` maior que o máximo anterior são fotos
+novas, também paradas):
+
+```ruby
+d = SolidQueue::Job.where(queue_name: "default")
+puts d.group(:class_name).count, d.where(finished_at: nil).count, d.maximum(:id), d.sum(:id)
+puts SolidQueue::ReadyExecution.where(queue_name: "default").count
+puts SolidQueue::ClaimedExecution.count, SolidQueue::FailedExecution.count
+puts ActiveStorage::Blob.left_joins(:attachments).where(active_storage_attachments: { id: nil }).count
+```
+
+Depois do deploy, confira também:
+
+- **Logs** (`heroku logs -a harp-ia --source app | grep SolidQueue`):
+  `Started Dispatcher`, `Started Scheduler` e dois `Started Worker`, com
+  `queues: "harpia"` e `queues: "maintenance"`; nenhum com `*` ou `default`.
+- `SolidQueue::Queue.find_by_name("default").paused?` → `true`.
+- `SolidQueue::RecurringTask.pluck(:key, :queue_name)` → as três tarefas na
+  `maintenance`.
+- Uma pergunta à Harpia recebe resposta.
+- No dia seguinte: execuções em `SolidQueue::RecurringExecution` e
+  `ExpenseAlert.count` maior que zero.
+
 ---
 
 ## Onde fica cada coisa
@@ -225,7 +376,9 @@ app/
   models/        entidades e associações (+ BrazilMap)
   policies/      regras do Pundit
   services/      cálculos e integrações (IA, métricas, comparações, importação, CNPJ)
-  jobs/          Solid Queue: consulta de CNPJ e recálculo dos alertas de gastos
+  jobs/          Solid Queue: resposta da Harpia (fila harpia), consulta de CNPJ
+                 e recálculo dos alertas de gastos (fila maintenance)
+  channels/      conexão do WebSocket (só usuários logados)
   queries/       consultas de leitura para as páginas
   helpers/       formatação (moeda, rótulos, painéis)
   views/painel/  componentes reaproveitados (cards, métricas, paginação, hero)
@@ -251,3 +404,10 @@ bin/dev
 ```
 
 Variáveis no `.env`: `OPENAI_API_KEY` (chat) e `CLOUDINARY_URL` (fotos).
+
+### Deploy no Heroku
+
+O deploy roda as migrations (fase `release` do `Procfile`) e liga os jobs
+dentro do Puma. Antes do **primeiro** deploy com jobs, pause a fila `default`
+e guarde a foto dela (Etapa 8, "A fila `default` não é processada"); depois,
+siga a "Verificação depois de um deploy".
