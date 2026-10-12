@@ -15,9 +15,10 @@
       nil,
       placeholder: "Pergunte à Harpia...",
       autocomplete: "off",
+      disabled: local_assigns[:disabled],
       data: { chat_target: "input" } %>
 
-  <%= button_tag type: "submit" do %>
+  <%= button_tag type: "submit", disabled: local_assigns[:disabled] do %>
     ➤
   <% end %>
 

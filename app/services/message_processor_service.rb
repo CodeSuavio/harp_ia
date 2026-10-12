@@ -1,6 +1,4 @@
 class MessageProcessorService
-  class AIError < StandardError; end
-
   # page_path: caminho da página em que o usuário fez a pergunta
   # (ex.: "/deputies/12?tab=expenses"), enviado pelo widget
   def initialize(chat, content, page_path: nil)
@@ -16,33 +14,14 @@ class MessageProcessorService
     user_message = @chat.messages.create!(
       content: @content,
       role: "user",
+      status: :pending,
       page_context: PageContextService.new(@page_path).call
     )
 
-    # Envia a mensagem para a IA
-    chatbot = ChatbotService.new(user_message)
-
-    begin
-      result = chatbot.call
-    rescue StandardError => e
-      Rails.logger.error(
-        "[MessageProcessorService] Erro ao gerar resposta da IA: #{e.class} - #{e.message}"
-      )
-
-      raise AIError, "Não foi possível gerar a resposta da IA."
-    end
-
-    # Salva a resposta da IA na mesma conversa
-    # e registra se a pergunta estava fora do escopo da Harpia
-    @chat.messages.create!(
-      content: result[:content],
-      role: "assistant",
-      out_of_scope: result[:out_of_scope]
-    )
-
-    # Gera um título somente quando a conversa ainda não possui título
-    # e a pergunta está dentro do escopo da Harpia.
-    @chat.update!(title: chatbot.generate_title) if @chat.title.blank? && !result[:out_of_scope]
+    # A resposta da IA pode levar vários segundos (consultas às ferramentas,
+    # título da conversa). Ela é gerada em segundo plano e chega à tela pelo
+    # WebSocket, sem prender a requisição do usuário.
+    ChatResponseJob.perform_later(user_message)
 
     # Retorna a mensagem criada pelo usuário
     user_message

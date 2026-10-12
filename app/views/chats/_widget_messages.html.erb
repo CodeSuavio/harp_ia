@@ -1,8 +1,22 @@
+<%#
+  Conversa do widget. Renderizada ao enviar uma pergunta
+  (ChatResponder#widget_streams) e pelo WebSocket quando a resposta
+  da Harpia fica pronta (ChatResponseJob).
+
+  O widget não sabe qual conversa vai exibir até a primeira pergunta,
+  por isso assina o canal da conversa aqui dentro.
+%>
+<% awaiting = chat.awaiting_response? %>
+
+<div id="<%= dom_id(chat, :widget) %>" class="chat-widget-conversation">
+<%= turbo_stream_from chat %>
+
 <div
   class="chat-widget-messages"
-  data-chat-target="messages">
+  data-chat-target="messages"
+  <%= chat_pending_data(chat, awaiting) %>>
 
-  <% @chat.messages.order(:created_at).each do |message| %>
+  <% chat.messages.order(:created_at).each do |message| %>
 
     <% if message.role == "user" %>
 
@@ -16,6 +30,13 @@
         data-chat-target="userMessage">
         <%= message.content %>
       </div>
+
+      <!-- Enquanto a Harpia responde, ou quando ela não conseguiu responder -->
+      <% if message.awaiting_response? %>
+        <div class="chat-widget-loading" data-chat-loading>Estamos de olho...</div>
+      <% elsif message.response_failed? %>
+        <div class="chat-widget-error"><%= ChatResponder::AI_ERROR_MESSAGE %></div>
+      <% end %>
 
     <% else %>
 
@@ -47,4 +68,5 @@
   As próximas mensagens são enviadas para esse mesmo Chat,
   permitindo continuar a conversa sem criar um novo Chat.
 -->
-<%= render "chats/widget_form", url: chat_messages_path(@chat) %>
+<%= render "chats/widget_form", url: chat_messages_path(chat), disabled: awaiting %>
+</div>

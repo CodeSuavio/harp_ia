@@ -78,6 +78,13 @@
   flex-direction: column;
 }
 
+// Conversa dentro do Turbo Frame, substituída pelo WebSocket quando a
+// resposta chega. Não gera caixa própria, para as mensagens e o campo de
+// envio continuarem participando do layout em coluna do frame.
+.chat-widget-conversation {
+  display: contents;
+}
+
 // Agrupa o logo e o nome "Estamos de Olho".
 .chat-widget-title {
   display: flex;

@@ -4,6 +4,7 @@ require "test_helper"
 # Turbo-Frame indica qual interface fez o envio.
 class MessagesControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include ActionView::RecordIdentifier
 
   TURBO_STREAM = "text/vnd.turbo-stream.html, text/html, application/xhtml+xml".freeze
 
@@ -16,16 +17,38 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
 
   teardown { FakeChatbot.reset! }
 
-  test "chat principal atualiza a própria conversa e o título" do
-    send_message("Quem é a deputada?", frame: ChatResponder::CONVERSATION_FRAME)
+  test "chat principal mostra a pergunta na hora e agenda a resposta da IA" do
+    assert_enqueued_with(job: ChatResponseJob) do
+      send_message("Quem é a deputada?", frame: ChatResponder::CONVERSATION_FRAME)
+    end
 
     assert_response :success
     assert_equal "text/vnd.turbo-stream.html", response.media_type
     assert_select "turbo-stream[action=update][target=chat_conversation]"
-    assert_select "turbo-stream[action=update][target=chat_title]", text: /Título gerado/
+    assert_select "turbo-stream[action=update][target=#{dom_id(@chat, :title)}]"
     assert_select "turbo-stream[target=chat_widget_messages]", count: 0
-    assert_includes response.body, "Resposta da Harpia"
-    assert_equal "Título gerado", @chat.reload.title
+    assert_includes response.body, "Quem é a deputada?"
+    assert_includes response.body, "Estamos de olho..."
+    assert @chat.messages.sole.pending?
+  end
+
+  test "formulário fica bloqueado enquanto a Harpia responde" do
+    send_message("Quem é a deputada?", frame: ChatResponder::CONVERSATION_FRAME)
+
+    assert_select "[data-chat-pending][data-chat-refresh-url='#{chat_path(@chat)}']"
+    assert_select "button[type=submit][disabled]"
+    assert_select "textarea[disabled]"
+  end
+
+  test "não aceita outra pergunta enquanto a anterior está sendo respondida" do
+    send_message("Primeira", frame: ChatResponder::CONVERSATION_FRAME)
+
+    assert_no_enqueued_jobs(only: ChatResponseJob) do
+      send_message("Segunda", frame: ChatResponder::CONVERSATION_FRAME)
+    end
+
+    assert_includes response.body, ChatResponder::BUSY_MESSAGE
+    assert_equal ["Primeira"], @chat.messages.pluck(:content)
   end
 
   test "widget atualiza somente o widget e a lista de chats" do
@@ -40,7 +63,9 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     deputy = deputies(:ana)
 
     [ChatResponder::CONVERSATION_FRAME, ChatResponder::WIDGET_FRAME].each do |frame|
-      send_message("E este deputado?", frame: frame, page_path: "/deputies/#{deputy.id}")
+      perform_enqueued_jobs do
+        send_message("E este deputado?", frame: frame, page_path: "/deputies/#{deputy.id}")
+      end
 
       assert_includes @chat.messages.where(role: "user").last.page_context, deputy.name
     end
@@ -52,24 +77,6 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_nil @chat.messages.where(role: "user").last.page_context
   end
 
-  test "falha da IA mostra mensagem amigável no chat principal" do
-    FakeChatbot.fail!
-    send_message("Pergunta", frame: ChatResponder::CONVERSATION_FRAME)
-
-    assert_response :success
-    assert_select "turbo-stream[target=chat_conversation]"
-    assert_includes response.body, ChatResponder::AI_ERROR_MESSAGE
-    assert_includes response.body, "Pergunta"
-  end
-
-  test "falha da IA mostra mensagem amigável no widget" do
-    FakeChatbot.fail!
-    send_message("Pergunta", frame: ChatResponder::WIDGET_FRAME)
-
-    assert_select "turbo-stream[target=chat_widget_messages]"
-    assert_includes response.body, ChatResponder::AI_ERROR_MESSAGE
-  end
-
   test "pergunta vazia mostra aviso dentro da conversa" do
     send_message("", frame: ChatResponder::CONVERSATION_FRAME)
 
@@ -77,12 +84,15 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, ChatResponder::INVALID_MESSAGE
   end
 
-  test "envio sem Turbo redireciona e exibe o erro dentro da conversa" do
+  test "envio sem Turbo redireciona e exibe o erro da IA dentro da conversa" do
     FakeChatbot.fail!
-    post chat_messages_path(@chat), params: { message: { content: "Pergunta" } }
+    perform_enqueued_jobs do
+      post chat_messages_path(@chat), params: { message: { content: "Pergunta" } }
+    end
 
     assert_redirected_to chat_path(@chat)
     follow_redirect!
+    assert_select ".user-message", text: /Pergunta/
     assert_select ".assistant-message--error", text: /#{ChatResponder::AI_ERROR_MESSAGE}/
   end
 

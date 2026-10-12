@@ -11,4 +11,13 @@ module ChatsHelper
   def chat_form_data(frame)
     { turbo_frame: frame, action: CHAT_FORM_ACTIONS }
   end
+
+  # Marca a área de mensagens enquanto a Harpia responde. O chat_controller
+  # usa essas informações para pedir o estado atual da conversa caso a
+  # resposta não chegue pelo WebSocket.
+  def chat_pending_data(chat, awaiting)
+    return unless awaiting
+
+    tag.attributes(data: { chat_pending: true, chat_refresh_url: chat_path(chat) })
+  end
 end

@@ -19,21 +19,21 @@ class MessagesController < ApplicationController
 
     authorize @message
 
-    # Processa toda a interação com a IA:
-    # - salva a pergunta do usuário e a página em que foi feita
-    # - envia a pergunta para a IA
-    # - salva a resposta da IA
-    # - gera o título do chat, quando necessário
+    # Uma pergunta por vez: enquanto a Harpia responde, o formulário fica
+    # bloqueado na tela, e esta verificação cobre outra aba com a mesma conversa.
+    return respond_with_conversation(error_message: BUSY_MESSAGE) if @chat.awaiting_response?
+
+    # Salva a pergunta do usuário e a página em que foi feita e agenda a
+    # resposta da IA (ChatResponseJob), que chega depois pelo WebSocket.
     MessageProcessorService.new(
       @chat,
       message_params[:content],
       page_path: message_params[:page_path]
     ).call
 
-    # Atualiza o chat principal ou o widget, conforme a origem do envio.
+    # Atualiza o chat principal ou o widget, conforme a origem do envio,
+    # mostrando a pergunta e o aviso de que a Harpia está respondendo.
     respond_with_conversation
-  rescue MessageProcessorService::AIError
-    respond_with_conversation(error_message: AI_ERROR_MESSAGE)
   rescue ActiveRecord::RecordInvalid
     respond_with_conversation(error_message: INVALID_MESSAGE)
   end

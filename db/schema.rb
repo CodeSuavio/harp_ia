@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_120001) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_182620) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -171,6 +171,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120001) do
     t.boolean "out_of_scope", default: false, null: false
     t.text "page_context"
     t.string "role", null: false
+    t.string "status", default: "answered", null: false
     t.datetime "updated_at", null: false
     t.index ["chat_id"], name: "index_messages_on_chat_id"
   end
