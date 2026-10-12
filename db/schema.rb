@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_120001) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -131,6 +131,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
     t.index ["json_id"], name: "index_deputies_on_json_id", unique: true
     t.index ["party_id"], name: "index_deputies_on_party_id"
     t.index ["state_label"], name: "index_deputies_on_state_label"
+  end
+
+  create_table "expense_alerts", force: :cascade do |t|
+    t.datetime "created_at", null: false
+    t.bigint "deputy_id", null: false
+    t.jsonb "details", default: {}, null: false
+    t.bigint "expense_ids", default: [], null: false, array: true
+    t.string "kind", null: false
+    t.string "severity", null: false
+    t.datetime "updated_at", null: false
+    t.decimal "value"
+    t.integer "year", null: false
+    t.index ["deputy_id", "year"], name: "index_expense_alerts_on_deputy_id_and_year"
+    t.index ["year", "severity"], name: "index_expense_alerts_on_year_and_severity"
   end
 
   create_table "expenses", force: :cascade do |t|
@@ -508,6 +522,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   add_foreign_key "candidates", "parties"
   add_foreign_key "chats", "users"
   add_foreign_key "deputies", "parties"
+  add_foreign_key "expense_alerts", "deputies"
   add_foreign_key "expenses", "deputies"
   add_foreign_key "messages", "chats"
   add_foreign_key "party_affiliations", "deputies"

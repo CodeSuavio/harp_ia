@@ -2,6 +2,7 @@ module Suppliers
   # Busca o cadastro (CNAE e situação) das empresas que aparecem nas despesas e
   # ainda não estão no cache ou estão desatualizadas. Ficam de fora CPFs (pessoa
   # física), notas sem documento e passagens aéreas (companhias aéreas conhecidas).
+  # No fim, agenda o recálculo dos alertas de gastos, que dependem desses dados.
   class FetchJob < ApplicationJob
     queue_as :default
     limits_concurrency to: 1, key: "suppliers-fetch", duration: 6.hours
@@ -22,6 +23,7 @@ module Suppliers
         sleep(RATE_LIMIT_PAUSE) if lookup.rate_limited?
       end
 
+      Expense.distinct.pluck(:year).each { |year| ExpenseAlerts::RefreshJob.perform_later(year) }
       pending.size
     end
 

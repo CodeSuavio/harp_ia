@@ -48,6 +48,7 @@ PollTheme.destroy_all
 Vote.destroy_all
 Poll.destroy_all
 Bill.destroy_all
+ExpenseAlert.delete_all
 Expense.destroy_all
 Candidate.destroy_all
 Deputy.destroy_all
@@ -211,6 +212,12 @@ data.each do |gasto|
   end
 end
 puts "importado #{Expense.count} gastos"
+
+# Alertas de gastos gravados para o ranking (/alertas). A regra de atividade
+# econômica (CNAE) depende do cadastro dos fornecedores: rode `bin/rails harpia:suppliers`
+# (demorado: uma consulta à BrasilAPI por CNPJ), que recalcula os alertas no fim.
+Expense.distinct.pluck(:year).each { |year| ExpenseAlerts::RefreshJob.perform_now(year) }
+puts "calculados #{ExpenseAlert.count} alertas de gastos"
 
 
 
