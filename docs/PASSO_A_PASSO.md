@@ -179,8 +179,11 @@ A base da Câmara não traz os itens da nota fiscal, então não dá para saber
    de rede ficam sem `fetched_at` e entram na rodada seguinte.
    `Suppliers::FetchJob` (Solid Queue) percorre os CNPJs das despesas sem
    cadastro ou com mais de 90 dias, com pausa de 1,5 s entre chamadas (60 s
-   depois de um 429). CPFs, notas sem documento e passagens aéreas ficam de
-   fora. Comando: `bin/rails "harpia:suppliers[100]"` (limite opcional).
+   depois de um 429), em lotes de 200 que se reenfileiram: nenhum lote prende
+   uma thread por horas, e um deploy no meio só interrompe um lote. Um CNPJ que
+   falhou não é tentado de novo na mesma rodada. CPFs, notas sem documento,
+   passagens aéreas e CNPJs com dígito verificador errado ficam de fora.
+   Comando: `bin/rails "harpia:suppliers[100]"` (limite opcional, roda na hora).
 2. **Duas regras novas em `ExpenseAnomalies`**, no mesmo formato das outras
    (o chat usa sem mudança):
    - `incompatible_supplier_activity`: nenhuma atividade da empresa
@@ -195,11 +198,16 @@ A base da Câmara não traz os itens da nota fiscal, então não dá para saber
    `expense_alerts`) guarda os alertas por deputado e ano;
    `ExpenseAlerts::RefreshJob(year)` recalcula todos (≈20 s para a Câmara
    inteira) e troca os de cada deputado numa transação. Roda no fim do
-   `Suppliers::FetchJob` e na carga das despesas (`db/seeds.rb`). A aba Gastos
-   continua calculando os alertas na hora.
+   `Suppliers::FetchJob` (se algo foi consultado), na carga das despesas
+   (`db/seeds.rb`), todo dia às 5h e com `bin/rails harpia:expense_alerts`.
+   Em produção, `config/recurring.yml` também agenda o `FetchJob` aos domingos.
+   A aba Gastos continua calculando os alertas na hora.
 4. **Ranking em `/alertas`** (público): pontuação ponderada (alta = 5,
    média = 2, baixa = 1) calculada em SQL, desempate pelo valor sinalizado,
-   filtros de ano, UF, partido e gravidade mínima. Link na navbar e atalho
+   filtros de ano, UF, partido e gravidade mínima. Também ordena pela parte do
+   gasto do ano em notas com alerta (cada nota conta uma vez), para comparar
+   deputados com volumes de gasto diferentes. Mostra a data do cálculo e avisa
+   quando o ano ainda não foi calculado. Link na navbar e atalho
    na listagem de deputados. O aviso no topo deixa claro que alerta não é
    prova de irregularidade.
 5. **Aba Gastos do deputado**: filtro "Só notas com alerta" (`alerts=1`) e
