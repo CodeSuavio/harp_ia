@@ -111,7 +111,10 @@
           <% (1..12).each do |month| %>
             <% value = @monthly[month].to_f %>
             <% description = "#{month_label(month)}: #{brl(value)}" %>
-            <%= link_to deputy_tab_path(@deputy, "expenses", filter_params.merge(month: (month unless @month == month))),
+            <%# Mês fora do período escolhido: o clique troca o período pelo mês %>
+            <% in_period = ((@from || 1)..(@to || 12)).cover?(month) %>
+            <%= link_to deputy_tab_path(@deputy, "expenses", (in_period ? filter_params : filter_params.except(:from, :to))
+                                                                .merge(month: (month unless @month == month))),
                   class: "month-bar-wrap text-decoration-none flex-fill text-center #{'is-active' if @month == month}",
                   title: description,
                   aria: { label: "#{description}. #{@month == month ? 'Remover filtro' : 'Filtrar despesas deste mês'}", pressed: @month == month } do %>
@@ -294,7 +297,7 @@
       <%= hidden_field_tag :tab, "expenses", id: nil %>
       <%= hidden_field_tag :year, @year, id: nil %>
       <%= hidden_field_tag :expense_type, @expense_type, id: nil if @expense_type %>
-      <%= hidden_field_tag :month, @month, id: nil if @month %>
+      <%# Sem o mês do gráfico: mudar o período desfaz o filtro de mês, para os dois não se contradizerem %>
       <% months = (1..12).map { |m| [month_label(m), m] } %>
       <div class="col-6 col-md-auto">
         <%= label_tag :expense_from, "De", class: "form-label text-muted mb-1" %>
@@ -332,7 +335,7 @@
         <tbody>
           <% @expenses.each do |expense| %>
             <% alerts = @alerts_by_expense[expense.id] %>
-            <tr class="<%= 'border-bottom-0' if alerts %>">
+            <tr class="<%= 'expense-flagged' if alerts %>">
               <td class="ps-3 fw-medium text-muted text-nowrap small">
                 <%= expense.document_date&.strftime("%d/%m/%Y") || "#{month_label(expense.month)}/#{expense.year}" %>
               </td>

@@ -165,3 +165,8 @@ $compare-worst: #dc3545;
   height: 56px;
   object-fit: cover;
 }
+
+// Nota com alerta: a linha e o bloco de alerta logo abaixo ficam juntos
+.expense-flagged > td {
+  border-bottom-width: 0;
+}
