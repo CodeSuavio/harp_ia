@@ -6,6 +6,11 @@ module ExpenseAlerts
     queue_as :default
     limits_concurrency to: 1, key: ->(year) { "expense-alerts-#{year}" }
 
+    # Recálculo de todos os anos com despesas (fim do Suppliers::FetchJob, agendamento)
+    def self.refresh_all_later = years.each { |year| perform_later(year) }
+    def self.refresh_all_now = years.each { |year| perform_now(year) }
+    def self.years = Expense.distinct.pluck(:year)
+
     def perform(year)
       deputy_ids = Expense.where(year: year).distinct.pluck(:deputy_id)
       ExpenseAlert.where(year: year).where.not(deputy_id: deputy_ids).delete_all

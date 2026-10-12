@@ -216,7 +216,7 @@ puts "importado #{Expense.count} gastos"
 # Alertas de gastos gravados para o ranking (/alertas). A regra de atividade
 # econômica (CNAE) depende do cadastro dos fornecedores: rode `bin/rails harpia:suppliers`
 # (demorado: uma consulta à BrasilAPI por CNPJ), que recalcula os alertas no fim.
-Expense.distinct.pluck(:year).each { |year| ExpenseAlerts::RefreshJob.perform_now(year) }
+ExpenseAlerts::RefreshJob.refresh_all_now
 puts "calculados #{ExpenseAlert.count} alertas de gastos"
 
 

@@ -6,8 +6,9 @@ module Suppliers
     URL = "https://brasilapi.com.br/api/cnpj/v1/%s".freeze
     OPEN_TIMEOUT = 5
     READ_TIMEOUT = 15
-    NETWORK_ERRORS = [Timeout::Error, SocketError, SystemCallError, OpenSSL::SSL::SSLError, Net::HTTPBadResponse,
-                      JSON::ParserError].freeze
+    # IOError cobre o EOFError de conexão fechada no meio da resposta
+    NETWORK_ERRORS = [Timeout::Error, SocketError, SystemCallError, IOError, OpenSSL::SSL::SSLError,
+                      Net::HTTPBadResponse, JSON::ParserError].freeze
 
     attr_reader :supplier
 
@@ -55,7 +56,7 @@ module Suppliers
     end
 
     def store(data)
-      supplier.update!(
+      persist!(
         name: data["razao_social"],
         cnae_code: cnae(data["cnae_fiscal"]), cnae_description: data["cnae_fiscal_descricao"],
         secondary_cnaes: secondary_cnaes(data["cnaes_secundarios"]),
@@ -78,10 +79,22 @@ module Suppliers
       value.to_i.positive? ? value.to_i.to_s.rjust(7, "0") : nil
     end
 
+    # updated_at muda mesmo quando o erro se repete: o FetchJob usa para não
+    # consultar de novo, na mesma rodada, um CNPJ que acabou de falhar
     def save_error(message, fetched: true)
-      supplier.fetch_error = message
-      supplier.fetched_at = fetched ? Time.current : nil
-      supplier.save!
+      persist!(fetch_error: message, fetched_at: (Time.current if fetched), updated_at: Time.current)
+    end
+
+    # Duas consultas do mesmo CNPJ ao mesmo tempo (ex.: rake task com o job rodando):
+    # a segunda grava por cima do registro que a primeira criou
+    def persist!(attributes)
+      supplier.update!(attributes)
+    rescue ActiveRecord::RecordNotUnique, ActiveRecord::RecordInvalid => e
+      raise unless supplier.new_record? && Supplier.exists?(cnpj: supplier.cnpj)
+
+      Rails.logger.info("Suppliers::CnpjLookup: #{supplier.cnpj} gravado por outra consulta (#{e.class})")
+      @supplier = Supplier.find_by!(cnpj: supplier.cnpj)
+      supplier.update!(attributes)
     end
 
     def error_message(response)

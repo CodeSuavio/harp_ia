@@ -2,6 +2,7 @@ ENV["RAILS_ENV"] ||= "test"
 require_relative "../config/environment"
 require "rails/test_help"
 require_relative "support/fake_chatbot"
+require_relative "support/http_stub"
 
 module ActiveSupport
   class TestCase

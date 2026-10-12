@@ -136,9 +136,9 @@ module DeputiesHelper
     when :inactive_supplier
       ["#{supplier} estava com CNPJ #{row[:status].to_s.downcase} quando emitiu " \
        "#{pluralize(row[:count], 'nota', plural: 'notas')} (#{brl(row[:value], precision: 0)})",
-       "Situação cadastral na Receita Federal diferente de ATIVA " \
-       "(#{row[:status_date] ? "desde #{row[:status_date].strftime('%d/%m/%Y')}" : 'sem data informada'}) " \
-       "na data da nota."]
+       "Situação cadastral na Receita Federal diferente de ATIVA desde " \
+       "#{row[:status_date]&.strftime('%d/%m/%Y')}, antes da data da nota. A Receita só informa a situação " \
+       "atual: uma empresa que esteve inapta e voltou a ficar ativa não aparece aqui."]
     when :exclusive_supplier
       ["#{supplier} só aparece nas notas deste deputado e recebeu #{brl(row[:value], precision: 0)}",
        "Empresa que não atende nenhum outro deputado e recebeu ao menos #{brl(ExpenseAnomalies::EXCLUSIVE_SUPPLIER_MIN,

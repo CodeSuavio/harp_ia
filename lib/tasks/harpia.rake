@@ -17,10 +17,21 @@ namespace :harpia do
 
   desc "Consulta na BrasilAPI o CNAE dos fornecedores (CNPJ) das despesas. Uso: bin/rails 'harpia:suppliers[100]'"
   task :suppliers, [:limit] => :environment do |_, args|
-    limit = args[:limit].presence&.to_i
-    puts "#{Suppliers::FetchJob.pending_cnpjs.size} CNPJs sem cadastro ou desatualizados"
-    count = Suppliers::FetchJob.perform_now(limit: limit)
+    pending = Suppliers::FetchJob.pending_cnpjs
+    pending = pending.first(args[:limit].to_i) if args[:limit].present?
+    puts "#{pending.size} CNPJs para consultar (~#{(pending.size * Suppliers::FetchJob::PAUSE / 60).ceil} min)"
+
+    Suppliers::FetchJob.fetch(pending)
     errors = Supplier.where.not(fetch_error: nil).count
-    puts "#{count} consultados · #{Supplier.with_activity.count} com CNAE · #{errors} com erro"
+    puts "#{pending.size} consultados · #{Supplier.with_activity.count} com CNAE · #{errors} com erro"
+
+    ExpenseAlerts::RefreshJob.refresh_all_now if pending.any?
+    puts "#{ExpenseAlert.count} alertas de gastos recalculados" if pending.any?
+  end
+
+  desc "Recalcula os alertas de gastos gravados (ranking /alertas) de todos os anos"
+  task expense_alerts: :environment do
+    ExpenseAlerts::RefreshJob.refresh_all_now
+    puts "#{ExpenseAlert.count} alertas de gastos"
   end
 end
