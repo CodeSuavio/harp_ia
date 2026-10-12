@@ -14,4 +14,13 @@ namespace :harpia do
     puts "#{result[:created]} propostas importadas"
     result[:errors].each { |error| puts "  ! #{error}" }
   end
+
+  desc "Consulta na BrasilAPI o CNAE dos fornecedores (CNPJ) das despesas. Uso: bin/rails 'harpia:suppliers[100]'"
+  task :suppliers, [:limit] => :environment do |_, args|
+    limit = args[:limit].presence&.to_i
+    puts "#{Suppliers::FetchJob.pending_cnpjs.size} CNPJs sem cadastro ou desatualizados"
+    count = Suppliers::FetchJob.perform_now(limit: limit)
+    errors = Supplier.where.not(fetch_error: nil).count
+    puts "#{count} consultados · #{Supplier.with_activity.count} com CNAE · #{errors} com erro"
+  end
 end

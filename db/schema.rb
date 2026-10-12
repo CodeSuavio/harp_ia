@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_11_120002) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_12_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -443,6 +443,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_11_120002) do
     t.index ["expires_at"], name: "index_solid_queue_semaphores_on_expires_at"
     t.index ["key", "value"], name: "index_solid_queue_semaphores_on_key_and_value"
     t.index ["key"], name: "index_solid_queue_semaphores_on_key", unique: true
+  end
+
+  create_table "suppliers", force: :cascade do |t|
+    t.string "cnae_code"
+    t.string "cnae_description"
+    t.string "cnpj", null: false
+    t.datetime "created_at", null: false
+    t.string "fetch_error"
+    t.datetime "fetched_at"
+    t.string "name"
+    t.string "registration_status"
+    t.date "registration_status_date"
+    t.jsonb "secondary_cnaes", default: [], null: false
+    t.datetime "updated_at", null: false
+    t.index ["cnpj"], name: "index_suppliers_on_cnpj", unique: true
   end
 
   create_table "themes", force: :cascade do |t|
