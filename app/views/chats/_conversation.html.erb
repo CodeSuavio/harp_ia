@@ -1,0 +1,66 @@
+<!--
+  Mensagens e formulário do chat principal.
+  Renderizado na página da conversa e novamente pelo Turbo Stream
+  a cada resposta da Harpia (ChatResponder#conversation_streams).
+-->
+<div
+  class="chat-messages p-4 p-md-5"
+  style="max-height: 60vh; overflow-y: auto; background-color: #F8FAFC;"
+  data-chat-target="messages">
+
+  <% messages = chat.messages.order(:created_at) %>
+
+  <% if messages.empty? %>
+    <div class="text-center py-5 opacity-50" data-chat-target="placeholder">
+      <i class="fa-solid fa-comment-dots fa-3x text-navy mb-3"></i>
+      <h4 class="h5 text-navy fw-bold">Como posso ajudar na sua análise?</h4>
+      <p class="text-muted small">Faça perguntas sobre candidatos, histórico ou dados eleitorais.</p>
+    </div>
+  <% end %>
+
+  <% messages.each do |message| %>
+    <% if message.role == "user" %>
+      <%= render "chats/user_message" do %>
+        <%= message.content %>
+      <% end %>
+    <% else %>
+      <%= render "chats/assistant_message", out_of_scope: message.out_of_scope? do %>
+        <%= render_markdown(message.content) %>
+      <% end %>
+    <% end %>
+  <% end %>
+
+  <!-- Exibe uma mensagem amigável quando a IA não consegue responder. -->
+  <% if local_assigns[:error_message].present? %>
+    <%= render "chats/assistant_message", error: true do %>
+      <%= error_message %>
+    <% end %>
+  <% end %>
+</div>
+
+<!-- ========================================== -->
+<!-- FORMULÁRIO DE ENVIO -->
+<!-- ========================================== -->
+<div class="card-footer bg-white border-top p-3 p-md-4">
+  <%= form_with model: [chat, Message.new],
+        class: "chat-form",
+        data: chat_form_data(ChatResponder::CONVERSATION_FRAME) do |form| %>
+
+    <!-- Preenchido pelo Stimulus com a página atual. Na página da conversa
+      não há registro em foco: a Harpia usa as páginas das perguntas anteriores. -->
+    <%= form.hidden_field :page_path, id: nil %>
+
+    <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
+      <%= form.text_area :content,
+            placeholder: "Pergunte à Harpia...",
+            class: "form-control border-0 shadow-none bg-light px-4 py-3",
+            rows: 1,
+            style: "resize: none; overflow: hidden;",
+            data: { chat_target: "input", action: "keydown.enter->chat#submitOnEnter" } %>
+
+      <%= button_tag type: "submit", class: "btn btn-auth px-4 d-flex align-items-center justify-content-center" do %>
+        <i class="fa-solid fa-paper-plane"></i>
+      <% end %>
+    </div>
+  <% end %>
+</div>

@@ -83,3 +83,25 @@
   font-weight: 600;
   cursor: pointer;
 }
+
+// ----- RESPOSTAS ESPECIAIS DA HARPIA -----
+// Mesmos destaques do chat widget, para as duas interfaces
+// apresentarem a conversa da mesma forma.
+
+// Resposta a uma pergunta fora do escopo da Harpia.
+.assistant-message--out-of-scope {
+  border-left: 3px solid $orange !important;
+  background-color: rgba($orange, 0.08) !important;
+}
+
+// Aviso exibido quando a Harpia não consegue gerar uma resposta.
+.assistant-message--error {
+  border-left: 3px solid $orange !important;
+  background-color: rgba($orange, 0.08) !important;
+  font-size: 0.95rem;
+}
+
+// Feedback exibido enquanto aguardamos a resposta da Harpia.
+.chat-loading {
+  @extend .chat-widget-loading;
+}

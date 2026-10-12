@@ -38,7 +38,7 @@ class PageContextService
       names = Deputy.where(id: Array(query["ids"])).map { |d| "#{d.name} (deputy_id #{d.id})" }
       "Comparação entre os deputados #{names.to_sentence}" if names.any?
     when %w[deputies index]
-      "Lista de deputados#{filters_text(query)}"
+      "Lista de deputados#{filters_text(query)}#{sort_text(DeputiesController::SORTS, query)}"
     when %w[expenses index]
       deputy = Deputy.find_by(id: route[:deputy_id])
       deputy && "Gastos do deputado #{deputy.name} (deputy_id #{deputy.id})#{year_text(query)}"
@@ -48,7 +48,11 @@ class PageContextService
                "aba \"#{tab_label(PartiesController::TABS, query['tab'])}\""
     when %w[parties compare]
       labels = Party.where(id: Array(query["ids"])).map { |p| "#{p.label} (party_id #{p.id})" }
-      labels.any? ? "Comparação entre os partidos #{labels.to_sentence}" : "Comparação entre partidos"
+      if labels.any?
+        "Comparação entre os partidos #{labels.to_sentence}"
+      else
+        "Comparação entre partidos#{sort_text(PartyComparison::SORTS, query)}"
+      end
     when %w[parties index]
       "Lista de partidos#{filters_text(query)}"
     when %w[bills show]
@@ -69,6 +73,15 @@ class PageContextService
     when %w[pages home]
       "Página inicial do Harp_IA"
     end
+  end
+
+  # Ordenação escolhida pelo usuário, para entender "quem lidera esse ranking?"
+  def sort_text(sorts, query)
+    sort = sorts[query["sort"]]
+    return "" unless sort
+
+    direction = query["dir"] == "asc" && sort[:default] != :asc ? ", do menor para o maior" : ""
+    ", ordenada por \"#{sort[:label].delete_prefix('Ordenar por ')}\"#{direction}"
   end
 
   def tab_label(tabs, tab)

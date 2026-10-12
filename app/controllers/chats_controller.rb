@@ -1,4 +1,6 @@
 class ChatsController < ApplicationController
+  include ChatResponder
+
   before_action :authenticate_user!
   before_action :set_chat, only: %i[show destroy]
 
@@ -8,9 +10,6 @@ class ChatsController < ApplicationController
 
   def show
     authorize @chat
-
-    @messages = @chat.messages.order(:created_at)
-    @message = Message.new
   end
 
   def create
@@ -18,80 +17,32 @@ class ChatsController < ApplicationController
     @chat = current_user.chats.new
     authorize @chat
 
-    if @chat.save
-
-      # Quando o chat já é iniciado com uma pergunta, como acontece
-      # no widget "Estamos de Olho", processa a primeira interação.
-      #
-      # O MessageProcessorService centraliza todo o fluxo:
-      # - salva a pergunta do usuário
-      # - envia a pergunta para a IA
-      # - salva a resposta da IA
-      # - gera o título da conversa, quando necessário
-      if params.dig(:message, :content).present?
-        MessageProcessorService.new(
-          @chat,
-          params[:message][:content],
-          page_path: params.dig(:message, :page_path)
-        ).call
-      end
-
-      # Atualiza a lista de chats com a conversa recém-criada.
-      @chats = policy_scope(Chat)
-
-      # O mesmo endpoint atende dois fluxos:
-      # HTML → chat tradicional
-      # Turbo Stream → widget, sem trocar de página
-      respond_to do |format|
-        format.html { redirect_to @chat }
-
-        format.turbo_stream do
-          render turbo_stream: [
-            # Atualiza as mensagens exibidas dentro do widget.
-            turbo_stream.update(
-              "chat_widget_messages",
-              partial: "chats/widget_messages"
-            ),
-
-            # Atualiza a lista da página "Meus Chats".
-            # Se o usuário estiver nessa página, o novo chat
-            # aparecerá sem precisar atualizar o navegador.
-            turbo_stream.update(
-              "chats_list",
-              partial: "chats/chats_list",
-              locals: { chats: @chats }
-            )
-          ]
-        end
-      end
-
-    else
-      redirect_to chats_path,
-                  alert: "Nao foi possivel criar a conversa."
+    unless @chat.save
+      redirect_to chats_path, alert: "Nao foi possivel criar a conversa."
+      return
     end
+
+    # Quando o chat já é iniciado com uma pergunta, como acontece
+    # no widget e no botão "Perguntar à Harpia", processa a primeira interação.
+    #
+    # O MessageProcessorService centraliza todo o fluxo:
+    # - salva a pergunta do usuário e a página em que foi feita
+    # - envia a pergunta para a IA
+    # - salva a resposta da IA
+    # - gera o título da conversa, quando necessário
+    if params.dig(:message, :content).present?
+      MessageProcessorService.new(
+        @chat,
+        params[:message][:content],
+        page_path: params.dig(:message, :page_path)
+      ).call
+    end
+
+    respond_with_conversation
   rescue MessageProcessorService::AIError
     # Se a IA falhar, mantém o erro técnico no backend
     # e apresenta uma mensagem amigável para o usuário.
-    @chats = policy_scope(Chat)
-
-    respond_to do |format|
-      # Fluxo tradicional.
-      format.html do
-        redirect_to @chat,
-                    alert: "Não foi possível gerar a resposta. Tente novamente."
-      end
-
-      # Fluxo do widget.
-      format.turbo_stream do
-        render turbo_stream: turbo_stream.update(
-          "chat_widget_messages",
-          partial: "chats/widget_messages",
-          locals: {
-            error_message: "Não foi possível gerar a resposta. Tente novamente."
-          }
-        )
-      end
-    end
+    respond_with_conversation(error_message: AI_ERROR_MESSAGE)
   end
 
   def destroy

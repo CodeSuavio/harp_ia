@@ -1,4 +1,4 @@
-<% page_description = "Compare os partidos da Câmara: governismo, coesão, disciplina, gastos, projetos e candidaturas de 2026." %>
+<% page_description = "Compare as bancadas de deputados federais na Câmara dos Deputados: governismo, coesão, disciplina, gastos, projetos e candidaturas de 2026." %>
 <% content_for :title, "Comparar partidos · Harpia" %>
 <% content_for :head do %>
   <meta name="description" content="<%= page_description %>">
@@ -11,8 +11,8 @@
 <% total_seats = [@comparison.total_seats, 1].max %>
 <% bloc_labels = PartyComparison::BLOCS.transform_values { |bloc| bloc[:label] }.merge(PartyComparison::NO_DATA => "Sem dados") %>
 
-<%= render "painel/hero", title: "Comparar partidos", highlight: "na Câmara",
-      subtitle: "Como cada bancada se posiciona: quanto vota com o Governo, quão unida é e o que mais a diferencia das outras." %>
+<%= render "painel/hero", title: "Comparar partidos", highlight: "na Câmara dos Deputados",
+      subtitle: "Bancadas de deputados federais: quanto cada uma vota com o Governo, quão unida é e o que mais a diferencia das outras." %>
 
 <div class="container py-5">
   <div class="mb-4">
@@ -166,6 +166,9 @@
       <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
         <i class="fa-solid fa-table-list me-2 text-gold"></i>Indicadores lado a lado
       </h2>
+      <p class="small text-muted mb-1">
+        Bancadas de deputados federais na Câmara dos Deputados (<%= @comparison.total_seats %> cadeiras).
+      </p>
       <p class="small text-muted mb-0">
         Clique no nome de uma coluna para ordenar. Passe o mouse no ⓘ para ver como calculamos.
         Para ver só alguns partidos lado a lado, use "Escolher partidos" na <%= link_to "lista de partidos", parties_path, class: "text-navy fw-medium" %>.
@@ -178,7 +181,7 @@
           <tr class="small text-muted text-uppercase">
             <% [
                  ["label", nil],
-                 ["seats", "Deputados hoje e variação desde a posse da legislatura (trocas de partido, licenças e suplências)."],
+                 ["seats", "Deputados federais hoje e variação desde a posse da legislatura (trocas de partido, licenças e suplências)."],
                  ["states", "Estados (e DF) com ao menos um deputado do partido. Entre parênteses, a fatia da bancada no estado mais representado."],
                  ["governism", "Votações com orientação Sim/Não do Governo em que a maioria da bancada votou igual (mínimo de #{PartyComparison::MIN_GOVERNMENT_POLLS})."],
                  ["cohesion", "Quão unida a bancada vota: 100% quando todos votam igual, 0% quando racha ao meio (média das votações com ao menos #{DeputyMetrics::COHESION_MIN_VOTERS} votos Sim/Não do partido)."],

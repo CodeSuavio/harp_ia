@@ -1,6 +1,14 @@
+<%#
+  data-turbo-permanent: o widget (aberto ou fechado, com a conversa) continua
+  na tela ao navegar, por exemplo ao clicar em "Ver ranking completo".
+  O id muda com o usuário, para não manter a conversa depois de sair da conta.
+%>
 <div
+  id="chat_widget_<%= current_user&.id || 'guest' %>"
   class="chat-widget"
-  data-controller="chat-widget">
+  data-turbo-permanent
+  data-controller="chat-widget chat"
+  data-action="chat-widget:opened->chat#scrollToLatestInteraction <%= ChatsHelper::CHAT_ACTIONS %>">
 
   <!-- Botão flutuante que abre o chatbot -->
   <button
@@ -18,6 +26,7 @@
   <!-- Janela do chatbot -->
   <div
     class="chat-widget-window"
+    hidden
     data-chat-widget-target="window">
 
     <!-- Cabeçalho -->
@@ -40,47 +49,40 @@
       </button>
     </div>
 
+    <!-- Aparência das mensagens exibidas pelo chat_controller
+      enquanto a Harpia processa a resposta. -->
+    <template data-chat-target="userMessageTemplate">
+      <div class="chat-widget-user-message" data-chat-target="userMessage"></div>
+    </template>
+
+    <template data-chat-target="loadingTemplate">
+      <div class="chat-widget-loading" data-chat-loading>Estamos de olho...</div>
+    </template>
+
+    <template data-chat-target="errorTemplate">
+      <div class="chat-widget-error"><%= ChatResponder::AI_ERROR_MESSAGE %></div>
+    </template>
+
     <!--
       O Turbo Frame contém tanto as mensagens quanto o formulário.
 
       Antes da primeira pergunta ainda não existe um Chat,
       portanto o formulário envia para POST /chats.
     -->
-    <%= turbo_frame_tag "chat_widget_messages" do %>
+    <%# target="_top": links das respostas abrem a página inteira;
+        os formulários apontam para o próprio frame. %>
+    <%= turbo_frame_tag ChatResponder::WIDGET_FRAME, target: "_top" do %>
 
       <!-- Área das mensagens -->
       <% if user_signed_in? %>
-        <div class="chat-widget-messages">
+        <div class="chat-widget-messages" data-chat-target="messages">
           <p>Olá! O que você gostaria de saber?</p>
         </div>
 
         <!-- Formulário da primeira pergunta
           Usuários autenticados podem iniciar uma nova conversa
           diretamente pelo widget.-->
-        <%= form_with url: chats_path,
-              method: :post,
-              class: "chat-widget-input",
-              data: {
-                turbo_frame: "chat_widget_messages",
-                action: "submit->chat-widget#showLoading " \
-                "turbo:submit-start->chat-widget#clearInput turbo:submit-start->chat-widget#disableForm " \
-                "turbo:submit-end->chat-widget#enableForm"
-              } do %>
-
-          <!-- Preenchido pelo Stimulus com a página atual, para a Harpia
-             saber o que o usuário está vendo ao fazer a pergunta. -->
-          <%= hidden_field_tag "message[page_path]", nil, id: nil %>
-
-          <%= text_field_tag "message[content]",
-            nil,
-            placeholder: "Pergunte à Harpia...",
-            autocomplete: "off" %>
-
-          <%= button_tag type: "submit" do %>
-          ➤
-          <% end %>
-
-        <% end %>
+        <%= render "chats/widget_form", url: chats_path %>
 
       <% else %>
 

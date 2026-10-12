@@ -1,0 +1,12 @@
+<!-- Pergunta do usuário no chat principal. O target "userMessage" é a âncora
+  usada pelo chat_controller para posicionar o scroll na pergunta mais recente. -->
+<div class="d-flex justify-content-end mb-4" data-chat-target="userMessage">
+  <div class="user-message bg-navy text-white rounded-4 p-3 shadow-sm" style="max-width: 80%; border-bottom-right-radius: 4px !important;" data-chat-text>
+    <%= yield %>
+  </div>
+  <div class="ms-2 flex-shrink-0 mt-auto">
+    <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 30px; height: 30px;">
+      <i class="fa-solid fa-user text-muted small"></i>
+    </div>
+  </div>
+</div>

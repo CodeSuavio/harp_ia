@@ -13,9 +13,8 @@
             <i class="fa-solid fa-robot fa-lg text-gold"></i>
           </div>
           <div>
-            <h1 class="h3 fw-bolder text-white mb-0 letter-spacing-tight">
-              <%= @chat.title.presence || "Nova Investigação" %>
-            </h1>
+            <!-- Atualizado pelo Turbo Stream quando a Harpia gera o título -->
+            <h1 id="chat_title" class="h3 fw-bolder text-white mb-0 letter-spacing-tight"><%= @chat.title.presence || Chat::DEFAULT_TITLE %></h1>
             <p class="text-white-50 small mb-0">Harpia Intelligence Analyst</p>
           </div>
         </div>
@@ -34,69 +33,38 @@
   <!-- ÁREA DE MENSAGENS -->
   <!-- ========================================== -->
   <section class="container position-relative" style="margin-top: -3rem; z-index: 10; margin-bottom: 7rem;">
-    <div class="card border-0 shadow-lg bg-white rounded-4 inspiration-card overflow-hidden">
+    <div
+      class="card border-0 shadow-lg bg-white rounded-4 inspiration-card overflow-hidden"
+      data-controller="chat"
+      data-action="<%= ChatsHelper::CHAT_ACTIONS %>">
 
-      <div class="chat-messages p-4 p-md-5" style="max-height: 60vh; overflow-y: auto; background-color: #F8FAFC;">
-        <% if @messages.empty? %>
-          <div class="text-center py-5 opacity-50">
-            <i class="fa-solid fa-comment-dots fa-3x text-navy mb-3"></i>
-            <h4 class="h5 text-navy fw-bold">Como posso ajudar na sua análise?</h4>
-            <p class="text-muted small">Faça perguntas sobre candidatos, histórico ou dados eleitorais.</p>
-          </div>
-        <% else %>
-          <% @messages.each do |message| %>
+      <!-- Aparência das mensagens exibidas pelo chat_controller
+        enquanto a Harpia processa a resposta. -->
+      <template data-chat-target="userMessageTemplate">
+        <%= render "chats/user_message" do %><% end %>
+      </template>
 
-            <% if message.role == "user" %>
-              <!-- Mensagem do Utilizador -->
-              <div class="d-flex justify-content-end mb-4">
-                <div class="user-message bg-navy text-white rounded-4 p-3 shadow-sm" style="max-width: 80%; border-bottom-right-radius: 4px !important;">
-                  <%= message.content %>
-                </div>
-                <div class="ms-2 flex-shrink-0 mt-auto">
-                   <div class="bg-light rounded-circle d-flex align-items-center justify-content-center border" style="width: 30px; height: 30px;">
-                    <i class="fa-solid fa-user text-muted small"></i>
-                   </div>
-                </div>
-              </div>
-            <% else %>
-              <!-- Mensagem da IA (Harpia) -->
-              <div class="d-flex justify-content-start mb-4">
-                <div class="me-2 flex-shrink-0 mt-auto">
-                   <div class="bg-gold rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
-                    <i class="fa-solid fa-robot text-white small"></i>
-                   </div>
-                </div>
-                <div class="assistant-message bg-white text-navy rounded-4 p-3 shadow-sm border" style="max-width: 80%; border-bottom-left-radius: 4px !important;">
-                  <%= render_markdown(message.content) %>
-                </div>
-              </div>
-            <% end %>
+      <template data-chat-target="loadingTemplate">
+        <%= render "chats/assistant_message", loading: true %>
+      </template>
 
-          <% end %>
+      <template data-chat-target="errorTemplate">
+        <%= render "chats/assistant_message", error: true do %>
+          <%= ChatResponder::AI_ERROR_MESSAGE %>
         <% end %>
+      </template>
 
-        <!-- Ponto de referência para rolar até a última mensagem -->
-        <div id="chat-bottom" data-controller="chat-scroll"></div>
-      </div>
+      <!--
+        O Turbo Frame contém as mensagens e o formulário. A cada pergunta,
+        o Rails devolve um Turbo Stream que atualiza somente esta área
+        e o título, sem recarregar a página.
 
-      <!-- ========================================== -->
-      <!-- FORMULÁRIO DE ENVIO -->
-      <!-- ========================================== -->
-      <div class="card-footer bg-white border-top p-3 p-md-4">
-        <%= form_with model: [@chat, @message], class: "chat-form" do |form| %>
-          <div class="input-group input-group-lg shadow-sm rounded-pill overflow-hidden border">
-            <%= form.text_area :content,
-                               placeholder: "Pergunte à Harpia...",
-                               class: "form-control border-0 shadow-none bg-light px-4 py-3",
-                               rows: 1,
-                               style: "resize: none; overflow: hidden;" %>
-
-            <%= button_tag type: 'submit', class: "btn btn-auth px-4 d-flex align-items-center justify-content-center" do %>
-              <i class="fa-solid fa-paper-plane"></i>
-            <% end %>
-          </div>
-        <% end %>
-      </div>
+        target="_top": links das respostas (ex.: "Ver ranking completo")
+        abrem a página inteira; o formulário aponta para o próprio frame.
+      -->
+      <%= turbo_frame_tag ChatResponder::CONVERSATION_FRAME, target: "_top", class: "d-block" do %>
+        <%= render "chats/conversation", chat: @chat, error_message: flash[:chat_error] %>
+      <% end %>
 
     </div>
   </section>

@@ -1,0 +1,24 @@
+<%#
+  Resposta da Harpia no chat principal.
+  out_of_scope: destaca as respostas a perguntas fora do escopo da Harpia
+  loading:      feedback exibido enquanto a IA processa a resposta
+  error:        aviso amigável quando a IA não consegue responder
+%>
+<% modifier = if local_assigns[:error] then "assistant-message--error"
+              elsif local_assigns[:out_of_scope] then "assistant-message--out-of-scope"
+              end %>
+
+<div class="d-flex justify-content-start mb-4" <%= "data-chat-loading" if local_assigns[:loading] %>>
+  <div class="me-2 flex-shrink-0 mt-auto">
+    <div class="bg-gold rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
+      <i class="fa-solid fa-robot text-white small"></i>
+    </div>
+  </div>
+  <div class="assistant-message bg-white text-navy rounded-4 p-3 shadow-sm border <%= modifier %>" style="max-width: 80%; border-bottom-left-radius: 4px !important;">
+    <% if local_assigns[:loading] %>
+      <span class="chat-loading">Estamos de olho...</span>
+    <% else %>
+      <%= yield %>
+    <% end %>
+  </div>
+</div>

@@ -17,6 +17,18 @@ module DeputiesHelper
     number_to_currency(value || 0, unit: "R$ ", separator: ",", delimiter: ".", precision: precision)
   end
 
+  # Valor do indicador da ordenação que o card não mostra nas colunas fixas
+  # (gasto mensal, projetos e presença), para a lista bater com o ranking da Harpia.
+  def deputy_sort_value(sort, value)
+    return if value.nil?
+
+    case sort
+    when "expenses_total" then "#{brl(value, precision: 0)} no ano"
+    when "alignment" then "#{percent(value)} alinhado ao partido"
+    when "against_party" then "#{value} #{'voto'.pluralize(value)} contra o partido"
+    end
+  end
+
   def percent(value)
     value.nil? ? "—" : "#{value}%"
   end

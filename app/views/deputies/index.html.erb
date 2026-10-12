@@ -1,4 +1,4 @@
-<% content_for :title, "Deputados · Harpia" %>
+<% content_for :title, "Deputados federais · Harpia" %>
 
 <div class="container py-5"
      data-controller="compare-selection"
@@ -6,8 +6,8 @@
      data-compare-selection-key-value="deputy-compare"
      data-compare-selection-limit-value="<%= DeputiesController::COMPARE_LIMIT %>">
   <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 fw-bold text-navy mb-0">Deputados</h1>
-    <span class="text-muted small">Diretório e monitoramento</span>
+    <h1 class="h4 fw-bold text-navy mb-0">Deputados federais</h1>
+    <span class="text-muted small">Câmara dos Deputados · diretório e monitoramento</span>
   </div>
 
   <%= turbo_frame_tag "deputies_list", data: { turbo_action: "advance" } do %>
@@ -101,7 +101,18 @@
                       params[:sort]
                     ),
                     class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
+
+              <%# Direção só faz sentido nas ordenações por indicador %>
+              <% if DeputiesController::SORTS.dig(@sort, :metric) %>
+                <%= select_tag :dir,
+                      options_for_select(DeputiesController::DIRECTIONS.invert, @direction),
+                      aria: { label: "Direção da ordenação" },
+                      class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium text-truncate" %>
+              <% end %>
             </div>
+
+            <%# Ano dos gastos vindo de um link (ex.: ranking da Harpia), mantido ao mudar os filtros %>
+            <%= hidden_field_tag :year, @expense_year if params[:year].present? %>
           </div>
 
         </div>
