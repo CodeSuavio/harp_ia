@@ -7,7 +7,12 @@
      data-compare-selection-limit-value="<%= DeputiesController::COMPARE_LIMIT %>">
   <div class="d-flex justify-content-between align-items-center mb-4">
     <h1 class="h4 fw-bold text-navy mb-0">Deputados federais</h1>
-    <span class="text-muted small">Câmara dos Deputados · diretório e monitoramento</span>
+    <div class="d-flex flex-wrap align-items-center justify-content-end gap-3">
+      <span class="text-muted small d-none d-md-inline">Câmara dos Deputados · diretório e monitoramento</span>
+      <%= link_to expense_alerts_path, class: "btn btn-sm btn-outline-secondary rounded-pill px-3" do %>
+        <i class="fa-solid fa-triangle-exclamation text-warning me-1" aria-hidden="true"></i> Ranking de alertas de gastos
+      <% end %>
+    </div>
   </div>
 
   <%= turbo_frame_tag "deputies_list", data: { turbo_action: "advance" } do %>
