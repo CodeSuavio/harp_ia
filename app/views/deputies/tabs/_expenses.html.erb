@@ -5,7 +5,8 @@
     <p class="text-muted small mb-0">Ainda não existem despesas disponíveis para este deputado.</p>
   </div>
 <% else %>
-  <% filter_params = { year: @year, expense_type: @expense_type, month: @month }.compact %>
+  <% filter_params = { year: @year, expense_type: @expense_type, month: @month, from: @from, to: @to,
+                      alerts: ("1" if @alerts_only) }.compact %>
 
   <!-- Seleção de ano -->
   <% if @years.size > 1 %>
@@ -273,7 +274,49 @@
               class: "badge badge-wrap text-bg-light border text-decoration-none",
               aria: { label: "Remover filtro de tipo #{expense_type_label(@expense_type)}" } %>
       <% end %>
+      <% if @from || @to %>
+        <% period = "#{month_label(@from || 1)}–#{month_label(@to || 12)}" %>
+        <%= link_to "#{period} ×", deputy_tab_path(@deputy, "expenses", filter_params.except(:from, :to)),
+              class: "badge badge-wrap text-bg-light border text-decoration-none",
+              aria: { label: "Remover filtro de período #{period}" } %>
+      <% end %>
+      <% if @alerts_only %>
+        <%= link_to "Só notas com alerta ×", deputy_tab_path(@deputy, "expenses", filter_params.except(:alerts)),
+              class: "badge badge-wrap text-bg-light border text-decoration-none",
+              aria: { label: "Remover filtro de notas com alerta" } %>
+      <% end %>
     </div>
+
+    <!-- Filtros da tabela -->
+    <%= form_with url: deputy_path(@deputy), method: :get,
+          data: { controller: "filter-form", action: "change->filter-form#submit" },
+          class: "row g-2 align-items-end small mb-3" do %>
+      <%= hidden_field_tag :tab, "expenses", id: nil %>
+      <%= hidden_field_tag :year, @year, id: nil %>
+      <%= hidden_field_tag :expense_type, @expense_type, id: nil if @expense_type %>
+      <%= hidden_field_tag :month, @month, id: nil if @month %>
+      <% months = (1..12).map { |m| [month_label(m), m] } %>
+      <div class="col-6 col-md-auto">
+        <%= label_tag :expense_from, "De", class: "form-label text-muted mb-1" %>
+        <%= select_tag :from, options_for_select([["Jan", ""]] + months.drop(1), @from),
+              id: "expense_from", class: "form-select form-select-sm" %>
+      </div>
+      <div class="col-6 col-md-auto">
+        <%= label_tag :expense_to, "Até", class: "form-label text-muted mb-1" %>
+        <%= select_tag :to, options_for_select(months.first(11) + [["Dez", ""]], @to),
+              id: "expense_to", class: "form-select form-select-sm" %>
+      </div>
+      <div class="col-12 col-md-auto ms-md-2">
+        <div class="form-check form-switch mb-1">
+          <%= check_box_tag :alerts, "1", @alerts_only, id: "expense_alerts_only", class: "form-check-input", role: "switch",
+                disabled: @anomaly_expense_ids.empty? && !@alerts_only %>
+          <%= label_tag :expense_alerts_only, class: "form-check-label text-navy fw-medium" do %>
+            Só notas com alerta (<%= @anomaly_expense_ids.size %>)
+          <% end %>
+        </div>
+      </div>
+      <noscript><div class="col-auto"><button type="submit" class="btn btn-sm btn-dark">Filtrar</button></div></noscript>
+    <% end %>
 
     <div class="table-responsive">
       <table class="table table-hover align-middle mb-0">
@@ -288,15 +331,19 @@
         </thead>
         <tbody>
           <% @expenses.each do |expense| %>
-            <tr>
+            <% alerts = @alerts_by_expense[expense.id] %>
+            <tr class="<%= 'border-bottom-0' if alerts %>">
               <td class="ps-3 fw-medium text-muted text-nowrap small">
                 <%= expense.document_date&.strftime("%d/%m/%Y") || "#{month_label(expense.month)}/#{expense.year}" %>
               </td>
               <td class="text-navy small"><%= expense_type_label(expense.expense_type) %></td>
               <td class="text-muted small">
                 <%= expense.supplier.presence || "Não informado" %>
-                <% if @anomaly_expense_ids.include?(expense.id) %>
+                <% if alerts %>
                   <i class="fa-solid fa-triangle-exclamation text-warning ms-1" role="img" title="Nota fora do padrão" aria-label="Nota fora do padrão"></i>
+                <% end %>
+                <% if expense.supplier_cnpj_cpf.present? %>
+                  <span class="d-block text-nowrap"><%= supplier_document(expense.supplier_cnpj_cpf) %></span>
                 <% end %>
               </td>
               <td class="text-end fw-bold text-nowrap <%= expense.net_amount.to_f.negative? ? 'text-success' : 'text-navy' %>">
@@ -306,12 +353,37 @@
               <td class="pe-3 text-end text-nowrap">
                 <% if expense.document_url.present? %>
                   <%= link_to expense.document_url, target: "_blank", rel: "noopener", class: "text-gold text-decoration-none small",
-                        title: "Ver nota fiscal", aria: { label: "Ver nota fiscal (abre em nova aba)" } do %>
-                    <i class="fa-solid fa-file-invoice" aria-hidden="true"></i><span class="d-md-none ms-1">Nota</span>
+                        aria: { label: "Ver nota na Câmara (abre em nova aba)" } do %>
+                    <i class="fa-solid fa-file-invoice me-1" aria-hidden="true"></i>Ver nota na Câmara
                   <% end %>
                 <% end %>
               </td>
             </tr>
+            <% if alerts %>
+              <% company = @suppliers[Supplier.normalize_value_for(:cnpj, expense.supplier_cnpj_cpf)] %>
+              <tr>
+                <td colspan="5" class="px-3 pt-0">
+                  <div class="alert <%= alerts.any? { |a| a[:severity] == :high } ? 'alert-danger' : 'alert-warning' %> small mb-0 py-2">
+                    <% alerts.each do |alert| %>
+                      <% title, criterion = expense_anomaly_text(alert) %>
+                      <p class="mb-1">
+                        <i class="fa-solid fa-triangle-exclamation me-1" aria-hidden="true"></i>
+                        <strong><%= title %></strong>
+                        <span class="d-block"><%= criterion %></span>
+                      </p>
+                    <% end %>
+                    <% if company&.cnae_code %>
+                      <p class="mb-0 text-body-secondary">
+                        Atividade do fornecedor na Receita: <%= cnae_label(code: Supplier.format_cnae(company.cnae_code), description: company.cnae_description) %>
+                        <% if company.secondary_cnaes.any? %>
+                          · <%= pluralize(company.secondary_cnaes.size, "atividade secundária", plural: "atividades secundárias") %>
+                        <% end %>
+                      </p>
+                    <% end %>
+                  </div>
+                </td>
+              </tr>
+            <% end %>
           <% end %>
         </tbody>
       </table>

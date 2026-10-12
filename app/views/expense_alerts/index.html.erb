@@ -1,0 +1,118 @@
+<% content_for :title, "Alertas de gastos · Harpia" %>
+
+<%= render "painel/hero", title: "Alertas", highlight: "de gastos",
+      subtitle: "Deputados com mais gastos fora do padrão na cota parlamentar, pela gravidade dos alertas." %>
+
+<% filter_params = { year: @year, state: @state, party: @party&.id, severity: (@severity unless @severity == "low") }.compact %>
+<% severity_badges = { high: ["text-bg-danger", "alta"], medium: ["text-bg-warning", "média"], low: ["text-bg-secondary", "baixa"] } %>
+
+<section class="container search-container pb-5">
+  <!-- Aviso fixo -->
+  <div class="bg-white border rounded-4 small mb-4 p-3">
+    <div class="d-flex gap-2 align-items-start">
+      <i class="fa-solid fa-circle-info text-gold mt-1" aria-hidden="true"></i>
+      <div>
+        <p class="mb-1 text-navy fw-semibold">Alerta não é prova de irregularidade.</p>
+        <p class="mb-0">
+          Os alertas apontam gastos que fogem do padrão (do próprio deputado, da Câmara ou do cadastro do fornecedor na Receita Federal)
+          e merecem um olhar mais atento. Pode haver explicação legítima para cada um. Confira as notas no perfil do deputado e na Câmara.
+          Fonte: cota parlamentar (CEAP) de <%= @year %>, dados abertos da Câmara dos Deputados e cadastro de CNPJ da Receita Federal (BrasilAPI).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <%= form_with url: expense_alerts_path, method: :get,
+        data: { controller: "filter-form", action: "change->filter-form#submit" },
+        class: "card search-card shadow-sm bg-white rounded-4 p-3 border-0 mb-4" do %>
+    <div class="row g-2 align-items-center">
+      <div class="col-6 col-lg">
+        <%= label_tag :year, "Ano", class: "form-label small text-muted mb-1" %>
+        <%= select_tag :year, options_for_select(@years, @year), class: "form-select form-select-sm" %>
+      </div>
+      <div class="col-6 col-lg">
+        <%= label_tag :state, "Estado", class: "form-label small text-muted mb-1" %>
+        <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states, @state), class: "form-select form-select-sm" %>
+      </div>
+      <div class="col-6 col-lg">
+        <%= label_tag :party, "Partido", class: "form-label small text-muted mb-1" %>
+        <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
+              class: "form-select form-select-sm" %>
+      </div>
+      <div class="col-6 col-lg">
+        <%= label_tag :severity, "Gravidade mínima", class: "form-label small text-muted mb-1" %>
+        <%= select_tag :severity, options_for_select(ExpenseAlertsController::SEVERITY_LABELS.invert, @severity),
+              class: "form-select form-select-sm" %>
+      </div>
+    </div>
+    <noscript><button type="submit" class="btn btn-sm btn-dark mt-2">Filtrar</button></noscript>
+  <% end %>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <span class="text-muted small me-2"><%= @total %> <%= "deputado".pluralize(@total) %> com alertas</span>
+    <span class="small text-muted">
+      Ordem: pontuação (alta = <%= ExpenseAlert::WEIGHTS["high"] %>, média = <%= ExpenseAlert::WEIGHTS["medium"] %>,
+      baixa = <%= ExpenseAlert::WEIGHTS["low"] %> pontos por alerta), depois o valor sinalizado.
+      <%= info_tip("Um mesmo gasto pode entrar em mais de um alerta (ex.: nota atípica e pico no mês), então o valor sinalizado pode somar mais que o total gasto.") %>
+    </span>
+  </div>
+
+  <% if @page_rows.empty? %>
+    <p class="text-muted text-center py-5">Nenhum deputado com alertas nesse recorte.</p>
+  <% else %>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+      <% @page_rows.each_with_index do |row, index| %>
+        <% deputy = row[:deputy] %>
+        <div class="col">
+          <div class="card border-0 shadow-sm rounded-4 h-100 bg-white">
+            <div class="card-body p-4">
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <span class="text-muted fw-bold small" aria-label="Posição"><%= (@page - 1) * ExpenseAlertsController::PER_PAGE + index + 1 %>º</span>
+                <% if deputy.photo.attached? %>
+                  <%= cl_image_tag deputy.photo.key, class: "alert-rank-photo rounded-circle flex-shrink-0", alt: "", loading: "lazy" %>
+                <% elsif deputy.photo_url.to_s.start_with?("http") %>
+                  <%= image_tag deputy.photo_url, class: "alert-rank-photo rounded-circle flex-shrink-0", alt: "", loading: "lazy" %>
+                <% else %>
+                  <div class="alert-rank-photo candidate-photo-placeholder rounded-circle flex-shrink-0 d-flex align-items-center justify-content-center">
+                    <i class="fa-solid fa-user text-muted" aria-hidden="true"></i>
+                  </div>
+                <% end %>
+                <div class="min-w-0">
+                  <h2 class="h6 fw-bold text-navy mb-0 text-truncate">
+                    <%= link_to deputy.name, deputy_path(deputy, tab: "expenses", year: @year),
+                          class: "text-reset text-decoration-none stretched-link" %>
+                  </h2>
+                  <span class="small text-muted"><%= [deputy.party&.label, deputy.state_label].compact.join(" · ") %></span>
+                </div>
+              </div>
+
+              <dl class="row small mb-3 g-0">
+                <dt class="col-7 text-muted fw-normal">Total gasto em <%= @year %></dt>
+                <dd class="col-5 text-end fw-bold text-navy mb-1"><%= brl(@expenses.dig(deputy.id, :total), precision: 0) %></dd>
+                <dt class="col-7 text-muted fw-normal">Notas no ano</dt>
+                <dd class="col-5 text-end text-navy mb-1"><%= @note_counts[deputy.id].to_i %></dd>
+                <dt class="col-7 text-muted fw-normal">Valor sinalizado</dt>
+                <dd class="col-5 text-end text-navy mb-1"><%= brl(row[:value], precision: 0) %></dd>
+                <dt class="col-7 text-muted fw-normal">Alertas · pontuação</dt>
+                <dd class="col-5 text-end text-navy mb-0"><%= row[:count] %> · <%= row[:score] %> pts</dd>
+              </dl>
+
+              <div class="d-flex flex-wrap gap-1">
+                <% severity_badges.each do |severity, (css, label)| %>
+                  <% next if row[severity].to_i.zero? %>
+                  <span class="badge <%= css %>" title="Alertas de gravidade <%= label %>">
+                    <%= label.capitalize %>: <%= row[severity] %>
+                  </span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+          path_for: ->(p) { expense_alerts_path(filter_params.merge(page: p)) } %>
+  <% end %>
+</section>

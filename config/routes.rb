@@ -24,6 +24,9 @@ Rails.application.routes.draw do
 
   resources :polls, only: [:index, :show]
 
+  # Ranking de deputados pelos alertas de gastos
+  get "alertas", to: "expense_alerts#index", as: :expense_alerts
+
   # ==========================================
   # ÁREA LOGADA (Utilizadores Autenticados)
   # ==========================================

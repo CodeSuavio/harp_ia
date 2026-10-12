@@ -3,6 +3,7 @@ class Deputy < ApplicationRecord
   belongs_to :party
 
   has_many :expenses, dependent: :destroy
+  has_many :expense_alerts, dependent: :delete_all
   has_many :bills, dependent: :destroy
   has_many :votes, dependent: :destroy
   has_many :proposals, dependent: :destroy

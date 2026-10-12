@@ -141,7 +141,11 @@ class DeputiesController < ApplicationController
     @year_over_year = @stats.year_over_year(year: @year)
     @concentration = @stats.supplier_concentration(year: @year)
     @anomalies = ExpenseAnomalies.new(@deputy).for_year(@year)
-    @anomaly_expense_ids = @anomalies.flat_map { |row| row[:expense_ids].to_a }.to_set
+    # { expense_id => [alertas da nota] }, para a tabela não percorrer @anomalies a cada linha
+    @alerts_by_expense = @anomalies.each_with_object({}) do |row, index|
+      row[:expense_ids].to_a.each { |id| (index[id] ||= []) << row }
+    end
+    @anomaly_expense_ids = @alerts_by_expense.keys.to_set
     @anomaly_documents = expenses.where(id: @anomaly_expense_ids.to_a).where.not(document_url: [nil, ""])
                                  .pluck(:id, :document_url).to_h
     @monthly = expenses.group(:month).sum(:net_amount)
@@ -152,12 +156,27 @@ class DeputiesController < ApplicationController
                              .pluck(Expense::SUPPLIER_NAME, Arel.sql("MAX(supplier_cnpj_cpf)"),
                                     Arel.sql("SUM(net_amount)"), Arel.sql("COUNT(*)"))
 
-    @expense_type = params[:expense_type].presence
-    @month = params[:month].presence&.to_i
-    rows = expenses
+    @expenses = paginate(filtered_expenses(expenses).order(document_date: :desc, id: :desc))
+    @suppliers = Supplier.where(cnpj: @expenses.map { |e| Supplier.normalize_value_for(:cnpj, e.supplier_cnpj_cpf) })
+                         .index_by(&:cnpj)
+  end
+
+  # Filtros da tabela de despesas: tipo, mês (gráfico), período (mês inicial e final) e só notas com alerta
+  def filtered_expenses(rows)
+    read_expense_filters
     rows = rows.where(expense_type: @expense_type) if @expense_type
     rows = rows.where(month: @month) if @month
-    @expenses = paginate(rows.order(document_date: :desc, id: :desc))
+    rows = rows.where(month: (@from || 1)..(@to || 12)) if @from || @to
+    rows = rows.where(id: @anomaly_expense_ids.to_a) if @alerts_only
+    rows
+  end
+
+  def read_expense_filters
+    @expense_type = params[:expense_type].presence
+    @month = params[:month].presence&.to_i
+    @from, @to = [params[:from], params[:to]].map { |month| month.to_i if month.to_i.between?(1, 12) }
+    @from, @to = @to, @from if @from && @to && @from > @to
+    @alerts_only = params[:alerts] == "1"
   end
 
   def load_bills
