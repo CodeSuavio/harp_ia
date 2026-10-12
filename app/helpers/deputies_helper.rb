@@ -62,12 +62,15 @@ module DeputiesHelper
     end
   end
 
-  # CPF de fornecedor pessoa física é dado pessoal (LGPD): mostra só os dígitos do meio
+  # CPF de fornecedor pessoa física é dado pessoal (LGPD): mostra só os dígitos do meio.
+  # CNPJ sai no formato padrão (a base traz formatações variadas, ex.: 560.310.060/0018-0)
   def supplier_document(document)
     digits = document.to_s.gsub(/\D/, "")
-    return document.presence || "—" unless digits.size == 11
-
-    "***.#{digits[3, 3]}.#{digits[6, 3]}-**"
+    case digits.size
+    when 11 then "***.#{digits[3, 3]}.#{digits[6, 3]}-**"
+    when 14 then "#{digits[0, 2]}.#{digits[2, 3]}.#{digits[5, 3]}/#{digits[8, 4]}-#{digits[12, 2]}"
+    else document.presence || "—"
+    end
   end
 
   # Links de redes sociais válidos (http/https), ignorando URLs malformadas
