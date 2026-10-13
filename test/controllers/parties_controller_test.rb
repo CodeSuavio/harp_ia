@@ -6,7 +6,7 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "MDB"
     assert_select ".party-bench-map a.uf-tile", 27
-    assert_select ".party-bench-map a[href=?] .uf-seats", parties_path(uf: "SP"), text: "2"
+    assert_select ".party-bench-map a[href=?] .uf-seats", root_path(uf: "SP", anchor: "partidos"), text: "2"
     assert_select "a[href=?]", deputy_path(deputies(:ana))
   end
 
@@ -50,28 +50,6 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".nav-link.active", text: "Visão geral"
   end
 
-  test "mapa tem os 27 estados e o JSON traz as bancadas nacional e por estado" do
-    get parties_path
-    assert_response :success
-    assert_select ".uf-tile[data-uf]", 27
-    assert_select ".uf-tile[data-uf=SP] .uf-seats", text: "2"
-
-    data = JSON.parse(css_select("[data-party-map-target=data]").first.text)
-    mdb = parties(:mdb).id.to_s
-    pt = parties(:pt).id.to_s
-    assert_equal({ mdb => 3, pt => 1 }, data["national"])
-    assert_equal({ mdb => 1, pt => 1 }, data.dig("states", "RJ", "seats"))
-    assert_equal({}, data.dig("states", "AC", "seats"))
-  end
-
-  test "pré-seleciona o estado do ?uf= e ignora UF inválida" do
-    get parties_path(uf: "rj")
-    assert_select "[data-party-map-selected-value=RJ]"
-
-    get parties_path(uf: "XX")
-    assert_select "[data-party-map-selected-value='']"
-  end
-
   test "comparação mostra destaques, blocos e a tabela de indicadores" do
     get compare_parties_path
     assert_response :success
@@ -92,16 +70,12 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".party-compare-table tbody tr:first-child th a", text: "MDB"
   end
 
-  test "lista de partidos leva à comparação" do
+  test "a antiga lista de partidos redireciona para a home, mantendo o ?uf=" do
     get parties_path
-    assert_select "a[href=?]", compare_parties_path
-  end
+    assert_redirected_to root_path(anchor: "partidos")
 
-  test "lista de partidos tem o modo de escolher partidos para comparar" do
-    get parties_path
-    assert_select "[data-controller~=compare-selection][data-compare-selection-url-value=?]", compare_parties_path
-    assert_select "button[data-action='compare-selection#toggleMode']", text: /Escolher partidos/
-    assert_select "template input[data-compare-selection-target=checkbox][data-field=compare]"
+    get parties_path(uf: "SP")
+    assert_redirected_to root_path(uf: "SP", anchor: "partidos")
   end
 
   test "comparação lado a lado dos partidos escolhidos" do

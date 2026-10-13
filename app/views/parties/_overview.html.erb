@@ -1,11 +1,6 @@
-<% content_for :title, "Partidos · Harpia" %>
-
-<%= render "painel/hero", title: "Partidos", highlight: "na Câmara",
-      subtitle: "Como as 513 cadeiras se dividem entre os partidos, no Brasil e em cada estado." %>
-
 <% max_seats = [@state_seats.values.max.to_i, 1].max %>
 
-<section class="container search-container pb-5"
+<section id="partidos" class="container search-container pb-5"
          data-controller="party-map compare-selection"
          data-compare-selection-url-value="<%= compare_parties_path %>"
          data-compare-selection-key-value="party-compare"
