@@ -18,7 +18,7 @@ class QueueConfigurationTest < ActiveSupport::TestCase
     kinds = production_processes.map(&:kind)
     workers = production_processes.select { |process| process.kind == :worker }
 
-    assert_equal [:dispatcher, :worker, :worker], kinds
+    assert_equal %i[dispatcher worker worker], kinds
     assert_equal([["harpia"], ["maintenance"]], workers.map { |worker| Array(worker.attributes[:queues]) })
     assert_not_includes consumed_queues, "*"
     assert_not_includes consumed_queues, "default"

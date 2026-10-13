@@ -117,7 +117,7 @@ class HarpiaChatTest < ApplicationSystemTestCase
     current = page.evaluate_script("document.querySelector('.chat-messages').scrollTop")
     min = page.evaluate_script("window.minChatScroll")
     assert current > 500, "a conversa deveria continuar na última pergunta (scrollTop=#{current})"
-    assert min.nil? || min > current - 50, "a conversa voltou ao topo durante a espera (mínimo #{min}, final #{current})"
+    assert min.nil? || min > current - 50, "a conversa voltou ao topo na espera (mín. #{min}, final #{current})"
   end
 
   test "widget recebe pelo WebSocket a resposta que chega depois" do
