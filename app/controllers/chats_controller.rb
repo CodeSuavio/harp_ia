@@ -10,6 +10,17 @@ class ChatsController < ApplicationController
 
   def show
     authorize @chat
+
+    respond_to do |format|
+      format.html
+      # Estado atual da conversa, pedido pelo chat_controller quando a resposta
+      # demora a chegar pelo WebSocket (ex.: conexão caiu no meio do caminho).
+      # Enquanto a Harpia ainda responde, nada mudou: a tela não é renderizada
+      # de novo, evitando saltos na rolagem da conversa.
+      format.turbo_stream do
+        @chat.awaiting_response? ? head(:no_content) : respond_with_conversation
+      end
+    end
   end
 
   def create
@@ -23,13 +34,8 @@ class ChatsController < ApplicationController
     end
 
     # Quando o chat já é iniciado com uma pergunta, como acontece
-    # no widget e no botão "Perguntar à Harpia", processa a primeira interação.
-    #
-    # O MessageProcessorService centraliza todo o fluxo:
-    # - salva a pergunta do usuário e a página em que foi feita
-    # - envia a pergunta para a IA
-    # - salva a resposta da IA
-    # - gera o título da conversa, quando necessário
+    # no widget e no botão "Perguntar à Harpia", salva a pergunta e
+    # agenda a resposta da IA (ver MessageProcessorService).
     if params.dig(:message, :content).present?
       MessageProcessorService.new(
         @chat,
@@ -39,10 +45,6 @@ class ChatsController < ApplicationController
     end
 
     respond_with_conversation
-  rescue MessageProcessorService::AIError
-    # Se a IA falhar, mantém o erro técnico no backend
-    # e apresenta uma mensagem amigável para o usuário.
-    respond_with_conversation(error_message: AI_ERROR_MESSAGE)
   end
 
   def destroy

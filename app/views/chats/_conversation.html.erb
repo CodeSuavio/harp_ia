@@ -1,12 +1,18 @@
 <!--
   Mensagens e formulário do chat principal.
-  Renderizado na página da conversa e novamente pelo Turbo Stream
-  a cada resposta da Harpia (ChatResponder#conversation_streams).
+  Renderizado na página da conversa, novamente pelo Turbo Stream ao enviar
+  uma pergunta (ChatResponder#conversation_streams) e pelo WebSocket quando
+  a resposta da Harpia fica pronta (ChatResponseJob). O id inclui a conversa,
+  para que a resposta de uma conversa nunca apareça na tela de outra.
 -->
+<% awaiting = chat.awaiting_response? %>
+
+<div id="<%= dom_id(chat, :conversation) %>">
 <div
   class="chat-messages p-4 p-md-5"
   style="max-height: 60vh; overflow-y: auto; background-color: #F8FAFC;"
-  data-chat-target="messages">
+  data-chat-target="messages"
+  <%= chat_pending_data(chat, awaiting) %>>
 
   <% messages = chat.messages.order(:created_at) %>
 
@@ -22,6 +28,15 @@
     <% if message.role == "user" %>
       <%= render "chats/user_message" do %>
         <%= message.content %>
+      <% end %>
+
+      <!-- Enquanto a Harpia responde, ou quando ela não conseguiu responder -->
+      <% if message.awaiting_response? %>
+        <%= render "chats/assistant_message", loading: true %>
+      <% elsif message.response_failed? %>
+        <%= render "chats/assistant_message", error: true do %>
+          <%= ChatResponder::AI_ERROR_MESSAGE %>
+        <% end %>
       <% end %>
     <% else %>
       <%= render "chats/assistant_message", out_of_scope: message.out_of_scope? do %>
@@ -56,11 +71,13 @@
             class: "form-control border-0 shadow-none bg-light px-4 py-3",
             rows: 1,
             style: "resize: none; overflow: hidden;",
+            disabled: awaiting,
             data: { chat_target: "input", action: "keydown.enter->chat#submitOnEnter" } %>
 
-      <%= button_tag type: "submit", class: "btn btn-auth px-4 d-flex align-items-center justify-content-center" do %>
+      <%= button_tag type: "submit", disabled: awaiting, class: "btn btn-auth px-4 d-flex align-items-center justify-content-center" do %>
         <i class="fa-solid fa-paper-plane"></i>
       <% end %>
     </div>
   <% end %>
+</div>
 </div>

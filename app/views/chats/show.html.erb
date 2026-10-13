@@ -14,7 +14,7 @@
           </div>
           <div>
             <!-- Atualizado pelo Turbo Stream quando a Harpia gera o título -->
-            <h1 id="chat_title" class="h3 fw-bolder text-white mb-0 letter-spacing-tight"><%= @chat.title.presence || Chat::DEFAULT_TITLE %></h1>
+            <h1 id="<%= dom_id(@chat, :title) %>" class="h3 fw-bolder text-white mb-0 letter-spacing-tight"><%= @chat.title.presence || Chat::DEFAULT_TITLE %></h1>
             <p class="text-white-50 small mb-0">Harpia Intelligence Analyst</p>
           </div>
         </div>
@@ -37,6 +37,11 @@
       class="card border-0 shadow-lg bg-white rounded-4 inspiration-card overflow-hidden"
       data-controller="chat"
       data-action="<%= ChatsHelper::CHAT_ACTIONS %>">
+
+      <!-- Recebe pelo WebSocket a resposta da Harpia e o título da conversa
+        (ChatResponseJob). Fica fora do Turbo Frame para continuar conectado
+        enquanto a conversa é atualizada. -->
+      <%= turbo_stream_from @chat %>
 
       <!-- Aparência das mensagens exibidas pelo chat_controller
         enquanto a Harpia processa a resposta. -->

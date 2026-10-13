@@ -7,4 +7,14 @@ class ApplicationSystemTestCase < ActionDispatch::SystemTestCase
 
   setup { Warden.test_mode! }
   teardown { Warden.test_reset! }
+
+  # As respostas da Harpia são geradas em segundo plano (ChatResponseJob) e
+  # chegam pelo WebSocket. No navegador, os jobs rodam de verdade, em outra
+  # thread, como em produção; nos demais testes eles só são enfileirados.
+  setup do
+    @queue_adapter = ActiveJob::Base.queue_adapter
+    ActiveJob::Base.queue_adapter = :async
+  end
+
+  teardown { ActiveJob::Base.queue_adapter = @queue_adapter }
 end

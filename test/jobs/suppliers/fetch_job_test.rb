@@ -16,12 +16,14 @@ class Suppliers::FetchJobTest < ActiveJob::TestCase
 
   test "consulta em lotes, encadeia o próximo lote e recalcula os alertas no fim" do
     with_http_response(Net::HTTPOK, "200", OK_BODY) do
-      assert_enqueued_with(job: Suppliers::FetchJob) { Suppliers::FetchJob.perform_now(pause: 0, batch_size: 1) }
+      assert_enqueued_with(job: Suppliers::FetchJob, queue: "maintenance") do
+        Suppliers::FetchJob.perform_now(pause: 0, batch_size: 1)
+      end
       assert_no_enqueued_jobs(only: ExpenseAlerts::RefreshJob)
       assert_equal 1, Supplier.count
 
       clear_enqueued_jobs
-      assert_enqueued_with(job: ExpenseAlerts::RefreshJob, args: [2025]) do
+      assert_enqueued_with(job: ExpenseAlerts::RefreshJob, args: [2025], queue: "maintenance") do
         Suppliers::FetchJob.perform_now(started_at: 1.minute.ago, fetched: 1, pause: 0, batch_size: 1)
       end
     end

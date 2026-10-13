@@ -1,4 +1,9 @@
 import { Controller } from "@hotwired/stimulus"
+import { Turbo } from "@hotwired/turbo-rails"
+
+// A resposta da Harpia chega pelo WebSocket. Se ela demorar mais do que isso
+// (ex.: a conexão caiu), o controller pede ao servidor o estado da conversa.
+const REFRESH_DELAY = 10000
 
 // Comportamento compartilhado pelas duas formas de conversar com a Harpia:
 // o chat principal (chats#show) e o chat widget. Cada interface fornece
@@ -61,8 +66,9 @@ export default class extends Controller {
       if (input && !input.value) input.value = this.pendingQuestion || ""
     }
 
-    // A resposta substitui o formulário logo depois deste evento;
-    // o foco vai para o campo novo assim que ele aparecer.
+    // A resposta substitui o formulário logo depois deste evento. Ele chega
+    // bloqueado enquanto a Harpia responde; o foco vai para o campo assim
+    // que a resposta chegar pelo WebSocket e o formulário for liberado.
     this.shouldFocus = true
     this.focusInput()
   }
@@ -81,17 +87,85 @@ export default class extends Controller {
     event.preventDefault()
   }
 
-  inputTargetConnected() {
-    if (this.shouldFocus) {
+  inputTargetConnected(input) {
+    if (this.shouldFocus && !input.disabled) {
       this.shouldFocus = false
-      this.focusInput()
+      input.focus()
     }
   }
 
-  messagesTargetConnected() {
-    // Sempre que o Turbo renderiza novamente a área de mensagens,
-    // posiciona a conversa na interação mais recente.
+  messagesTargetConnected(messages) {
+    // A área de mensagens renderizada de novo começa no topo. Ela volta, sem
+    // animação, à posição em que o usuário estava, para a tela não "pular".
+    if (this.savedScroll !== undefined) {
+      messages.scrollTop = this.savedScroll
+      this.savedScroll = undefined
+    }
+
+    // Posiciona a conversa na interação mais recente. Se ela já está
+    // visível (ex.: a resposta chegou abaixo da pergunta), nada se move.
     this.scrollToLatestInteraction()
+
+    // Conversa aguardando a Harpia: confere o estado na hora. Se a IA
+    // respondeu (ou falhou) muito rápido, a resposta pelo WebSocket pode ter
+    // chegado antes desta renderização, que então mostraria um estado antigo.
+    // Enquanto a Harpia responde, o servidor devolve 204 e a consulta se
+    // repete a cada REFRESH_DELAY.
+    clearTimeout(this.refreshTimer)
+    if ("chatPending" in messages.dataset) this.refresh(messages)
+  }
+
+  connect() {
+    // O Turbo marca o canal da conversa (turbo_stream_from) com o atributo
+    // "connected" quando a inscrição no WebSocket é confirmada, inclusive
+    // depois de uma reconexão. A resposta pode ter sido transmitida antes
+    // disso (ex.: primeira pergunta do widget), então a conversa é consultada.
+    this.streamObserver = new MutationObserver((mutations) => {
+      const connected = mutations.some(({ target }) => target.hasAttribute("connected"))
+      const messages = this.hasMessagesTarget && this.messagesTarget
+
+      if (connected && messages && "chatPending" in messages.dataset) this.refresh(messages)
+    })
+
+    this.streamObserver.observe(this.element, { subtree: true, attributeFilter: ["connected"] })
+
+    // Guarda a posição da rolagem antes de cada atualização da conversa
+    // (envio da pergunta, resposta pelo WebSocket ou consulta abaixo).
+    this.saveScroll = () => {
+      if (this.hasMessagesTarget) this.savedScroll = this.messagesTarget.scrollTop
+    }
+    document.addEventListener("turbo:before-stream-render", this.saveScroll)
+  }
+
+  disconnect() {
+    clearTimeout(this.refreshTimer)
+    this.streamObserver?.disconnect()
+    document.removeEventListener("turbo:before-stream-render", this.saveScroll)
+  }
+
+  // Busca o estado atual da conversa (ChatsController#show em Turbo Stream),
+  // para o caso de a resposta ter sido transmitida enquanto a tela não
+  // estava conectada ao WebSocket. Se a Harpia ainda estiver respondendo,
+  // o servidor responde 204 e outra consulta é agendada.
+  async refresh(messages) {
+    const frame = messages.closest("turbo-frame")
+    if (!frame || !messages.isConnected) return
+
+    clearTimeout(this.refreshTimer)
+
+    try {
+      const response = await fetch(messages.dataset.chatRefreshUrl, {
+        headers: { Accept: "text/vnd.turbo-stream.html", "Turbo-Frame": frame.id }
+      })
+      if (response.status === 204) {
+        this.refreshTimer = setTimeout(() => this.refresh(messages), REFRESH_DELAY)
+      } else if (response.ok) {
+        Turbo.renderStreamMessage(await response.text())
+      }
+    } catch {
+      // Sem conexão: tenta novamente mais tarde, se a tela ainda estiver aguardando.
+      if (messages.isConnected) this.refreshTimer = setTimeout(() => this.refresh(messages), REFRESH_DELAY)
+    }
   }
 
   scrollToLatestInteraction() {

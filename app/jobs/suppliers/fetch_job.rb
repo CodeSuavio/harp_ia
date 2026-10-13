@@ -10,7 +10,7 @@ module Suppliers
   # rede) não é consultado de novo na mesma rodada. No fim, se algo foi consultado,
   # agenda o recálculo dos alertas de gastos, que dependem desses dados.
   class FetchJob < ApplicationJob
-    queue_as :default
+    queue_as :maintenance
     # Um lote leva ~5 min (200 × 1,5 s); a trava cobre lotes lentos com folga
     limits_concurrency to: 1, key: "suppliers-fetch", duration: 1.hour
 

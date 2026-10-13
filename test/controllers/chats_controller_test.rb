@@ -2,6 +2,7 @@ require "test_helper"
 
 class ChatsControllerTest < ActionDispatch::IntegrationTest
   include Devise::Test::IntegrationHelpers
+  include ActionView::RecordIdentifier
 
   TURBO_STREAM = "text/vnd.turbo-stream.html, text/html, application/xhtml+xml".freeze
 
@@ -26,8 +27,12 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
          params: { message: { content: "Quem é a deputada?" } },
          headers: { "Accept" => TURBO_STREAM, "Turbo-Frame" => ChatResponder::WIDGET_FRAME }
 
+    chat = @user.chats.last
     assert_select "turbo-stream[target=chat_widget_messages]"
-    assert_equal 2, @user.chats.last.messages.count
+    assert_select "turbo-cable-stream-source", count: 1
+    assert_includes response.body, "Estamos de olho..."
+    assert chat.messages.sole.pending?
+    assert_enqueued_with(job: ChatResponseJob, args: [chat.messages.sole])
   end
 
   test "Perguntar à Harpia registra a página de origem e abre o chat principal" do
@@ -44,7 +49,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
 
   test "falha da IA ao iniciar pelo chat principal mostra a pergunta e o aviso" do
     FakeChatbot.fail!
-    post chats_path, params: { message: { content: "Pergunta inicial" } }
+    perform_enqueued_jobs { post chats_path, params: { message: { content: "Pergunta inicial" } } }
 
     follow_redirect!
     assert_select ".user-message", text: /Pergunta inicial/
@@ -61,6 +66,42 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "turbo-frame#chat_conversation [data-chat-target=messages]"
     assert_select ".assistant-message--out-of-scope", text: /Fora do escopo/
-    assert_select "#chat_title", text: Chat::DEFAULT_TITLE
+    assert_select "##{dom_id(chat, :title)}", text: Chat::DEFAULT_TITLE
+    assert_select "turbo-cable-stream-source", count: 1
+  end
+
+  test "estado atual da conversa para a tela que não recebeu a resposta pelo WebSocket" do
+    chat = @user.chats.create!
+    chat.messages.create!(role: "user", content: "Pergunta")
+    chat.messages.create!(role: "assistant", content: "Resposta pronta")
+
+    get chat_path(chat), headers: { "Accept" => "text/vnd.turbo-stream.html",
+                                    "Turbo-Frame" => ChatResponder::WIDGET_FRAME }
+
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_select "turbo-stream[target=chat_widget_messages]"
+    assert_includes response.body, "Resposta pronta"
+    assert_not_includes response.body, "data-chat-pending"
+  end
+
+  test "consulta enquanto a Harpia responde não renderiza a conversa de novo" do
+    chat = @user.chats.create!
+    chat.messages.create!(role: "user", content: "Pergunta", status: :pending)
+
+    get chat_path(chat), headers: { "Accept" => "text/vnd.turbo-stream.html",
+                                    "Turbo-Frame" => ChatResponder::CONVERSATION_FRAME }
+
+    assert_response :no_content
+  end
+
+  test "pergunta sem resposta há muito tempo aparece como falha e libera o formulário" do
+    chat = @user.chats.create!
+    chat.messages.create!(role: "user", content: "Pergunta", status: :pending,
+                          created_at: (Message::RESPONSE_TIMEOUT + 1.minute).ago)
+
+    get chat_path(chat)
+
+    assert_select ".assistant-message--error", text: /#{ChatResponder::AI_ERROR_MESSAGE}/
+    assert_select "#chat_conversation button[type=submit]:not([disabled])"
   end
 end
