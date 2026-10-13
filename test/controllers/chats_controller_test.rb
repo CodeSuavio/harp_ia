@@ -70,6 +70,35 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "turbo-cable-stream-source", count: 1
   end
 
+  test "próximos passos da Harpia aparecem como botões só na última resposta" do
+    chat = @user.chats.create!
+    chat.messages.create!(role: "user", content: "Ranking por estado?")
+    chat.messages.create!(role: "assistant", content: "Posso organizar de duas formas:",
+                          actions: [question("Opção antiga")])
+    chat.messages.create!(role: "user", content: "Opção antiga")
+    chat.messages.create!(role: "assistant", content: "Os 5 partidos com mais deputados são:",
+                          actions: [question("Ver mais", "Mostre as posições 6 a 10: partidos por cadeiras"),
+                                    { "type" => "link", "label" => "Ver lista completa",
+                                      "value" => "/parties/compare?sort=seats" }])
+
+    get chat_path(chat)
+
+    assert_select ".chat-quick-reply", count: 2
+    assert_select "button.chat-quick-reply[data-action='chat#quickReply']" \
+                  "[data-chat-reply-param='Mostre as posições 6 a 10: partidos por cadeiras']", text: "Ver mais"
+    assert_select "a.chat-quick-reply--link[href='/parties/compare?sort=seats']", text: "Ver lista completa"
+    assert_select ".chat-quick-reply", text: "Opção antiga", count: 0
+
+    get chat_path(chat), headers: { "Accept" => "text/vnd.turbo-stream.html",
+                                    "Turbo-Frame" => ChatResponder::WIDGET_FRAME }
+
+    assert_includes response.body, "chat-quick-replies--widget"
+  end
+
+  def question(label, text = label)
+    { "type" => "question", "label" => label, "value" => text }
+  end
+
   test "estado atual da conversa para a tela que não recebeu a resposta pelo WebSocket" do
     chat = @user.chats.create!
     chat.messages.create!(role: "user", content: "Pergunta")

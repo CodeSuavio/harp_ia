@@ -32,9 +32,9 @@ class ChatResponseJob < ApplicationJob
     result = chatbot.call
 
     # Salva a resposta da IA na mesma conversa
-    # e registra se a pergunta estava fora do escopo da Harpia
+    # e registra se a pergunta estava fora do escopo e os próximos passos em botões
     Message.transaction do
-      @chat.messages.create!(content: result[:content], role: "assistant", out_of_scope: result[:out_of_scope])
+      @chat.messages.create!(role: "assistant", **result.slice(:content, :out_of_scope, :actions).compact)
       question.answered!
     end
 

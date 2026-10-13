@@ -68,6 +68,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
       end
 
       assert_includes @chat.messages.where(role: "user").last.page_context, deputy.name
+      assert_equal "/deputies/#{deputy.id}", @chat.messages.where(role: "user").last.page_path
     end
   end
 
@@ -75,6 +76,7 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     send_message("Continue", frame: ChatResponder::CONVERSATION_FRAME, page_path: "/chats/#{@chat.id}")
 
     assert_nil @chat.messages.where(role: "user").last.page_context
+    assert_nil @chat.messages.where(role: "user").last.page_path
   end
 
   test "pergunta vazia mostra aviso dentro da conversa" do

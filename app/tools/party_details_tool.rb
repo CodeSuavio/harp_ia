@@ -17,10 +17,11 @@ class PartyDetailsTool < ApplicationTool
     expenses = stats.expenses
     adherence = stats.orientation_adherence
     affinity = stats.affinity
+    dissidents = stats.dissidents
 
     {
       partido: { id: party.id, sigla: party.label, nome: party.name, numero: party.number,
-                 ativo: party.active, lider: party.leader_name, pagina: routes.party_path(party) },
+                 ativo: party.active, lider: party.leader_name },
       bancada: { deputados: stats.deputies.size, no_inicio_da_legislatura: party.seats_at_start,
                  variacao: stats.bench_change, por_estado: stats.state_bench },
       gastos: expenses && expenses.except(:top).merge(
@@ -37,7 +38,7 @@ class PartyDetailsTool < ApplicationTool
         ),
         votacoes_mais_divididas: stats.divided_polls.map { |poll, row| poll_row(poll, row) },
         afinidade: affinity&.transform_values { |rows| rows.map { |p, row| row.merge(partido: p.label) } },
-        quem_mais_vota_contra_o_partido: stats.dissidents.map do |deputy, row|
+        quem_mais_vota_contra_o_partido: dissidents.map do |deputy, row|
           row.merge(deputado: deputy.name, id: deputy.id)
         end
       },
@@ -46,11 +47,33 @@ class PartyDetailsTool < ApplicationTool
         por_tipo: stats.bill_types,
         temas: stats.bill_themes.map { |theme, count| [theme.name, count] }
       },
-      candidatos_2026: stats.candidate_profile
+      candidatos_2026: stats.candidate_profile,
+      acoes: next_steps(party, stats, dissidents)
     }
   end
 
   private
+
+  # Páginas com as listas do partido e consultas sobre os seus deputados e candidatos
+  def next_steps(party, stats, dissidents)
+    label = party.label
+    [
+      link("Ver página do #{label}", routes.party_path(party)),
+      (link("Ver deputados do #{label}", routes.deputies_path(party: party.id)) if stats.deputies.any?),
+      (link("Ver candidatos do #{label}", routes.candidates_path(party: party.id)) if party.candidates.exists?),
+      (link("Ver projetos do #{label}", routes.bills_path(party: party.id)) if stats.bills.exists?),
+      link("Comparar com outros partidos", routes.compare_parties_path),
+      (if stats.deputies.any?
+         question("Quem do #{label} mais gasta", "Quais deputados do #{label} têm o maior gasto mensal?")
+       end),
+      (if dissidents.any?
+         question("Quem mais vota contra o #{label}", "Quais deputados do #{label} mais votam contra o partido?")
+       end),
+      (if party.candidates.exists?
+         question("Candidatos do #{label} por estado", "Quantos candidatos o #{label} tem em cada estado?")
+       end)
+    ].compact
+  end
 
   def poll_row(poll, row)
     row.merge(id: poll.id, data: poll.date&.to_date, descricao: poll.description.to_s.truncate(160))

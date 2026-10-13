@@ -37,7 +37,7 @@ class PartyRankingTool < ApplicationTool
 
   param :criterion, desc: "Indicador do ranking: #{CRITERIA.keys.join(', ')}"
   param :order, desc: "desc (do maior para o menor, padrão) ou asc (do menor para o maior)", required: false
-  param :limit, type: "integer", desc: "Quantidade de partidos (padrão #{LIST_LIMIT}, máximo #{MAX_LIMIT})",
+  param :limit, type: "integer", desc: "Quantidade de partidos (padrão #{RANKING_LIMIT}, máximo #{MAX_LIMIT})",
                 required: false
 
   def execute(criterion:, order: nil, limit: nil)
@@ -47,26 +47,30 @@ class PartyRankingTool < ApplicationTool
     comparison = PartyComparison.new
     value = PartyComparison::SORTS[criterion][:value]
     present, missing = comparison.sorted_rows(criterion, direction).partition { |row| row.public_send(value) }
+    rows = present.first(ranking_limit(limit, MAX_LIMIT)).each_with_index.map do |row, index|
+      ranking_row(row, value, index)
+    end
 
     {
       criterio: PartyComparison::SORTS[criterion][:label],
       como_e_calculado: CRITERIA[criterion],
       unidade: UNITS[criterion],
       ano_dos_gastos: (comparison.year if criterion == "expenses"),
-      ordem: direction == :desc ? "do maior para o menor" : "do menor para o maior",
+      ordem: order_label(direction),
       total_de_partidos: comparison.rows.size,
       total_de_cadeiras: comparison.total_seats,
-      ranking: present.first(limit_for(limit)).each_with_index.map { |row, index| ranking_row(row, value, index) },
+      ranking: rows,
+      recorte: recorte(rows.size, present.size),
       partidos_sem_dados: missing.map(&:label),
-      pagina: routes.compare_parties_path(sort: criterion, dir: direction, anchor: "indicadores")
+      # Comparação de partidos na mesma ordem: a lista completa, com todos os indicadores
+      acoes: continuation(shown: rows.size, total: present.size, max: MAX_LIMIT,
+                          description: "partidos por #{PartyComparison::SORTS[criterion][:label].downcase}, " \
+                                       "#{order_label(direction)}",
+                          page: routes.compare_parties_path(sort: criterion, dir: direction, anchor: "indicadores"))
     }.compact
   end
 
   private
-
-  def limit_for(limit)
-    limit.to_i.positive? ? [limit.to_i, MAX_LIMIT].min : LIST_LIMIT
-  end
 
   def ranking_row(row, value, index)
     {

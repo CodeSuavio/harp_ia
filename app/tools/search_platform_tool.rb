@@ -19,10 +19,27 @@ class SearchPlatformTool < ApplicationTool
 
     like = "%#{ActiveRecord::Base.sanitize_sql_like(term)}%"
     results = send("search_#{kind}", term, like)
-    { resultados: results, total: results.size }
+    { resultados: results, total: results.size, acoes: (choices(kind, results) if results.size > 1) }.compact
   end
 
   private
+
+  # Mais de um resultado: cada opção leva direto aos dados do registro
+  def choices(kind, results)
+    results.first(HarpiaActions::MAX).map do |row|
+      case kind
+      when "deputado" then choice("#{row[:nome]} (#{row[:partido]}-#{row[:uf]})", "Mostre os dados do deputado")
+      when "partido" then question(row[:sigla], "Mostre os dados do partido #{row[:sigla]}")
+      when "projeto" then question(row[:numero], "Do que trata o #{row[:numero]}?")
+      when "votacao" then link("Votação de #{row[:data]&.strftime('%d/%m/%Y')}", routes.poll_path(row[:id]))
+      when "candidato" then choice("#{row[:nome_de_urna]} (#{row[:partido]}-#{row[:uf]})", "Mostre o candidato")
+      end
+    end
+  end
+
+  def choice(label, prefix)
+    question(label, "#{prefix} #{label}")
+  end
 
   def search_deputado(_term, like)
     Deputy.includes(:party).where("deputies.name ILIKE ?", like).order(:name).limit(LIST_LIMIT).map do |deputy|

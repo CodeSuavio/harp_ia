@@ -23,11 +23,27 @@ class CandidateDetailsTool < ApplicationTool
         escolaridade: candidate.education_level,
         genero: candidate.gender,
         cor_raca: candidate.race_color,
-        concorre_a_reeleicao: candidate.reelection?,
-        pagina: routes.candidate_path(candidate)
+        concorre_a_reeleicao: candidate.reelection?
       },
       deputado_em_exercicio: deputy && { id: deputy.id, nome: deputy.name,
-                                         observacao: "Use deputy_details para ver a atuação." }
+                                         observacao: "Use deputy_details para ver a atuação." },
+      acoes: next_steps(candidate, deputy)
     }
+  end
+
+  private
+
+  # Página do candidato, a atuação dele como deputado e os outros candidatos do partido no estado
+  def next_steps(candidate, deputy)
+    party = party_label(candidate)
+    [
+      link("Ver candidatura de #{candidate.ballot_name}", routes.candidate_path(candidate)),
+      (question("Atuação como deputado", "Como é a atuação do deputado #{deputy.name}?") if deputy),
+      (link("Ver perfil de deputado", routes.deputy_path(deputy)) if deputy),
+      (if party
+         link("Ver candidatos do #{party} em #{candidate.state_label}",
+              routes.candidates_path(state: candidate.state_label, party: candidate.party_id))
+       end)
+    ].compact
   end
 end

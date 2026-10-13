@@ -8,6 +8,8 @@ class BillDetailsTool < ApplicationTool
     bill = Bill.includes(:party, :themes, :authors).find_by(id: bill_id)
     return not_found("Projeto de lei") unless bill
 
+    polls = bill.votings.order(date: :desc).limit(LIST_LIMIT).to_a
+
     {
       projeto: {
         id: bill.id,
@@ -18,13 +20,27 @@ class BillDetailsTool < ApplicationTool
         partido: party_label(bill),
         autores: bill.authors.map { |deputy| { id: deputy.id, nome: deputy.name } },
         temas: bill.themes.map(&:name),
-        link_oficial: bill.url,
-        pagina: routes.bill_path(bill)
+        link_oficial: bill.url
       },
-      votacoes: bill.votings.order(date: :desc).limit(LIST_LIMIT).map do |poll|
+      votacoes: polls.map do |poll|
         { id: poll.id, data: poll.date&.to_date, descricao: poll.description.to_s.truncate(200),
           aprovada: poll.approval }
-      end
+      end,
+      acoes: next_steps(bill, polls)
     }
+  end
+
+  private
+
+  # Página do projeto, das suas votações, do autor e de outros projetos do tema
+  def next_steps(bill, polls)
+    author = bill.authors.first
+    theme = bill.themes.first
+    [
+      link("Ver #{bill.bill_type} #{bill.number}/#{bill.year}", routes.bill_path(bill)),
+      *polls.first(2).map { |poll| link("Ver votação de #{poll.date&.strftime('%d/%m/%Y')}", routes.poll_path(poll)) },
+      (question("Sobre #{author.name}", "Mostre os dados do deputado #{author.name}") if author),
+      (link("Ver projetos sobre #{theme.name}", routes.bills_path(theme: theme.id)) if theme)
+    ].compact
   end
 end
