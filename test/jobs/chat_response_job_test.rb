@@ -31,6 +31,18 @@ class ChatResponseJobTest < ActiveJob::TestCase
     assert_not_includes conversation.to_html, "Estamos de olho..."
   end
 
+  test "salva as opções sugeridas em botões" do
+    FakeChatbot.reply("Posso organizar de duas formas:",
+                      quick_replies: ["Deputados por estado", "Ranking dentro dos estados"])
+
+    broadcasts = capture_turbo_stream_broadcasts(@chat) { ChatResponseJob.perform_now(@question) }
+
+    assert_equal ["Deputados por estado", "Ranking dentro dos estados"],
+                 @chat.messages.find_by(role: "assistant").actions.pluck("value")
+    widget = broadcasts.find { |stream| stream["target"] == dom_id(@chat, :widget) }
+    assert_includes widget.to_html, "Ranking dentro dos estados"
+  end
+
   test "pergunta fora do escopo não gera título" do
     FakeChatbot.reply("Fora do escopo", out_of_scope: true)
 

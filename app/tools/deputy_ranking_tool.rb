@@ -3,7 +3,7 @@
 #
 # Responde perguntas como "quem mais gastou?" ou "quem mais falta às votações
 # em SP?" sem a IA precisar consultar deputado por deputado.
-class DeputyRankingTool < ApplicationTool
+class DeputyRankingTool < ApplicationTool # rubocop:disable Metrics/ClassLength -- indicadores, ranking e link da lista
   MAX_LIMIT = 20
 
   CRITERIA = {
@@ -37,8 +37,26 @@ class DeputyRankingTool < ApplicationTool
   param :state, desc: "UF para filtrar, ex.: SP (opcional)", required: false
   param :party, desc: "Sigla do partido para filtrar, ex.: PT (opcional)", required: false
   param :year, type: "integer", desc: "Ano dos gastos (opcional; padrão: ano mais recente com dados)", required: false
-  param :limit, type: "integer", desc: "Quantidade de deputados (padrão #{LIST_LIMIT}, máximo #{MAX_LIMIT})",
+  param :limit, type: "integer", desc: "Quantidade de deputados (padrão #{RANKING_LIMIT}, máximo #{MAX_LIMIT})",
                 required: false
+
+  # Também usados pelo DeputyStateRankingTool, para os mesmos números nos dois rankings
+  def self.expense_year(year)
+    years = Expense.distinct.pluck(:year)
+    years.include?(year.to_i) ? year.to_i : years.max
+  end
+
+  # { deputy_id => valor }
+  def self.values_for(criterion, year)
+    case criterion
+    when "expenses" then DeputyMetrics.expenses(year).transform_values { |row| row[:monthly] }
+    when "expenses_total" then DeputyMetrics.expenses(year).transform_values { |row| row[:total] }
+    when "participation" then DeputyMetrics.participation.transform_values { |row| row[:pct] }
+    when "alignment" then DeputyMetrics.alignment.transform_values { |row| row[:pct] }
+    when "against_party" then DeputyMetrics.alignment.transform_values { |row| row[:against] }
+    when "bills" then Deputy.pluck(:id, Arel.sql(DeputiesController::BILLS_COUNT_SQL)).to_h
+    end
+  end
 
   def execute(criterion:, order: nil, state: nil, party: nil, year: nil, limit: nil) # rubocop:disable Metrics/ParameterLists
     return { erro: "Critério inválido. Use um destes: #{CRITERIA.keys.join(', ')}." } unless CRITERIA.key?(criterion)
@@ -47,23 +65,27 @@ class DeputyRankingTool < ApplicationTool
     return not_found("Partido") if party.present? && !party_record
 
     state = state.presence&.upcase
-    year = expense_year(year)
+    year = self.class.expense_year(year)
     direction = order.to_s == "asc" ? :asc : :desc
     deputies = filtered(state, party_record).to_a
-    values = values_for(criterion, year)
+    values = self.class.values_for(criterion, year)
     ranked, missing = deputies.partition { |deputy| values[deputy.id] }
+    rows = ranking(ranked, values, criterion, direction, ranking_limit(limit, MAX_LIMIT))
 
     {
       criterio: CRITERIA[criterion][:label],
       como_e_calculado: CRITERIA[criterion][:criterio],
       unidade: CRITERIA[criterion][:unidade],
       ano_dos_gastos: (year if criterion.start_with?("expenses")),
-      ordem: direction == :desc ? "do maior para o menor" : "do menor para o maior",
+      ordem: order_label(direction),
       filtros: { uf: state, partido: party_record&.label }.compact.presence,
       total_de_deputados: deputies.size,
       deputados_sem_dados: missing.size,
-      ranking: ranking(ranked, values, criterion, direction, limit),
-      pagina: page_path(criterion, direction, state, party_record, year)
+      ranking: rows,
+      recorte: recorte(rows.size, ranked.size),
+      acoes: continuation(shown: rows.size, total: ranked.size, max: MAX_LIMIT,
+                          description: ranking_description(criterion, direction, state, party_record, year),
+                          page: page_path(criterion, direction, state, party_record, year))
     }.compact
   end
 
@@ -78,25 +100,8 @@ class DeputyRankingTool < ApplicationTool
 
   def ranking(deputies, values, criterion, direction, limit)
     sorted = deputies.sort_by { |deputy| [direction == :desc ? -values[deputy.id] : values[deputy.id], deputy.name] }
-    sorted.first(limit_for(limit)).each_with_index.map do |deputy, index|
+    sorted.first(limit).each_with_index.map do |deputy, index|
       ranking_row(deputy, values[deputy.id], criterion, index)
-    end
-  end
-
-  def expense_year(year)
-    years = Expense.distinct.pluck(:year)
-    years.include?(year.to_i) ? year.to_i : years.max
-  end
-
-  # { deputy_id => valor }
-  def values_for(criterion, year)
-    case criterion
-    when "expenses" then DeputyMetrics.expenses(year).transform_values { |row| row[:monthly] }
-    when "expenses_total" then DeputyMetrics.expenses(year).transform_values { |row| row[:total] }
-    when "participation" then DeputyMetrics.participation.transform_values { |row| row[:pct] }
-    when "alignment" then DeputyMetrics.alignment.transform_values { |row| row[:pct] }
-    when "against_party" then DeputyMetrics.alignment.transform_values { |row| row[:against] }
-    when "bills" then Deputy.pluck(:id, Arel.sql(DeputiesController::BILLS_COUNT_SQL)).to_h
     end
   end
 
@@ -111,12 +116,16 @@ class DeputyRankingTool < ApplicationTool
     row
   end
 
-  def limit_for(limit)
-    limit.to_i.positive? ? [limit.to_i, MAX_LIMIT].min : LIST_LIMIT
+  # "deputados por gasto mensal, do maior para o menor, em SP, do PT, gastos de 2025"
+  def ranking_description(criterion, direction, state, party, year)
+    parts = ["deputados por #{CRITERIA[criterion][:label].downcase}", order_label(direction), ("em #{state}" if state),
+             ("do #{party.label}" if party), ("gastos de #{year}" if criterion.start_with?("expenses"))]
+    parts.compact.join(", ")
   end
 
   # Listagem de deputados com a mesma ordenação, direção, filtros e ano do
-  # ranking, para o link mostrar a mesma lista da resposta (DeputiesController::SORTS)
+  # ranking: a página mostra a lista completa, com o valor de cada deputado
+  # (DeputiesController::SORTS usa os mesmos indicadores)
   def page_path(criterion, direction, state, party, year)
     year = nil if year == DeputyMetrics.reference_year || !criterion.start_with?("expenses")
     routes.deputies_path({ sort: criterion, dir: (direction if direction == :asc), state: state,

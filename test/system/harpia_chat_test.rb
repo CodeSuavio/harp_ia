@@ -41,6 +41,43 @@ class HarpiaChatTest < ApplicationSystemTestCase
     within(".chat-widget-window") { assert_text "Quais partidos têm mais deputados?" }
   end
 
+  test "botão de opção sugerida pela Harpia envia a próxima pergunta" do
+    FakeChatbot.reply("Posso organizar os deputados federais de duas formas:",
+                      quick_replies: ["Deputados por estado", "Ranking dentro dos estados"])
+
+    visit chats_path
+    find(".chat-widget-button").click
+    within(".chat-widget-window") do
+      fill_in "message[content]", with: "Qual o ranking dos deputados federais por estado?"
+      find("button[type=submit]").click
+      assert_button "Ranking dentro dos estados"
+
+      FakeChatbot.reply("1. SP — 70 deputados")
+      click_button "Deputados por estado"
+
+      assert_selector ".chat-widget-user-message", text: "Deputados por estado"
+      assert_text "SP — 70 deputados"
+      assert_no_button "Ranking dentro dos estados"
+    end
+  end
+
+  test "botão de página sugerido pela Harpia abre a página e mantém a conversa aberta" do
+    FakeChatbot.reply("Os 1 partidos com mais deputados são:\n\n1. MDB — 3 deputados",
+                      actions: [{ "type" => "link", "label" => "Ver lista completa",
+                                  "value" => "/parties/compare?dir=desc&sort=seats#indicadores" }])
+
+    visit chats_path
+    find(".chat-widget-button").click
+    within(".chat-widget-window") do
+      fill_in "message[content]", with: "Quais partidos têm mais deputados?"
+      find("button[type=submit]").click
+      click_link "Ver lista completa"
+    end
+
+    assert_current_path "/parties/compare?dir=desc&sort=seats"
+    within(".chat-widget-window") { assert_text "Quais partidos têm mais deputados?" }
+  end
+
   test "widget continua a mesma conversa depois de navegar pelo link" do
     FakeChatbot.reply(RANKING_ANSWER)
 

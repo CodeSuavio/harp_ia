@@ -73,6 +73,15 @@ export default class extends Controller {
     this.focusInput()
   }
 
+  // Botão de próximo passo sugerido pela Harpia: envia a pergunta do botão,
+  // pelo mesmo formulário (e o mesmo fluxo de envio).
+  quickReply({ params: { reply } }) {
+    if (this.busy || !this.hasInputTarget || this.inputTarget.disabled) return
+
+    this.inputTarget.value = reply
+    this.inputTarget.form.requestSubmit()
+  }
+
   // Enter envia; Shift+Enter quebra a linha (campos de várias linhas).
   submitOnEnter(event) {
     if (event.shiftKey || event.isComposing) return

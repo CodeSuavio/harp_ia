@@ -3,8 +3,21 @@
 # Cada ferramenta é somente leitura e devolve apenas dados públicos da
 # plataforma (nunca dados de usuários ou de outros chats). O retorno é um
 # Hash que o RubyLLM envia à IA como JSON.
+#
+# Além dos dados, cada ferramenta oferece os próximos passos possíveis no
+# campo "acoes" (HarpiaActions): perguntas que a Harpia responde e páginas
+# da plataforma ligadas ao que foi consultado.
 class ApplicationTool < RubyLLM::Tool
   LIST_LIMIT = 10
+  # Itens de um ranking por resposta: o que cabe no widget
+  RANKING_LIMIT = 5
+
+  attr_reader :actions
+
+  # Todas as ferramentas de uma resposta compartilham o mesmo registro de ações
+  def initialize(actions = HarpiaActions.new)
+    @actions = actions
+  end
 
   private
 
@@ -13,7 +26,7 @@ class ApplicationTool < RubyLLM::Tool
     ApplicationController.helpers
   end
 
-  # Caminhos das páginas (deputy_path etc.), para a IA poder indicar onde ver mais
+  # Caminhos das páginas (deputy_path etc.), para as ações de página
   def routes
     Rails.application.routes.url_helpers
   end
@@ -28,5 +41,47 @@ class ApplicationTool < RubyLLM::Tool
 
   def party_label(record)
     record.party&.label
+  end
+
+  # ----- PRÓXIMOS PASSOS -----
+
+  def question(label, text, required: false)
+    actions.question(label, text, required: required)
+  end
+
+  def link(label, path, required: false)
+    actions.link(label, path, required: required)
+  end
+
+  # ----- RANKINGS EM PARTES -----
+  # Os rankings trazem RANKING_LIMIT itens por vez. Quando a lista foi
+  # cortada, o campo "recorte" avisa a IA e as ações "Ver mais" (a próxima
+  # parte, pela própria Harpia) e "Ver lista completa" (página existente,
+  # quando houver) entram sempre abaixo da resposta.
+
+  def ranking_limit(limit, max)
+    limit.to_i.positive? ? [limit.to_i, max].min : RANKING_LIMIT
+  end
+
+  def recorte(shown, total)
+    { exibindo: shown, de: total } if shown < total
+  end
+
+  # description: o ranking em palavras, para a pergunta "Ver mais" ser
+  # entendida sozinha (ex.: "deputados por gasto mensal, do maior para o menor, em SP")
+  def continuation(shown:, total:, max:, description:, page: nil)
+    return if shown >= total
+
+    upto = [shown + RANKING_LIMIT, max, total].min
+    [
+      (if upto > shown
+         question("Ver mais", "Mostre as posições #{shown + 1} a #{upto}: #{description}", required: true)
+       end),
+      (link("Ver lista completa", page, required: true) if page)
+    ].compact.presence
+  end
+
+  def order_label(direction)
+    direction == :desc ? "do maior para o menor" : "do menor para o maior"
   end
 end

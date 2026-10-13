@@ -20,6 +20,8 @@ class DeputyDetailsTool < ApplicationTool
     years = deputy.expenses.distinct.order(year: :desc).pluck(:year)
     year = years.include?(year.to_i) ? year.to_i : years.first
     profile = DeputyThemeProfile.new(deputy)
+    alerts = year ? ExpenseAnomalies.new(deputy).for_year(year) : []
+    candidate = deputy.candidates.first
 
     {
       deputado: {
@@ -30,11 +32,10 @@ class DeputyDetailsTool < ApplicationTool
         situacao: deputy.status,
         condicao_eleitoral: deputy.electoral_status,
         escolaridade: deputy.education_level,
-        naturalidade: [deputy.city_of_birth, deputy.state_of_birth].compact.join("-").presence,
-        pagina: routes.deputy_path(deputy)
+        naturalidade: [deputy.city_of_birth, deputy.state_of_birth].compact.join("-").presence
       },
       anos_com_gastos: years,
-      gastos: year && expenses(deputy, stats, year),
+      gastos: year && expenses(deputy, stats, year, alerts),
       votacoes: {
         participacao: stats.vote_participation,
         alinhamento_com_partido: stats.party_alignment,
@@ -55,15 +56,35 @@ class DeputyDetailsTool < ApplicationTool
                     "(dele e do partido). Com menos de #{DeputyThemeProfile::MIN_EVIDENCE} votos avaliados, " \
                     "o indicador é pouco conclusivo."
       },
-      candidatura_2026: deputy.candidates.first&.then do |c|
+      candidatura_2026: candidate&.then do |c|
         { id: c.id, nome_de_urna: c.ballot_name, situacao: c.candidacy_status }
-      end
+      end,
+      acoes: next_steps(deputy, year, alerts, candidate)
     }
   end
 
   private
 
-  def expenses(deputy, stats, year)
+  # Abas do perfil com o que foi resumido aqui e consultas ligadas ao deputado
+  def next_steps(deputy, year, alerts, candidate)
+    party = party_label(deputy)
+    [
+      link("Ver perfil de #{deputy.name}", routes.deputy_path(deputy)),
+      (if alerts.any?
+         link("Ver notas com alerta", routes.deputy_path(deputy, tab: "expenses", year: year, alerts: "1"))
+       end),
+      (link("Ver projetos de lei", routes.deputy_path(deputy, tab: "bills")) if deputy.authored_bills.exists?),
+      link("Ver votações", routes.deputy_path(deputy, tab: "votes")),
+      (link("Ver candidatura 2026", routes.candidate_path(candidate)) if candidate),
+      (if year
+         question("Gastos dos deputados de #{deputy.state_label}",
+                  "Quais deputados de #{deputy.state_label} têm o maior gasto mensal?")
+       end),
+      (question("Sobre o #{party}", "Mostre os dados do partido #{party}") if party)
+    ].compact
+  end
+
+  def expenses(deputy, stats, year, alerts)
     {
       ano: year,
       total: money(stats.total_expenses(year: year)),
@@ -74,7 +95,7 @@ class DeputyDetailsTool < ApplicationTool
       variacao_ano_anterior: stats.year_over_year(year: year),
       concentracao_no_principal_fornecedor: stats.supplier_concentration(year: year),
       por_tipo: stats.expenses_by_type(year: year).first(8),
-      alertas: ExpenseAnomalies.new(deputy).for_year(year).first(LIST_LIMIT).map do |row|
+      alertas: alerts.first(LIST_LIMIT).map do |row|
         title, criterion = helpers.expense_anomaly_text(row)
         { gravidade: row[:severity], alerta: title, criterio: criterion }
       end,

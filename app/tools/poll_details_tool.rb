@@ -22,15 +22,30 @@ class PollDetailsTool < ApplicationTool
         orgao: poll.label_comission,
         aprovada: poll.approval,
         temas: poll.themes.map(&:name),
-        projetos: poll.bills.map { |bill| { id: bill.id, numero: "#{bill.bill_type} #{bill.number}/#{bill.year}" } },
-        pagina: routes.poll_path(poll)
+        projetos: poll.bills.map { |bill| { id: bill.id, numero: "#{bill.bill_type} #{bill.number}/#{bill.year}" } }
       },
       placar: breakdown.tally,
       orientacao_do_governo: breakdown.government_orientation,
       por_partido: breakdown.by_party.map { |row| row.except(:party_id) },
       votos_contra_o_proprio_partido: breakdown.dissidents.first(20).map do |vote, majority|
         { deputado: vote.deputy.name, partido: vote.deputy.party.label, voto: vote.vote, maioria_do_partido: majority }
-      end
+      end,
+      acoes: next_steps(poll)
     }
+  end
+
+  private
+
+  # Página da votação, os projetos votados e outras votações do tema
+  def next_steps(poll)
+    theme = poll.themes.first
+    [
+      link("Ver votação", routes.poll_path(poll)),
+      *poll.bills.first(2).map do |bill|
+        number = "#{bill.bill_type} #{bill.number}/#{bill.year}"
+        question("Sobre o #{number}", "Do que trata o #{number}?")
+      end,
+      (link("Ver votações sobre #{theme.name}", routes.polls_path(theme: theme.id)) if theme)
+    ].compact
   end
 end

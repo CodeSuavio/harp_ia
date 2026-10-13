@@ -14,7 +14,7 @@
   data-chat-target="messages"
   <%= chat_pending_data(chat, awaiting) %>>
 
-  <% messages = chat.messages.order(:created_at) %>
+  <% messages = chat.messages.order(:created_at).to_a %>
 
   <% if messages.empty? %>
     <div class="text-center py-5 opacity-50" data-chat-target="placeholder">
@@ -41,6 +41,10 @@
     <% else %>
       <%= render "chats/assistant_message", out_of_scope: message.out_of_scope? do %>
         <%= render_markdown(message.content) %>
+      <% end %>
+
+      <% if message == messages.last %>
+        <%= render "chats/actions", actions: message.actions, css_class: "chat-quick-replies--conversation" %>
       <% end %>
     <% end %>
   <% end %>

@@ -16,7 +16,8 @@
   data-chat-target="messages"
   <%= chat_pending_data(chat, awaiting) %>>
 
-  <% chat.messages.order(:created_at).each do |message| %>
+  <% messages = chat.messages.order(:created_at).to_a %>
+  <% messages.each do |message| %>
 
     <% if message.role == "user" %>
 
@@ -48,6 +49,10 @@
       <div class="chat-widget-assistant-message <%= 'chat-widget-assistant-message--out-of-scope' if message.out_of_scope? %>">
         <%= render_markdown(message.content) %>
       </div>
+
+      <% if message == messages.last %>
+        <%= render "chats/actions", actions: message.actions, css_class: "chat-quick-replies--widget" %>
+      <% end %>
 
     <% end %>
 

@@ -24,8 +24,8 @@ class DeputiesController < ApplicationController
        OR bills.id IN (SELECT bill_id FROM bill_authors WHERE bill_authors.deputy_id = deputies.id))
   SQL
   # Ordenações por SQL ou por indicador calculado (DeputyMetrics), ordenadas em Ruby.
-  # Os indicadores são os mesmos do DeputyRankingTool, para o link que a Harpia
-  # envia mostrar a mesma lista da resposta do chat.
+  # Os indicadores são os mesmos do DeputyRankingTool, com os mesmos números
+  # das respostas da Harpia.
   SORTS = {
     "name" => { label: "Ordenar por nome", order: "deputies.name ASC", default: :asc },
     "state" => { label: "Ordenar por estado", order: "deputies.state_label ASC, deputies.name ASC", default: :asc },

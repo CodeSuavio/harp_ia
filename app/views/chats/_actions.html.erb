@@ -1,0 +1,19 @@
+<%#
+  Próximos passos sugeridos pela Harpia, como botões abaixo da resposta
+  (HarpiaActions). Só aparecem na última resposta da conversa.
+  - question: envia a pergunta como a próxima mensagem (chat_controller#quickReply);
+  - link: abre uma página da plataforma.
+%>
+<% if actions.any? %>
+  <div class="chat-quick-replies <%= local_assigns[:css_class] %>">
+    <% actions.each do |action| %>
+      <% if action["type"] == "link" %>
+        <%= link_to action["label"], action["value"], class: "chat-quick-reply chat-quick-reply--link",
+              data: { turbo_frame: "_top" } %>
+      <% else %>
+        <%= button_tag action["label"], type: "button", class: "chat-quick-reply",
+              data: { action: "chat#quickReply", chat_reply_param: action["value"] } %>
+      <% end %>
+    <% end %>
+  </div>
+<% end %>

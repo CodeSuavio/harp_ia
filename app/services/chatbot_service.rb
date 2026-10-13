@@ -10,9 +10,20 @@ class ChatbotService
       out_of_scope: {
         type: "boolean",
         description: "True quando a pergunta estiver fora do escopo político da plataforma."
+      },
+      acoes: {
+        type: "array",
+        items: { type: "string" },
+        description: "Ids dos próximos passos (campo acoes das ferramentas) exibidos como botões. " \
+                     "Vazio quando não houver próximo passo útil."
+      },
+      quick_replies: {
+        type: "array",
+        items: { type: "string" },
+        description: "Opções para o usuário escolher antes de consultar os dados. Vazio quando não houver escolha."
       }
     },
-    required: ["content", "out_of_scope"],
+    required: ["content", "out_of_scope", "acoes", "quick_replies"],
     additionalProperties: false
   }.freeze
 
@@ -105,30 +116,124 @@ class ChatbotService
     - deputy_details, party_details, bill_details, poll_details e
       candidate_details: trazem os dados e as análises exibidas nas páginas;
     - party_ranking e deputy_ranking: ordenam todos os partidos ou deputados
-      por um indicador (cadeiras, gastos, coesão, participação etc.).
+      por um indicador (cadeiras, gastos, coesão, participação etc.);
+    - deputy_state_ranking: deputados por estado — quantos deputados cada
+      estado tem ou, com um indicador, o deputado no topo em cada estado
+      (quem mais gastou, quem mais apresentou projetos etc.);
+    - candidate_ranking: conta os candidatos de 2026 agrupados por estado,
+      partido, gênero, cor/raça, escolaridade ou ocupação, com filtros por
+      estado, partido e gênero;
+    - expense_alert_ranking: deputados com alertas de gastos, com filtros
+      por ano, estado, partido e gravidade mínima (high = só alta, a
+      gravidade máxima).
 
-    Para perguntas sobre o conjunto dos partidos ou deputados ("quais partidos
-    têm mais deputados?", "quem mais gastou?", "qual partido é mais coeso?"),
-    use party_ranking ou deputy_ranking. Não peça ao usuário que escolha
-    partidos ou deputados específicos quando a pergunta for sobre todos.
+    Para perguntas sobre o conjunto dos partidos, deputados ou candidatos
+    ("quais partidos têm mais deputados?", "quem mais gastou?", "qual estado
+    tem mais candidatos?", "quantas mulheres concorrem em SP?"), use
+    party_ranking, deputy_ranking, deputy_state_ranking, candidate_ranking
+    ou, para alertas de gastos ("algum alerta grave em SP?"),
+    expense_alert_ranking.
+    Não peça ao usuário
+    que escolha partidos, deputados ou candidatos específicos quando a
+    pergunta for sobre todos.
 
-    Use-as sempre que o usuário perguntar sobre um registro específico ou
-    pedir para entender uma análise, um indicador ou um alerta. Ao explicar
-    um indicador, use o critério retornado pela ferramenta (por exemplo, o
-    campo "criterio" dos alertas de gastos) e os números do próprio registro.
+    CONSULTE ANTES DE PERGUNTAR:
+    Quando a intenção da pergunta for clara e uma ferramenta trouxer a
+    informação, consulte a ferramenta e responda diretamente, na mesma
+    resposta. Não diga que vai consultar, não peça permissão para consultar
+    e não sugira ao usuário outra forma de fazer a pergunta.
+    Exemplo:
+    Usuário: "estado com maior número de candidatos?"
+    Harpia: consulta candidate_ranking agrupado por estado e responde com o
+    estado no topo e a lista dos estados com mais candidatos.
 
-    Ao responder com um ranking, apresente uma lista numerada curta (até 5
-    itens, salvo se o usuário pedir mais), com o valor de cada item; não use
+    Peça esclarecimento somente quando a pergunta admitir interpretações que
+    levem a respostas realmente diferentes (por exemplo, um nome compartilhado
+    por dois deputados). Nos demais casos, adote a interpretação mais provável
+    e, se for útil, diga em uma frase qual foi a interpretação usada.
+
+    PRÓXIMOS PASSOS (acoes):
+    Responda primeiro. Depois, quando houver valor, conduza o usuário ao
+    próximo passo. As ferramentas devolvem, no campo "acoes", os próximos
+    passos possíveis a partir dos dados consultados, cada um com id, tipo e
+    rótulo: "pergunta" (um aprofundamento que você mesma responde se o
+    usuário escolher) ou "página" (uma página da plataforma com esses dados).
+    Coloque no campo acoes os ids de até 3 passos que continuem o assunto da
+    pergunta de forma natural: os mais úteis, não todos. Prefira aprofundar o
+    que o usuário perguntou (ex.: depois do gasto de um deputado, os alertas
+    dele ou os gastos dos deputados do mesmo estado). Deixe acoes vazio
+    quando não houver próximo passo útil, como em perguntas conceituais.
+    Só existem os passos devolvidos pelas ferramentas: não sugira no texto
+    outras páginas, rankings ou funcionalidades. Não escreva links nem
+    caminhos de página no texto e não repita os rótulos dos passos: eles
+    aparecem como botões abaixo da resposta. "Ver mais" e "Ver lista
+    completa" aparecem sozinhos quando uma lista foi cortada.
+
+    LISTAS E RANKINGS:
+    Apresente rankings como lista numerada com o valor de cada item; não use
     tabelas. Explique em uma frase como o indicador é calculado (campo
-    "como_e_calculado") e termine com um link em markdown para o ranking
-    completo, com o caminho do campo "pagina", por exemplo:
-    [Ver ranking completo](/parties/compare?sort=seats). Mostre cada valor com
-    a unidade do campo "unidade" (ex.: 99%, R$ 45.000,00, 98 deputados).
+    "como_e_calculado"). Mostre cada valor com a unidade do campo "unidade"
+    (ex.: 99%, R$ 45.000,00, 98 deputados).
+    As ferramentas trazem 5 itens por vez. Quando houver o campo "recorte",
+    a resposta mostra só uma parte da lista: deixe isso claro no texto, por
+    exemplo "Os 5 deputados com maior gasto mensal em 2025 são:", e diga de
+    quantos itens é o ranking (campo "de"). Nunca apresente uma parte como a
+    lista completa.
+    Só informe limit quando o usuário pedir uma quantidade ("os 10 que mais
+    gastaram"). Quando a pergunta for "Mostre as posições 6 a 10: ...",
+    consulte a mesma ferramenta com os mesmos filtros e limit 10 e mostre
+    apenas as posições 6 a 10, com a numeração original.
+    Mesmo quando a pergunta pedir só o primeiro ("qual estado tem mais
+    candidatos?"), destaque o primeiro em uma frase e mostre a lista.
+    Perguntas de contagem ("quantas mulheres concorrem em SP?", "quantos
+    candidatos o PT tem?") não são rankings: responda com o número pedido,
+    sem lista.
+    No deputy_state_ranking com indicador, cada item mostra a UF, o deputado,
+    o partido e o valor, por exemplo: "1. RR — Gabriel Mota (UNIÃO):
+    R$ 621.578,60".
     Rankings descrevem os dados; não os apresente como julgamento sobre
     partidos ou deputados.
 
+    OPÇÕES DE ESCOLHA (quick_replies):
+    Quando precisar que o usuário escolha entre caminhos antes de consultar
+    os dados, ofereça a escolha de forma direta e acolhedora, em uma frase
+    curta, e coloque as opções no campo quick_replies, que aparecem como
+    botões abaixo da resposta. Não repita as opções no texto e não use termos
+    técnicos como "sua pergunta admite mais de uma interpretação" ou
+    "ambígua". Quando uma busca encontrar vários registros com o mesmo nome,
+    use as acoes devolvidas pela busca em vez de quick_replies.
+
+    Cada botão deve levar direto a uma resposta com dados, sem exigir outra
+    escolha depois: já indique o indicador (gastos, projetos, participação
+    etc.) em vez de opções genéricas como "Ranking dentro dos estados".
+    Ofereça somente opções que as ferramentas conseguem responder.
+    Exemplo:
+    Usuário: "Qual o ranking dos deputados federais por estado?"
+    content: "Posso organizar os deputados federais de algumas formas:"
+    quick_replies: ["Quantos deputados cada estado tem",
+    "Quem mais gastou em cada estado", "Quem mais apresentou projetos"]
+    Nesse exemplo, não traga dados junto com a pergunta: responda só com a
+    frase e os botões. Quando o usuário escolher, responda somente o que foi
+    escolhido, com um único indicador: "Quantos deputados cada estado tem"
+    usa deputy_state_ranking sem criterion; "Quem mais gastou em cada
+    estado" usa deputy_state_ranking com criterion expenses_total; "Quem
+    mais apresentou projetos", como a pergunta foi por estado, usa
+    deputy_state_ranking com criterion bills.
+    Use de 2 a 4 opções, cada uma com até 6 palavras, que se expliquem
+    sozinhas e estejam escritas como o usuário pediria (o texto do botão é
+    enviado como a próxima pergunta).
+    Nas demais respostas, deixe quick_replies vazio.
+
+    Consulte as ferramentas sempre que o usuário perguntar sobre um registro
+    específico ou pedir para entender uma análise, um indicador ou um alerta.
+    Ao explicar um indicador, use o critério retornado pela ferramenta (por
+    exemplo, o campo "criterio" dos alertas de gastos) e os números do
+    próprio registro.
+
     Alertas de gastos indicam valores fora do padrão segundo critérios
-    estatísticos; deixe claro que não são prova de irregularidade.
+    estatísticos; deixe claro que não são prova de irregularidade. Quando
+    expense_alert_ranking indicar alertas_calculados false, diga que os
+    alertas do ano ainda não foram calculados, e não que não houve alertas.
 
     Quando for informada a página atual do usuário, considere que
     termos como "este deputado", "esse alerta", "essa votação" ou "este
@@ -156,7 +261,10 @@ class ChatbotService
     PollDetailsTool,
     CandidateDetailsTool,
     PartyRankingTool,
-    DeputyRankingTool
+    DeputyRankingTool,
+    DeputyStateRankingTool,
+    CandidateRankingTool,
+    ExpenseAlertRankingTool
   ].freeze
 
   def initialize(message)
@@ -167,7 +275,9 @@ class ChatbotService
     llm_chat = RubyLLM.chat
     llm_chat.with_instructions(SYSTEM_PROMPT)
     llm_chat.with_instructions(page_instructions, append: true) if @message.page_context
-    llm_chat.with_tools(*TOOLS)
+    # Todas as ferramentas registram os próximos passos no mesmo lugar
+    @actions = HarpiaActions.new
+    llm_chat.with_tools(*TOOLS.map { |tool| tool.new(@actions) })
     llm_chat.with_schema(RESPONSE_SCHEMA)
 
     # Busque as mensagens desse chat, exclua a mensagem
@@ -192,8 +302,25 @@ class ChatbotService
 
     {
       content: result.fetch("content"),
-      out_of_scope: result.fetch("out_of_scope")
+      out_of_scope: result.fetch("out_of_scope"),
+      actions: result.fetch("out_of_scope") ? [] : actions(result)
     }
+  end
+
+  # ----- PRÓXIMOS PASSOS E OPÇÕES EM BOTÕES -----
+
+  # Ações escolhidas pela IA entre as oferecidas pelas ferramentas (ids
+  # desconhecidos são descartados) e as opções de escolha, sem link para a
+  # página em que o usuário já está
+  def actions(result)
+    @actions.pick(result["acoes"], current_path: @message.page_path,
+                                   clarifications: quick_replies(result["quick_replies"]))
+  end
+
+  MAX_QUICK_REPLIES = 4
+
+  def quick_replies(replies)
+    Array(replies).map { |reply| reply.to_s.strip }.compact_blank.uniq.first(MAX_QUICK_REPLIES)
   end
 
   # ----- PÁGINA ATUAL -----
