@@ -251,6 +251,48 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_match "votaram diferente em <strong>1</strong> de 2", response.body
   end
 
+  test "listagem leva ao panorama de comparação" do
+    get deputies_path
+    assert_select "a.party-compare-cta[href=?]", compare_deputies_path, text: /Comparar deputados/
+  end
+
+  test "panorama compara todos os deputados" do
+    get compare_deputies_path
+    assert_response :success
+    assert_select "h1", text: /Comparar deputados/
+    assert_select ".party-insight", minimum: 1
+    assert_select ".deputy-panorama-table tbody tr", 4
+    assert_select ".deputy-panorama-table th a[href=?]", deputy_path(deputies(:ana))
+    assert_select ".deputy-panorama-table input[type=checkbox]", 0
+    assert_select ".deputy-panorama-table tfoot tr", 1
+    assert_select ".deputy-panorama-table tfoot th", text: /Média da Câmara/
+  end
+
+  test "panorama filtra por estado e partido e ordena pela coluna" do
+    get compare_deputies_path(state: "RJ")
+    assert_select "turbo-frame#deputies_panorama_table form select[name=state] option[selected][value=RJ]"
+    assert_select ".deputy-panorama-table tbody tr", 2
+    assert_select "turbo-frame#deputies_panorama_table .deputy-panorama-table a[href=?][data-turbo-frame=_top]",
+                  deputy_path(deputies(:carla))
+
+    assert_select ".deputy-panorama-table tfoot th", text: /Média do filtro/
+    assert_select ".deputy-panorama-table tfoot th", text: /Média da Câmara/
+
+    get compare_deputies_path(party: parties(:pt).id)
+    assert_select ".deputy-panorama-table tbody tr", 1
+    assert_select ".deputy-panorama-table tbody th a", text: "Davi Rocha"
+
+    get compare_deputies_path(sort: "expenses", dir: "desc")
+    assert_select "th[aria-sort=descending]", text: /Gasto mensal/
+  end
+
+  test "panorama ignora ordenação, estado e página inválidos" do
+    get compare_deputies_path(sort: "xyz", dir: "sideways", state: "XX", page: 99)
+    assert_response :success
+    assert_select "th[aria-sort=descending]", text: /Governismo/
+    assert_select ".deputy-panorama-table tbody tr", 4
+  end
+
   test "comparação pede ao menos dois deputados" do
     get compare_deputies_path(ids: [deputies(:ana).id])
     assert_match "Selecione de 2", response.body

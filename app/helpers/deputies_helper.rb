@@ -169,4 +169,48 @@ module DeputiesHelper
     else value.to_s
     end
   end
+
+  # ----- PANORAMA (/deputies/compare) -----
+
+  # Cabeçalho ordenável da tabela do panorama, mantendo os filtros de estado e partido
+  def deputy_panorama_sort_link(label, key, sort, direction)
+    active = key == sort
+    next_direction = if active
+                       direction == :desc ? :asc : :desc
+                     else
+                       DeputyPanorama::SORTS[key][:default]
+                     end
+    arrow = { asc: "fa-arrow-up-short-wide", desc: "fa-arrow-down-wide-short" }[direction] if active
+    query = request.query_parameters.except("page", "sort", "dir").merge(sort: key, dir: next_direction)
+    link_to compare_deputies_path(query),
+            class: "text-reset text-decoration-none" do
+      safe_join([label, (tag.i(class: "fa-solid #{arrow} ms-1 text-gold", aria: { hidden: true }) if arrow)].compact)
+    end
+  end
+
+  # Área do mapa de posicionamento dos deputados, em unidades do viewBox
+  DEPUTY_POSITIONING = { width: 720, height: 430, left: 52, right: 16, top: 30, bottom: 48, r: 4.5 }.freeze
+
+  # { x_ticks:, y_ticks:, points: [{ row:, cx:, cy: }] }
+  # x = governismo (0 a 100%), y = alinhamento ao partido (do menor valor arredondado para baixo até 100%)
+  def deputy_positioning_chart(rows)
+    chart = DEPUTY_POSITIONING
+    plot_w = chart[:width] - chart[:left] - chart[:right]
+    plot_h = chart[:height] - chart[:top] - chart[:bottom]
+    y_min = [((rows.map(&:alignment_pct).min.to_i - 2) / 10) * 10, 0].max
+
+    x = ->(pct) { chart[:left] + (plot_w * pct / 100.0) }
+    y = ->(pct) { chart[:top] + (plot_h * (100 - pct) / (100.0 - y_min)) }
+
+    {
+      chart: chart, plot_w: plot_w, plot_h: plot_h,
+      x_ticks: (0..100).step(25).map { |pct| [pct, x.call(pct).round(1)] },
+      y_ticks: (y_min..100).step(10).map { |pct| [pct, y.call(pct).round(1)] },
+      government_x: x.call(DeputyPanorama::BLOCS[:government][:min]).round(1),
+      center_x: x.call(DeputyPanorama::BLOCS[:center][:min]).round(1),
+      points: rows.map do |row|
+        { row: row, cx: x.call(row.governism_pct).round(1), cy: y.call(row.alignment_pct).round(1) }
+      end
+    }
+  end
 end
