@@ -70,6 +70,39 @@ class HarpiaRankingLinksTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "página de projetos mostra os mesmos projetos da lista da Harpia" do
+    3.times do |index|
+      bill = Bill.create!(bill_type: "PL", number: index + 1, bill_number: "PL #{index + 1}/2025", year: 2025,
+                          submission_date: "2025-0#{index + 3}-01", party: parties(:mdb))
+      BillTheme.create!(bill: bill, theme: themes(:transparencia))
+    end
+
+    [{}, { "theme" => "Transparência", "party" => "MDB" }, { "year" => 2025, "type" => "PL" }].each do |args|
+      expected = BillListTool.new.call(args.merge("limit" => 20))[:projetos].pluck(:id)
+      page = full_list_path(BillListTool, args)
+
+      get page
+
+      assert_equal expected, record_ids(%r{\A/bills/(\d+)\z}), "#{args}: #{page}"
+    end
+  end
+
+  test "página de votações mostra as mesmas votações da lista da Harpia" do
+    # Rejeitada com orientação Não do Governo: duas votações em que o Governo venceu
+    polls(:third).update!(approval: false)
+
+    [{}, { "result" => "rejected" }, { "year" => 2025, "query" => "requerimento" },
+     { "government" => "won" }].each do |args|
+      expected = PollListTool.new.call(args.merge("limit" => 20))[:votacoes].pluck(:id)
+      page = full_list_path(PollListTool, args)
+      next unless page
+
+      get page
+
+      assert_equal expected, record_ids(%r{\A/polls/(\d+)\z}), "#{args}: #{page}"
+    end
+  end
+
   test "rankings sem página de ranking oferecem só ver mais" do
     tools = [[DeputyStateRankingTool, {}], [DeputyStateRankingTool, { "criterion" => "expenses_total" }],
              [CandidateRankingTool, { "group_by" => "occupation" }]]
@@ -91,7 +124,10 @@ class HarpiaRankingLinksTest < ActionDispatch::IntegrationTest
       PollDetailsTool => { "poll_id" => polls(:first).id },
       CandidateDetailsTool => { "candidate_id" => candidate.id },
       CandidateRankingTool => { "group_by" => "party", "state" => "SP", "gender" => "MASCULINO" },
-      SearchPlatformTool => { "kind" => "votacao", "query" => "requerimento" }
+      SearchPlatformTool => { "kind" => "votacao", "query" => "requerimento" },
+      BillListTool => { "theme" => "Transparência" },
+      PollListTool => { "party" => "MDB" },
+      DeputyRankingTool => { "criterion" => "bills", "theme" => "Transparência" }
     }
 
     paths = calls.flat_map do |tool_class, args|
@@ -125,6 +161,11 @@ class HarpiaRankingLinksTest < ActionDispatch::IntegrationTest
     tool = tool_class.new
     tool.call(args.merge("limit" => 1))
     link_actions(tool).find { |action| action.label == "Ver lista completa" }&.value
+  end
+
+  # Ids dos registros listados na página, na ordem em que aparecem
+  def record_ids(pattern)
+    css_select("a[href]").filter_map { |a| a["href"][pattern, 1]&.to_i }.uniq
   end
 
   def link_actions(tool)
