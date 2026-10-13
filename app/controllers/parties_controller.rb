@@ -21,17 +21,10 @@ class PartiesController < ApplicationController
     "SP" => "São Paulo", "SE" => "Sergipe", "TO" => "Tocantins"
   }.freeze
 
+  # A visão geral dos partidos fica na home; mantém links antigos (inclusive ?uf=)
   def index
-    parties = policy_scope(Party).order(:label).to_a
-    seats = Deputy.group(:state_label, :party_id).count
-
-    @state_seats = Hash.new(0)
-    seats.each { |(uf, _), count| @state_seats[uf] += count }
-
-    bench_ids = seats.keys.to_set(&:last)
-    with_bench, @parties_without_bench = parties.partition { |p| bench_ids.include?(p.id) }
-    @map_data = map_data(with_bench, seats)
-    @uf = params[:uf].to_s.upcase.presence_in(STATES.keys)
+    skip_policy_scope
+    redirect_to root_path(uf: params[:uf].presence, anchor: "partidos"), status: :moved_permanently
   end
 
   def show
@@ -60,27 +53,5 @@ class PartiesController < ApplicationController
     @sort = PartyComparison::SORTS.key?(params[:sort]) ? params[:sort] : "seats"
     @direction = %w[asc desc].include?(params[:dir]) ? params[:dir].to_sym : PartyComparison::SORTS[@sort][:default]
     @rows = @comparison.sorted_rows(@sort, @direction)
-  end
-
-  private
-
-  # Tudo o que o mapa precisa para trocar de estado sem ir ao servidor:
-  # { parties: { id => {label, name, url, logo} }, national: { party_id => cadeiras },
-  #   states: { "SP" => { name:, seats: { party_id => cadeiras } } } }
-  def map_data(parties, seats)
-    national = Hash.new(0)
-    by_state = Hash.new { |hash, uf| hash[uf] = {} }
-    seats.each do |(uf, party_id), count|
-      national[party_id] += count
-      by_state[uf][party_id] = count
-    end
-
-    {
-      parties: parties.to_h do |p|
-        [p.id, { label: p.label, name: p.name, url: party_path(p), logo: helpers.party_logo_path(p) }]
-      end,
-      national: national,
-      states: STATES.to_h { |uf, name| [uf, { name: name, seats: by_state[uf] }] }
-    }
   end
 end
