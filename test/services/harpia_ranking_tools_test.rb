@@ -107,6 +107,39 @@ class HarpiaRankingToolsTest < ActiveSupport::TestCase
     assert DeputyRankingTool.new.call("criterion" => "idade")[:erro]
   end
 
+  test "ranking de projetos de um tema conta autoria e coautoria, sem repetir o projeto" do
+    # Ana é autora principal e também está entre os autores: conta uma vez
+    BillAuthor.create!(bill: bills(:ana_bill), deputy: deputies(:ana))
+    BillAuthor.create!(bill: bills(:ana_bill), deputy: deputies(:bruno))
+    health = Bill.create!(bill_type: "PL", number: 9, bill_number: "PL 9/2025", year: 2025, deputy: deputies(:davi))
+    BillTheme.create!(bill: health, theme: themes(:saude))
+
+    tool = DeputyRankingTool.new
+    result = tool.call("criterion" => "bills", "theme" => "transparencia", "limit" => 2)
+
+    assert_equal(["Ana Souza", "Bruno Lima"], result[:ranking].map { |row| row[:nome] })
+    assert_equal([1, 1], result[:ranking].map { |row| row[:valor] })
+    assert_equal({ tema: "Transparência e administração pública" }, result[:filtros])
+    assert_match "classificados no tema Transparência", result[:como_e_calculado]
+    # Quem não tem projeto no tema entra com zero
+    assert_equal 0, result[:deputados_sem_dados]
+    assert_equal({ exibindo: 2, de: 4 }, result[:recorte])
+
+    # A listagem de deputados não filtra por tema: sem "Ver lista completa"
+    actions = result[:acoes].map { |action| tool.actions.find(action[:id]) }
+    assert_equal ["Ver mais", "Ver projetos de Ana Souza sobre Transparência e administração pública"],
+                 actions.map(&:label)
+    assert_equal "Mostre as posições 3 a 4: deputados por projetos de lei sobre Transparência e administração " \
+                 "pública, do maior para o menor", actions.first.value
+    assert_equal "/deputies/#{deputies(:ana).id}?tab=bills&theme=transparency", actions.last.value
+  end
+
+  test "tema só vale para o ranking de projetos" do
+    assert_match "só vale para o indicador bills",
+                 DeputyRankingTool.new.call("criterion" => "expenses", "theme" => "Saúde")[:erro]
+    assert DeputyRankingTool.new.call("criterion" => "bills", "theme" => "astronomia")[:erro]
+  end
+
   # ----- DEPUTADOS POR ESTADO -----
 
   test "conta os deputados de cada estado" do

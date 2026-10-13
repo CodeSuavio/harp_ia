@@ -19,12 +19,17 @@ class Bill < ApplicationRecord
   validates :year, numericality: { only_integer: true, greater_than: 1900 }
   validates :bill_number, uniqueness: { scope: :year, message: "já existe para o ano especificado" }
 
-  # { deputy_id => projetos de autoria ou coautoria }, sem contar duas vezes o mesmo projeto
-  def self.count_by_author(deputies)
-    pairs = [
-      unscoped.where(deputy_id: deputies).select(:id, :deputy_id).to_sql,
-      BillAuthor.where(deputy_id: deputies).select(:bill_id, :deputy_id).to_sql
-    ].join(" UNION ")
+  # { deputy_id => projetos de autoria ou coautoria }, sem contar duas vezes o mesmo projeto;
+  # theme: só os projetos classificados nesse tema
+  def self.count_by_author(deputies, theme: nil)
+    bills = unscoped.where(deputy_id: deputies)
+    authors = BillAuthor.where(deputy_id: deputies)
+    if theme
+      theme_bills = BillTheme.where(theme: theme).select(:bill_id)
+      bills = bills.where(id: theme_bills)
+      authors = authors.where(bill_id: theme_bills)
+    end
+    pairs = [bills.select(:id, :deputy_id).to_sql, authors.select(:bill_id, :deputy_id).to_sql].join(" UNION ")
     unscoped.from("(#{pairs}) AS bills").group(:deputy_id).count
   end
 end

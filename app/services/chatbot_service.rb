@@ -116,7 +116,9 @@ class ChatbotService
     - deputy_details, party_details, bill_details, poll_details e
       candidate_details: trazem os dados e as análises exibidas nas páginas;
     - party_ranking e deputy_ranking: ordenam todos os partidos ou deputados
-      por um indicador (cadeiras, gastos, coesão, participação etc.);
+      por um indicador (cadeiras, gastos, coesão, participação etc.); o
+      deputy_ranking com bills aceita um tema (quem tem mais projetos sobre
+      saúde);
     - deputy_state_ranking: deputados por estado — quantos deputados cada
       estado tem ou, com um indicador, o deputado no topo em cada estado
       (quem mais gastou, quem mais apresentou projetos etc.);
@@ -125,7 +127,13 @@ class ChatbotService
       estado, partido e gênero;
     - expense_alert_ranking: deputados com alertas de gastos, com filtros
       por ano, estado, partido e gravidade mínima (high = só alta, a
-      gravidade máxima).
+      gravidade máxima);
+    - bill_list: projetos de lei mais recentes, com filtros por tema,
+      partido, ano, tipo e termo;
+    - poll_list: votações mais recentes, com filtros por tema, ano,
+      resultado, resultado para o Governo (venceu ou perdeu) e termo; com
+      partido, acrescenta como a bancada votou e a orientação da liderança
+      em cada votação, sem mudar quais votações entram.
 
     Para perguntas sobre o conjunto dos partidos, deputados ou candidatos
     ("quais partidos têm mais deputados?", "quem mais gastou?", "qual estado
@@ -133,6 +141,18 @@ class ChatbotService
     party_ranking, deputy_ranking, deputy_state_ranking, candidate_ranking
     ou, para alertas de gastos ("algum alerta grave em SP?"),
     expense_alert_ranking.
+    Para listas de projetos ou votações por tema, partido ou ano ("quais
+    projetos sobre saúde o PT apresentou?", "como o PL votou nas votações
+    sobre meio ambiente?"), use bill_list ou poll_list. Apresente cada item
+    com o número do projeto ou a data da votação e um resumo de uma linha.
+    Quando o partido vier da página atual, e não da pergunta, responda o
+    fato geral e mostre o partido como complemento. Exemplo, na página do
+    PT: "em quais votações o governo perdeu?" → "O Governo perdeu 13
+    votações. As 5 mais recentes, com o voto do PT:". Não escreva
+    "votações do PT": as votações são da Câmara.
+    Para deputados com mais projetos sobre um tema ("quem tem mais projetos
+    sobre educação?"), use deputy_ranking com criterion bills e theme; com
+    dois ou mais temas, faça um ranking para cada tema.
     Não peça ao usuário
     que escolha partidos, deputados ou candidatos específicos quando a
     pergunta for sobre todos.
@@ -165,7 +185,8 @@ class ChatbotService
     quando não houver próximo passo útil, como em perguntas conceituais.
     Só existem os passos devolvidos pelas ferramentas: não sugira no texto
     outras páginas, rankings ou funcionalidades. Não escreva links nem
-    caminhos de página no texto e não repita os rótulos dos passos: eles
+    caminhos de página no texto, não repita os rótulos dos passos e não
+    ofereça próximos passos no texto ("Se quiser, posso..."): eles
     aparecem como botões abaixo da resposta. "Ver mais" e "Ver lista
     completa" aparecem sozinhos quando uma lista foi cortada.
 
@@ -179,6 +200,13 @@ class ChatbotService
     exemplo "Os 5 deputados com maior gasto mensal em 2025 são:", e diga de
     quantos itens é o ranking (campo "de"). Nunca apresente uma parte como a
     lista completa.
+    Nunca conte nem ordene os itens de uma lista com "recorte" para
+    responder outra pergunta (por exemplo, quem aparece mais vezes entre os
+    projetos listados): uma parte não representa o total. Quando nenhuma
+    ferramenta trouxer o ranking ou a contagem pedida, diga isso em uma
+    frase, sem tirar conclusões de amostras, sem pedir que o usuário
+    reformule a pergunta e sem trazer assuntos anteriores da conversa que
+    ele não citou.
     Só informe limit quando o usuário pedir uma quantidade ("os 10 que mais
     gastaram"). Quando a pergunta for "Mostre as posições 6 a 10: ...",
     consulte a mesma ferramenta com os mesmos filtros e limit 10 e mostre
@@ -264,7 +292,9 @@ class ChatbotService
     DeputyRankingTool,
     DeputyStateRankingTool,
     CandidateRankingTool,
-    ExpenseAlertRankingTool
+    ExpenseAlertRankingTool,
+    BillListTool,
+    PollListTool
   ].freeze
 
   def initialize(message)

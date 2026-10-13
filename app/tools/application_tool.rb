@@ -43,6 +43,34 @@ class ApplicationTool < RubyLLM::Tool
     record.party&.label
   end
 
+  # Tema pelo nome, sem diferenciar maiúsculas e acentos, ou por parte dele
+  # quando só um tema combina ("saude" → Saúde, "tributos" → Economia e tributos)
+  def find_theme(name)
+    term = normalize(name)
+    return if term.blank?
+
+    themes = Theme.all.to_a
+    themes.find { |theme| normalize(theme.name) == term || theme.slug == term } ||
+      themes.select { |theme| normalize(theme.name).include?(term) }.then { |found| found.first if found.one? }
+  end
+
+  def find_party(label)
+    Party.find_by("label ILIKE ?", label.to_s.strip) if label.present?
+  end
+
+  # Erro quando o tema ou o partido informado não existe na base
+  def lookup_error(theme, party)
+    if theme.present? && !find_theme(theme)
+      return { erro: "Tema não encontrado. Use um destes: #{Theme.pluck(:name).join(', ')}." }
+    end
+
+    not_found("Partido") if party.present? && !find_party(party)
+  end
+
+  def normalize(text)
+    I18n.transliterate(text.to_s.strip).downcase
+  end
+
   # ----- PRÓXIMOS PASSOS -----
 
   def question(label, text, required: false)
