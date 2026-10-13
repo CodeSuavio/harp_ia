@@ -72,4 +72,60 @@ class HarpiaRankingToolsTest < ActiveSupport::TestCase
     assert DeputyRankingTool.new.call("criterion" => "bills", "party" => "XYZ")[:erro]
     assert DeputyRankingTool.new.call("criterion" => "idade")[:erro]
   end
+
+  # ----- CANDIDATOS -----
+
+  test "conta os candidatos por estado, do maior para o menor" do
+    add_candidates
+
+    result = CandidateRankingTool.new.call("group_by" => "state")
+
+    assert_equal([["SP", 3], ["RJ", 1]], result[:ranking].map { |row| [row[:grupo], row[:candidatos]] })
+    assert_equal([75.0, 25.0], result[:ranking].map { |row| row[:percentual] })
+    assert_equal 4, result[:total_de_candidatos]
+    assert_equal "candidatos", result[:unidade]
+    assert_equal "/candidates", result[:pagina]
+    assert result[:como_e_calculado]
+  end
+
+  test "filtra os candidatos por estado, partido e gênero" do
+    add_candidates
+
+    result = CandidateRankingTool.new.call("group_by" => "gender", "state" => "sp", "party" => "pt")
+
+    assert_equal([["FEMININO", 1]], result[:ranking].map { |row| [row[:grupo], row[:candidatos]] })
+    assert_equal({ uf: "SP", partido: "PT" }, result[:filtros])
+    assert_equal "/candidates?party=#{parties(:pt).id}&state=SP", result[:pagina]
+  end
+
+  test "inverte a ordem, agrupa por partido e informa os candidatos sem o dado" do
+    add_candidates
+
+    result = CandidateRankingTool.new.call("group_by" => "gender", "order" => "asc")
+
+    assert_equal(%w[FEMININO MASCULINO], result[:ranking].map { |row| row[:grupo] })
+    assert_equal 1, result[:candidatos_sem_informacao]
+    assert_equal(%w[MDB PT], CandidateRankingTool.new.call("group_by" => "party")[:ranking].map { |row| row[:grupo] })
+  end
+
+  test "informa partido inexistente e agrupamento inválido no ranking de candidatos" do
+    assert CandidateRankingTool.new.call("group_by" => "state", "party" => "XYZ")[:erro]
+    assert CandidateRankingTool.new.call("group_by" => "idade")[:erro]
+  end
+
+  test "a Harpia tem acesso ao ranking de candidatos" do
+    assert_includes ChatbotService::TOOLS, CandidateRankingTool
+    assert_includes ChatbotService::SYSTEM_PROMPT, "candidate_ranking"
+  end
+
+  private
+
+  # Além da Ana (SP, MDB, sem gênero na fixture): 2 em SP e 1 no RJ
+  def add_candidates
+    rows = [["SP", :mdb, "MASCULINO"], ["SP", :pt, "FEMININO"], ["RJ", :mdb, "MASCULINO"]]
+    rows.each_with_index do |(uf, party, gender), i|
+      Candidate.create!(name: "Candidato #{i}", ballot_name: "Candidato #{i}", number: 2000 + i,
+                        party: parties(party), state_label: uf, gender: gender)
+    end
+  end
 end

@@ -105,12 +105,32 @@ class ChatbotService
     - deputy_details, party_details, bill_details, poll_details e
       candidate_details: trazem os dados e as análises exibidas nas páginas;
     - party_ranking e deputy_ranking: ordenam todos os partidos ou deputados
-      por um indicador (cadeiras, gastos, coesão, participação etc.).
+      por um indicador (cadeiras, gastos, coesão, participação etc.);
+    - candidate_ranking: conta os candidatos de 2026 agrupados por estado,
+      partido, gênero, cor/raça, escolaridade ou ocupação, com filtros por
+      estado, partido e gênero.
 
-    Para perguntas sobre o conjunto dos partidos ou deputados ("quais partidos
-    têm mais deputados?", "quem mais gastou?", "qual partido é mais coeso?"),
-    use party_ranking ou deputy_ranking. Não peça ao usuário que escolha
-    partidos ou deputados específicos quando a pergunta for sobre todos.
+    Para perguntas sobre o conjunto dos partidos, deputados ou candidatos
+    ("quais partidos têm mais deputados?", "quem mais gastou?", "qual estado
+    tem mais candidatos?", "quantas mulheres concorrem em SP?"), use
+    party_ranking, deputy_ranking ou candidate_ranking. Não peça ao usuário
+    que escolha partidos, deputados ou candidatos específicos quando a
+    pergunta for sobre todos.
+
+    CONSULTE ANTES DE PERGUNTAR:
+    Quando a intenção da pergunta for clara e uma ferramenta trouxer a
+    informação, consulte a ferramenta e responda diretamente, na mesma
+    resposta. Não diga que vai consultar, não peça permissão para consultar
+    e não sugira ao usuário outra forma de fazer a pergunta.
+    Exemplo:
+    Usuário: "estado com maior número de candidatos?"
+    Harpia: consulta candidate_ranking agrupado por estado e responde com o
+    estado no topo e o número de candidatos.
+
+    Peça esclarecimento somente quando a pergunta admitir interpretações que
+    levem a respostas realmente diferentes (por exemplo, um nome compartilhado
+    por dois deputados). Nos demais casos, adote a interpretação mais provável
+    e, se for útil, diga em uma frase qual foi a interpretação usada.
 
     Use-as sempre que o usuário perguntar sobre um registro específico ou
     pedir para entender uma análise, um indicador ou um alerta. Ao explicar
@@ -156,7 +176,8 @@ class ChatbotService
     PollDetailsTool,
     CandidateDetailsTool,
     PartyRankingTool,
-    DeputyRankingTool
+    DeputyRankingTool,
+    CandidateRankingTool
   ].freeze
 
   def initialize(message)
