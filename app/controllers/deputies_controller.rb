@@ -4,6 +4,8 @@ class DeputiesController < ApplicationController
   PER_PAGE = 24
   TAB_PER_PAGE = 20
   COMPARE_LIMIT = 3
+  # Linhas por página na tabela do panorama (/deputies/compare)
+  PANORAMA_PER_PAGE = 50
   TABS = {
     "overview" => "Visão geral",
     "expenses" => "Gastos",
@@ -105,11 +107,31 @@ class DeputiesController < ApplicationController
   def compare
     authorize Deputy
 
-    ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT)
-    @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by do |d|
-      d.id.to_s
-    end.values_at(*ids).compact
-    @comparison = DeputyComparison.new(@deputies)
+    # Deputados escolhidos na listagem (?ids[]=): comparação lado a lado
+    if params.key?(:ids)
+      ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT)
+      @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by do |d|
+        d.id.to_s
+      end.values_at(*ids).compact
+      @comparison = DeputyComparison.new(@deputies)
+      return render :compare_selected
+    end
+
+    @panorama = DeputyPanorama.new
+    @sort = DeputyPanorama::SORTS.key?(params[:sort]) ? params[:sort] : "governism"
+    @direction = %w[asc desc].include?(params[:dir]) ? params[:dir].to_sym : DeputyPanorama::SORTS[@sort][:default]
+    @state = params[:state].presence_in(Deputy.distinct.pluck(:state_label))
+    @party = Party.find_by(id: params[:party]) if params[:party].present?
+
+    rows = @panorama.sorted_rows(@sort, @direction, state: @state, party_id: @party&.id)
+    @filtered = rows.size
+    @total_pages = [(@filtered / PANORAMA_PER_PAGE.to_f).ceil, 1].max
+    @page = params[:page].to_i.clamp(1, @total_pages)
+    @rows = rows.slice((@page - 1) * PANORAMA_PER_PAGE, PANORAMA_PER_PAGE) || []
+    @positioned = @panorama.positioned
+    @filter_averages = @panorama.averages(rows) if @state || @party
+    @parties = Party.where(id: Deputy.select(:party_id)).order(:label)
+    @states = PartiesController::STATES
   end
 
   private

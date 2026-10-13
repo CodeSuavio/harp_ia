@@ -358,3 +358,10 @@ $bloc-opposition: #c27c00;
 
   &:hover, &:focus-visible { background-color: rgba($gold, 0.15); }
 }
+
+// Panorama de deputados: um ponto por deputado, menor e mais transparente
+// que as bolhas dos partidos para os grupos sobrepostos aparecerem
+.deputy-positioning .bubble .dot {
+  fill-opacity: 0.6;
+  stroke-width: 1;
+}
