@@ -6,7 +6,7 @@ class DeputiesController < ApplicationController
   COMPARE_LIMIT = 3
   # Linhas por página na tabela do panorama (/deputies/compare)
   PANORAMA_PER_PAGE = 50
-  TABS = {
+  ALL_TABS = {
     "overview" => "Visão geral",
     "expenses" => "Gastos",
     "bills" => "Projetos de lei",
@@ -14,6 +14,11 @@ class DeputiesController < ApplicationController
     "promises" => "Promessas × Atuação",
     "elections" => "Eleições 2026"
   }.freeze
+  # Abas escondidas do perfil: o código continua no projeto (load_*, view em
+  # deputies/tabs e testes com skip). Pedidas pela URL, caem na Visão geral.
+  # Para reativar uma aba, tire a chave daqui (e o skip dos testes dela).
+  HIDDEN_TABS = %w[promises].freeze
+  TABS = ALL_TABS.except(*HIDDEN_TABS).freeze
   # Chaves antigas (em português) de links já compartilhados
   LEGACY_TABS = {
     "geral" => "overview", "gastos" => "expenses", "projetos" => "bills",
