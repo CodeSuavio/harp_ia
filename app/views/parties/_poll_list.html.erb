@@ -1,7 +1,7 @@
 <%# rows: [[votação, { sim:, nao:, orientation: }]] com os votos da bancada %>
 <ul class="list-group list-group-flush">
   <% rows.each do |poll, row| %>
-    <li class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+    <li class="list-group-item px-3 py-3 d-flex justify-content-between align-items-start gap-3">
       <div class="min-w-0">
         <span class="data-label text-muted small text-nowrap me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
         <%= link_to poll_summary(poll).truncate(110), poll_path(poll), class: "text-navy text-decoration-none hover-opacity" %>

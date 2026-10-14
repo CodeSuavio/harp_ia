@@ -40,7 +40,7 @@
     <h2 class="h6 text-uppercase text-muted mt-4">Votações deste projeto</h2>
     <ul class="list-group list-group-flush mb-4">
       <% @votings.each do |poll| %>
-        <li class="list-group-item px-0">
+        <li class="list-group-item px-3 py-3">
           <%= link_to poll_path(poll), class: "text-decoration-none text-reset" do %>
             <span class="data-label text-muted me-2"><%= poll.date&.strftime("%d/%m/%Y") %></span>
             <%= poll_result_badge(poll) %>
