@@ -14,6 +14,16 @@ class Message < ApplicationRecord
   # - failed:   a IA não conseguiu responder
   enum :status, { pending: "pending", answered: "answered", failed: "failed" }, default: :answered
 
+  # Primeira mensagem de cada conversa que menciona o termo, por chat_id.
+  # Mostrada em "Meus Chats" para explicar por que a conversa apareceu na busca.
+  def self.first_mentions(query, chats)
+    select("DISTINCT ON (messages.chat_id) messages.chat_id, messages.content")
+      .where(chat_id: chats.select(:id))
+      .where("unaccent(messages.content) ILIKE unaccent(?)", "%#{sanitize_sql_like(query.to_s.strip)}%")
+      .order(:chat_id, :created_at)
+      .to_h { |message| [message.chat_id, message.content] }
+  end
+
   def awaiting_response?
     pending? && created_at > RESPONSE_TIMEOUT.ago
   end

@@ -6,6 +6,11 @@ class ChatsController < ApplicationController
 
   def index
     @chats = policy_scope(Chat)
+    @query = params[:q].to_s.strip
+    return if @query.blank?
+
+    @chats = @chats.search(@query)
+    @mentions = Message.first_mentions(@query, @chats)
   end
 
   def show

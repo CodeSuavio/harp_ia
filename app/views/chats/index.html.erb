@@ -48,16 +48,44 @@
     class="container position-relative"
     style="margin-top: -3.5rem; z-index: 10; margin-bottom: 5rem;">
 
-    <!--
-      Esta div funciona como alvo para o Turbo.
+    <!-- Busca por título ou por algo mencionado na conversa -->
+    <% if @query.present? || @chats.any? %>
+      <%= form_with url: chats_path, method: :get,
+                    data: {
+                      turbo_frame: "chats_results",
+                      turbo_action: "advance",
+                      controller: "filter-form",
+                      action: "input->filter-form#submit"
+                    },
+                    class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0 mb-4" do %>
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+            <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
+          </span>
+          <%= search_field_tag :q, @query,
+                id: "chat-search",
+                placeholder: "Buscar por título ou assunto da conversa...",
+                aria: { label: "Buscar nos meus chats" },
+                class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium" %>
+        </div>
+      <% end %>
+    <% end %>
 
-      Quando um novo chat for criado pelo widget,
-      poderemos atualizar apenas esta área da página,
-      sem precisar fazer refresh completo.
-    -->
-    <div id="chats_list">
-      <%= render "chats_list", chats: @chats %>
-    </div>
+    <%= turbo_frame_tag "chats_results", target: "_top" do %>
+      <!--
+        Esta div funciona como alvo para o Turbo.
+
+        Quando um novo chat for criado pelo widget,
+        poderemos atualizar apenas esta área da página,
+        sem precisar fazer refresh completo.
+
+        Durante uma busca ela muda de id, para que essas atualizações
+        (que trazem todos os chats) não desfaçam o resultado na tela.
+      -->
+      <div id="<%= @query.present? ? "chats_search_results" : "chats_list" %>">
+        <%= render "chats_list", chats: @chats, query: @query, mentions: @mentions %>
+      </div>
+    <% end %>
 
   </section>
 
