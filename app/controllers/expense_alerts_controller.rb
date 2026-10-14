@@ -17,6 +17,7 @@ class ExpenseAlertsController < ApplicationController
     @computed_at = ranking.computed_at
     @expenses = ranking.expenses
     @page_rows = with_deputies(page_of(ranking.rows))
+    @kinds = ranking.kinds(@page_rows.pluck(:deputy_id))
 
     @note_counts = Expense.where(year: @year, deputy_id: @page_rows.pluck(:deputy_id)).group(:deputy_id).count
     @states = Deputy.distinct.pluck(:state_label).compact.sort
