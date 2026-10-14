@@ -134,6 +134,20 @@ body {
   .input-group-text i {
     color: $gold-dark; // Ícones da busca: dourado escuro no branco (5,7:1)
   }
+
+  // Divisória entre os filtros lado a lado (só em telas largas, onde ficam numa linha)
+  @media (min-width: 992px) {
+    .border-end-lg {
+      border-right: 1px solid rgba($navy-blue, 0.08);
+    }
+  }
+}
+
+// Barra de filtro dentro de um card (tabelas do panorama e da aba de gastos):
+// mesmo padrão, com borda no lugar da sombra
+.search-card-inline {
+  border: 1px solid rgba($navy-blue, 0.1);
+  box-shadow: none !important;
 }
 
 // ==========================================

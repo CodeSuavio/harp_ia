@@ -176,27 +176,50 @@
     </div>
 
     <%= turbo_frame_tag "deputies_panorama_table", data: { turbo_action: "advance" } do %>
-    <!-- Filtros da tabela -->
+    <!-- Filtros da tabela (mesmo padrão das barras de filtro do site) -->
     <%= form_with url: compare_deputies_path, method: :get,
                   data: { controller: "filter-form", action: "change->filter-form#submit" },
-                  class: "d-flex flex-wrap align-items-center gap-2 px-4 pb-3" do %>
+                  class: "px-4 pb-3" do %>
       <%= hidden_field_tag :sort, @sort %>
       <%= hidden_field_tag :dir, @direction %>
-      <span class="small fw-bold text-navy text-uppercase me-1">
-        <i class="fa-solid fa-filter text-gold me-1" aria-hidden="true"></i> Filtrar
-      </span>
-      <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states.map { |uf, name| [name, uf] }, @state),
-            class: "form-select form-select-sm w-auto", aria: { label: "Estado" } %>
-      <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
-            class: "form-select form-select-sm w-auto", aria: { label: "Partido" } %>
-      <noscript><button type="submit" class="btn btn-sm btn-auth rounded-pill px-3 fw-medium">Filtrar</button></noscript>
-      <% if @state || @party %>
-        <%= link_to "Limpar filtros", compare_deputies_path(sort: @sort, dir: @direction),
-              class: "btn btn-sm btn-link text-muted text-decoration-none" %>
-      <% end %>
-      <span class="small text-muted ms-md-auto">
-        <%= @filtered %> de <%= @panorama.total %> deputados
-      </span>
+      <div class="card search-card search-card-inline bg-white rounded-4 p-2">
+        <div class="row g-0 align-items-center">
+          <!-- Filtro: Estado -->
+          <div class="col-md-6 border-end-lg px-2 py-1">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
+                <i class="fa-solid fa-location-crosshairs text-gold"></i>
+              </span>
+              <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states.map { |uf, name| [name, uf] }, @state),
+                    aria: { label: "Estado" },
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+            </div>
+          </div>
+
+          <!-- Filtro: Partido -->
+          <div class="col-md-6 px-2 py-1">
+            <div class="input-group border-0">
+              <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
+                <i class="fa-solid fa-flag text-gold"></i>
+              </span>
+              <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
+                    aria: { label: "Partido" },
+                    class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+            </div>
+          </div>
+        </div>
+      </div>
+      <noscript><button type="submit" class="btn btn-sm btn-auth rounded-pill px-3 fw-medium mt-2">Filtrar</button></noscript>
+
+      <div class="d-flex flex-wrap align-items-center gap-2 mt-2 px-1">
+        <span class="small text-muted">
+          <%= @filtered %> de <%= @panorama.total %> deputados
+        </span>
+        <% if @state || @party %>
+          <%= link_to "Limpar filtros", compare_deputies_path(sort: @sort, dir: @direction),
+                class: "btn btn-sm btn-link text-muted text-decoration-none p-0 ms-auto" %>
+        <% end %>
+      </div>
     <% end %>
 
     <div class="table-responsive">
