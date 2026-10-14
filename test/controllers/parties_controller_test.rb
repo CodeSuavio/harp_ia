@@ -58,6 +58,10 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".party-compare-table tbody tr", 2
     assert_select ".party-compare-table a[href=?]", party_path(parties(:mdb))
     assert_select ".bloc-majority", text: "257"
+    # Com as 3 votações das fixtures, ninguém chega ao mínimo de governismo: os dois
+    # partidos vão para a linha "Sem dados", fora das colunas dos blocos
+    assert_select ".bloc-legend-item", 0
+    assert_select "p", text: /Sem dados\s+\(4 cadeiras\)/
   end
 
   test "comparação ordena pela coluna pedida e ignora coluna desconhecida" do

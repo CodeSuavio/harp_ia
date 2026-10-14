@@ -52,4 +52,40 @@ class PartyComparisonTest < ActiveSupport::TestCase
     extremes = @comparison.insights.find { |_, title, _| title == "Do mais governista ao mais oposicionista" }
     assert_match(/MDB acompanhou o Governo em 50%.*PT, em apenas 0%/, extremes.last)
   end
+
+  # Troca DeputyMetrics.party_affinity por uma matriz montada no teste e restaura no fim
+  # (as fixtures têm só 3 votações, abaixo do mínimo de votações em comum)
+  def with_party_affinity(matrix)
+    original = DeputyMetrics.method(:party_affinity)
+    DeputyMetrics.define_singleton_method(:party_affinity) { matrix }
+    yield
+  ensure
+    DeputyMetrics.define_singleton_method(:party_affinity, original)
+  end
+
+  test "matriz de afinidade tira quem não tem votações suficientes em comum e lista à parte" do
+    mdb, pt = parties(:mdb), parties(:pt)
+    matrix = lambda do |common|
+      cell = { same: common / 2, common: common, pct: 50 }
+      { mdb.id => { pt.id => cell }, pt.id => { mdb.id => cell } }
+    end
+
+    with_party_affinity(matrix.call(PartyStats::AFFINITY_MIN_POLLS)) do
+      affinity = PartyComparison.new(min_government_polls: 1).affinity
+      assert_equal %w[MDB PT], affinity[:parties].map(&:label).sort
+      assert_empty affinity[:left_out]
+    end
+
+    # Abaixo do mínimo, a linha e a coluna seriam só "·": os dois saem da matriz
+    with_party_affinity(matrix.call(PartyStats::AFFINITY_MIN_POLLS - 1)) do
+      affinity = PartyComparison.new(min_government_polls: 1).affinity
+      assert_empty affinity[:parties]
+      assert_equal %w[MDB PT], affinity[:left_out].map(&:label)
+    end
+
+    # Partido sem dado de votação nenhum também vai para a lista
+    with_party_affinity({}) do
+      assert_equal %w[MDB PT], PartyComparison.new.affinity[:left_out].map(&:label)
+    end
+  end
 end

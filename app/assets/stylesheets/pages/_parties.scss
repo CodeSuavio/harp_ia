@@ -238,6 +238,31 @@ $bloc-opposition: #c27c00;
 
 // Mapa de posicionamento (governismo × coesão): no celular rola na horizontal
 // para os rótulos não ficarem minúsculos
+// Descrição de cada bloco embaixo da sua parcela da barra: mesmas proporções e o
+// mesmo espaço entre as parcelas (gap da .bloc-bar); a linha no topo, na cor do
+// bloco, liga o texto à parcela. No celular, as colunas ficariam estreitas demais:
+// empilham, como uma lista
+.bloc-legend {
+  display: flex;
+  gap: 2px;
+
+  .bloc-legend-item {
+    min-width: 0;
+    padding: 0.6rem 0.75rem 0 0;
+    border-top: 3px solid var(--bloc-color);
+  }
+
+  .bloc-legend-spacer { min-width: 4px; }
+
+  @media (max-width: 767.98px) {
+    flex-direction: column;
+    gap: 1rem;
+
+    .bloc-legend-item { flex: none !important; }
+    .bloc-legend-spacer { display: none; }
+  }
+}
+
 .positioning-scroll { overflow-x: auto; }
 
 .positioning-chart {
@@ -364,4 +389,49 @@ $bloc-opposition: #c27c00;
 .deputy-positioning .bubble .dot {
   fill-opacity: 0.6;
   stroke-width: 1;
+}
+
+// Mapa de posicionamento interativo (positioning_chart_controller): a bolha mais
+// perto do cursor fica em destaque e as outras esmaecem; o cartão mostra os números
+.positioning-chart {
+  &.has-active { cursor: pointer; }
+
+  &.has-active .bubble:not(.is-active) .dot { fill-opacity: 0.35; }
+
+  // Bolha por cima de outra: contorno azul-marinho para ela aparecer sobre a vizinha
+  .bubble.is-covering .dot {
+    stroke: rgba($navy-blue, 0.6);
+    stroke-width: 1.5;
+  }
+
+  .bubble.is-active .dot {
+    fill-opacity: 1;
+    stroke: $navy-blue;
+    stroke-width: 3;
+  }
+}
+
+.positioning-tooltip {
+  position: absolute;
+  z-index: 5;
+  width: 240px;
+  padding: 0.75rem 0.9rem;
+  background-color: #fff;
+  border: 1px solid rgba($navy-blue, 0.12);
+  border-left: 4px solid $gold;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 28px rgba($navy-blue, 0.18);
+  // Com o mouse, o cartão não captura o cursor (senão o mapa "perde" o mouse e o cartão pisca);
+  // fixado por um toque, aceita o clique no link
+  pointer-events: none;
+
+  &.is-pinned { pointer-events: auto; }
+
+  li { line-height: 1.5; }
+
+  .positioning-tooltip-overlaps {
+    margin-top: 0.25rem;
+    color: $navy-blue;
+    font-weight: 600;
+  }
 }
