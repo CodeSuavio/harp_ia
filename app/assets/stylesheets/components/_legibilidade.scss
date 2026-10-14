@@ -50,17 +50,9 @@ a.text-gold {
   border-left: 0 !important;
 }
 
-// Alertas de gastos: as três gravidades sempre visíveis, em cores suaves e legíveis
-.severity-badge {
-  border: 1px solid transparent;
-  font-weight: 600;
-}
-
-.severity-high { color: #8F1D1D; background-color: #FDE4E4; border-color: #F5B5B5; }
-.severity-medium { color: #7A4100; background-color: #FFEFD6; border-color: #F7CF8F; }
-.severity-low { color: #4A5260; background-color: #ECEEF2; border-color: #D5D9E0; }
-
-.severity-badge.is-zero {
-  color: #6B7280;
-  background-color: #FFFFFF;
+// Alertas de gastos: gravidade sem alerta aparece apagada, para as três ficarem sempre visíveis
+.badge.is-zero {
+  color: #6B7280 !important;
+  background-color: #FFFFFF !important;
+  border: 1px solid #D5D9E0;
 }

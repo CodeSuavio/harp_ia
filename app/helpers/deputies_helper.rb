@@ -103,6 +103,23 @@ module DeputiesHelper
   end
 
   # [título, explicação do critério] de um item de ExpenseAnomalies
+  # Nome curto de cada tipo de alerta, para os cartões do ranking (/alertas)
+  EXPENSE_ALERT_KINDS = {
+    "duplicate_document" => "Nota duplicada",
+    "split_notes" => "Notas fracionadas no mesmo dia",
+    "atypical_note" => "Nota acima do padrão",
+    "month_peak" => "Pico de gasto no mês",
+    "type_jump" => "Salto em um tipo de despesa",
+    "exclusive_supplier" => "Fornecedor exclusivo",
+    "new_supplier" => "Fornecedor novo",
+    "incompatible_supplier_activity" => "Fornecedor de outro ramo",
+    "inactive_supplier" => "Fornecedor com CNPJ inativo"
+  }.freeze
+
+  def expense_alert_kind_label(kind)
+    EXPENSE_ALERT_KINDS.fetch(kind.to_s, kind.to_s.humanize)
+  end
+
   def expense_anomaly_text(row)
     supplier = row[:supplier].presence || "fornecedor não informado"
     case row[:kind]

@@ -92,21 +92,25 @@ class PartyComparison
     rows.select { |row| row.governism && row.cohesion }
   end
 
-  # { parties: [Row], cells: { [id_a, id_b] => { same:, common:, pct: } } }
-  # Ordenados do mais governista ao mais oposicionista, para os blocos aparecerem juntos
+  # { parties: [Row], cells: { [id_a, id_b] => { same:, common:, pct: } }, left_out: [Row] }
+  # Ordenados do mais governista ao mais oposicionista, para os blocos aparecerem juntos.
+  # Partidos sem nenhum par com votações suficientes em comum (ex.: bancada que quase
+  # não votou) saem da matriz, que teria só "·" na linha e na coluna deles, e vão para left_out.
   def affinity
     @affinity ||= begin
       matrix = DeputyMetrics.party_affinity
-      parties = rows.select { |row| matrix.key?(row.party.id) }
-                    .sort_by { |row| [-(row.governism_pct || -1), -row.seats] }
+      candidates = rows.select { |row| matrix.key?(row.party.id) }
+                       .sort_by { |row| [-(row.governism_pct || -1), -row.seats] }
       cells = {}
-      parties.combination(2).each do |a, b|
+      candidates.combination(2).each do |a, b|
         cell = matrix.dig(a.party.id, b.party.id)
         next unless cell && cell[:common] >= PartyStats::AFFINITY_MIN_POLLS
 
         cells[[a.party.id, b.party.id]] = cells[[b.party.id, a.party.id]] = cell
       end
-      { parties: parties, cells: cells }
+      paired = cells.keys.to_set(&:first)
+      parties = candidates.select { |row| paired.include?(row.party.id) }
+      { parties: parties, cells: cells, left_out: (rows - parties).sort_by(&:label) }
     end
   end
 

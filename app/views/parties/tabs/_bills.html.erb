@@ -33,7 +33,7 @@
         <h3 class="small fw-bold text-muted text-uppercase tracking-wider mb-3">Mais recentes</h3>
         <ul class="list-group list-group-flush">
           <% @stats.recent_bills.each do |bill| %>
-            <li class="list-group-item px-0">
+            <li class="list-group-item px-3 py-3">
               <div class="d-flex flex-wrap align-items-center gap-2 small mb-1">
                 <span class="fw-bold text-navy"><%= proposicao_label(bill) %></span>
                 <% if bill.submission_date %>

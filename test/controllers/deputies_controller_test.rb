@@ -264,9 +264,11 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_match "votaram diferente em <strong>1</strong> de 2", response.body
   end
 
-  test "listagem leva ao panorama de comparação" do
+  test "listagem tem o hero e leva ao panorama de comparação e ao ranking de alertas" do
     get deputies_path
+    assert_select ".panel-hero h1", text: /Deputados\s+federais/
     assert_select "a.party-compare-cta[href=?]", compare_deputies_path, text: /Comparar deputados/
+    assert_select "a.party-compare-cta[href=?]", expense_alerts_path, text: /Ranking de alertas de gastos/
   end
 
   test "panorama compara todos os deputados" do

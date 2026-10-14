@@ -6,11 +6,11 @@
     <div class="row align-items-center">
 
       <!-- Coluna vazia: mantém os links no centro e o copyright à direita -->
-      <div class="col-md-4 d-none d-md-block"></div>
+      <div class="col-lg-3 d-none d-lg-block"></div>
 
-      <!-- Links Úteis -->
-      <div class="col-md-4 mb-3 mb-md-0">
-        <div class="footer-links d-flex justify-content-center gap-4">
+      <!-- Links Úteis: lado a lado, numa linha só -->
+      <div class="col-md-8 col-lg-6 mb-3 mb-md-0">
+        <div class="footer-links d-flex justify-content-center">
           <a href="#onboarding-modal" data-bs-toggle="modal">Como funciona</a>
           <a href="#" data-hints-reset>Rever dicas</a>
           <%= link_to "Sobre Nós", about_path %>
@@ -19,7 +19,7 @@
       </div>
 
       <!-- Direitos Reservados e Ano Dinâmico -->
-      <div class="col-md-4 text-center text-md-end footer-copyright">
+      <div class="col-md-4 col-lg-3 text-center text-md-end footer-copyright">
         &copy; <%= Time.current.year %> HarpIA. <br class="d-md-none">
         Todos os direitos reservados.
       </div>
