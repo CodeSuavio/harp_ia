@@ -192,7 +192,7 @@
                   <% documents.first(5).each_with_index do |url, index| %>
                     <%= link_to url, target: "_blank", rel: "noopener", class: "text-gold text-decoration-none",
                           aria: { label: "Ver nota fiscal #{index + 1} (abre em nova aba)" } do %>
-                      <i class="fa-solid fa-file-invoice" aria-hidden="true"></i><%= index + 1 if documents.many? %>
+                      <i class="fa-solid fa-file-invoice" aria-hidden="true"></i><%= index + 1 if documents.many? %><i class="fa-solid fa-arrow-up-right-from-square external-link-icon" aria-hidden="true"></i>
                     <% end %>
                   <% end %>
                   <% if documents.size > 5 %>e mais <%= documents.size - 5 %><% end %>
@@ -200,7 +200,7 @@
                 <% end %>
                 <%= link_to camara_expenses_url(@deputy, @year, anomaly[:month]), target: "_blank", rel: "noopener",
                       class: "text-gold text-decoration-none", aria: { label: "Ver na Câmara dos Deputados (abre em nova aba)" } do %>
-                  Ver na Câmara <i class="fa-solid fa-arrow-up-right-from-square small" aria-hidden="true"></i>
+                  Ver na Câmara<i class="fa-solid fa-arrow-up-right-from-square external-link-icon" aria-hidden="true"></i>
                 <% end %>
               </div>
             </div>
@@ -357,7 +357,7 @@
                 <% if expense.document_url.present? %>
                   <%= link_to expense.document_url, target: "_blank", rel: "noopener", class: "text-gold text-decoration-none small",
                         aria: { label: "Ver nota na Câmara (abre em nova aba)" } do %>
-                    <i class="fa-solid fa-file-invoice me-1" aria-hidden="true"></i>Ver nota na Câmara
+                    <i class="fa-solid fa-file-invoice me-1" aria-hidden="true"></i>Ver nota na Câmara<i class="fa-solid fa-arrow-up-right-from-square external-link-icon" aria-hidden="true"></i>
                   <% end %>
                 <% end %>
               </td>

@@ -68,7 +68,7 @@
           <% if @party.url.present? %>
             <%= link_to @party.url.start_with?("http") ? @party.url : "https://#{@party.url}", target: "_blank", rel: "noopener",
                   class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
-              <i class="fa-solid fa-globe me-2 text-gold"></i> Site oficial
+              <i class="fa-solid fa-globe me-2 text-gold"></i> Site oficial<%= external_link_icon %>
             <% end %>
           <% end %>
         </div>

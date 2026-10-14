@@ -89,7 +89,7 @@
       <div class="d-flex flex-wrap gap-2">
         <% links.each do |url, host| %>
           <%= link_to url, target: "_blank", rel: "noopener", class: "btn btn-light border btn-sm rounded-pill px-3 py-2 d-inline-flex align-items-center text-navy fw-medium shadow-sm transition" do %>
-            <i class="fa-solid fa-link me-2 text-gold"></i> <%= host.capitalize %>
+            <i class="fa-solid fa-link me-2 text-gold"></i> <%= host.capitalize %><%= external_link_icon %>
           <% end %>
         <% end %>
       </div>

@@ -62,7 +62,8 @@
   <% end %>
 
   <% if @bill.url.present? %>
-    <%= link_to "Ver tramitação na Câmara", @bill.url, target: "_blank", rel: "noopener",
-          class: "btn btn-outline-dark rounded-pill" %>
+    <%= link_to @bill.url, target: "_blank", rel: "noopener", class: "btn btn-outline-dark rounded-pill" do %>
+      Ver tramitação na Câmara<%= external_link_icon %>
+    <% end %>
   <% end %>
 </section>
