@@ -20,4 +20,25 @@ module ChatsHelper
 
     tag.attributes(data: { chat_pending: true, chat_refresh_url: chat_path(chat) })
   end
+
+  # Trecho da mensagem em volta do termo buscado, com o termo destacado.
+  # Como a busca ignora acentos, o termo é localizado no texto sem acentos e
+  # destacado como está escrito na mensagem ("votacao" destaca "votação").
+  def chat_search_excerpt(content, query)
+    text = strip_tags(content).squish
+    term = written_term(text, query.to_s.strip) || query
+    highlight(excerpt(text, term, radius: 60) || truncate(text, length: 120), term)
+  end
+
+  private
+
+  def written_term(text, query)
+    plain = I18n.transliterate(text).downcase
+    # A posição só vale se tirar os acentos não mudou o tamanho do texto
+    return unless plain.length == text.length
+
+    plain_query = I18n.transliterate(query).downcase
+    start = plain.index(plain_query)
+    text[start, plain_query.length] if start
+  end
 end

@@ -140,4 +140,49 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select ".assistant-message--error", text: /#{ChatResponder::AI_ERROR_MESSAGE}/
     assert_select "#chat_conversation button[type=submit]:not([disabled])"
   end
+
+  test "Meus Chats busca pelo título e pelo que foi mencionado na conversa" do
+    titled = @user.chats.create!(title: "Emendas do Orçamento")
+    mentioned = @user.chats.create!(title: "Perguntas gerais")
+    mentioned.messages.create!(role: "user", content: "Quanto foi gasto em emendas parlamentares?")
+    @user.chats.create!(title: "Votação da reforma")
+
+    get chats_path(q: "emendas")
+
+    assert_select "h3", text: titled.title
+    assert_select "h3", text: mentioned.title
+    assert_select "h3", text: "Votação da reforma", count: 0
+    assert_select "mark", text: "emendas"
+    assert_select "#chats_search_results"
+    assert_select "#chats_list", count: 0
+  end
+
+  test "busca sem acentos destaca o termo como está escrito na conversa" do
+    chat = @user.chats.create!(title: "Perguntas gerais")
+    chat.messages.create!(role: "user", content: "Como foi a votação da PEC?")
+
+    get chats_path(q: "votacao")
+
+    assert_select "h3", text: chat.title
+    assert_select "mark", text: "votação"
+  end
+
+  test "busca em Meus Chats não mostra conversas de outros usuários" do
+    other = User.create!(email: "outra@example.com", password: "senha123", first_name: "Outra", last_name: "Pessoa")
+    other.chats.create!(title: "Emendas secretas")
+
+    get chats_path(q: "emendas")
+
+    assert_select "h3", text: "Emendas secretas", count: 0
+    assert_select "p", text: /Nenhum chat menciona "emendas"/
+  end
+
+  test "Meus Chats sem busca mostra todos os chats na lista atualizada pelo Turbo" do
+    @user.chats.create!(title: "Emendas do Orçamento")
+
+    get chats_path
+
+    assert_select "input#chat-search"
+    assert_select "#chats_list h3", text: "Emendas do Orçamento"
+  end
 end
