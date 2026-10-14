@@ -23,12 +23,6 @@
   padding: 4.5rem 0 7rem 0;
 }
 
-@media (min-width: 992px) {
-  .panel-filter-col + .panel-filter-col {
-    border-left: 1px solid rgba($navy-blue, 0.08);
-  }
-}
-
 .panel-chip {
   font-size: 0.7rem;
   font-weight: 600;

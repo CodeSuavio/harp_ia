@@ -11,6 +11,75 @@
                        low: ["text-bg-light border", "fa-circle-info", "baixa"] } %>
 
 <section class="container search-container pb-5">
+  <!-- Filtros (mesmo padrão da página de deputados) -->
+  <%= form_with url: expense_alerts_path, method: :get,
+        data: { controller: "filter-form", action: "change->filter-form#submit" },
+        class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0 mb-4" do %>
+    <div class="row g-0 align-items-center">
+      <!-- Filtro: Ano -->
+      <div class="col-md-4 col-lg-2 border-end-lg px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Ano">
+            <i class="fa-solid fa-calendar text-gold"></i>
+          </span>
+          <%= select_tag :year, options_for_select(@years, @year), aria: { label: "Ano" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+
+      <!-- Filtro: Estado -->
+      <div class="col-md-8 col-lg-5 border-end-lg px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
+            <i class="fa-solid fa-location-crosshairs text-gold"></i>
+          </span>
+          <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states, @state), aria: { label: "Estado" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+
+      <!-- Filtro: Partido -->
+      <div class="col-md-12 col-lg-5 px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
+            <i class="fa-solid fa-flag text-gold"></i>
+          </span>
+          <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
+                aria: { label: "Partido" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+    </div>
+
+    <%# Segunda linha: recorte dos alertas e ordenação, com espaço para o texto inteiro %>
+    <div class="row g-0 align-items-center border-top pt-2 mt-2">
+      <!-- Filtro: Gravidade mínima -->
+      <div class="col-md-6 border-end-lg px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Gravidade mínima">
+            <i class="fa-solid fa-triangle-exclamation text-gold"></i>
+          </span>
+          <%= select_tag :severity, options_for_select(ExpenseAlertsController::SEVERITY_LABELS.invert, @severity),
+                aria: { label: "Gravidade mínima" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+
+      <!-- Filtro: Ordenação -->
+      <div class="col-md-6 px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Ordenar">
+            <i class="fa-solid fa-arrow-down-wide-short text-gold"></i>
+          </span>
+          <%= select_tag :order, options_for_select(ExpenseAlertsController::ORDERS.invert, @order),
+                aria: { label: "Ordenar por" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+    </div>
+    <noscript><button type="submit" class="btn btn-sm btn-dark mt-2">Filtrar</button></noscript>
+  <% end %>
+
   <!-- Aviso fixo -->
   <div class="bg-white border rounded-4 small mb-4 p-3">
     <div class="d-flex gap-2 align-items-start">
@@ -25,38 +94,6 @@
       </div>
     </div>
   </div>
-
-  <!-- Filtros -->
-  <%= form_with url: expense_alerts_path, method: :get,
-        data: { controller: "filter-form", action: "change->filter-form#submit" },
-        class: "card search-card shadow-sm bg-white rounded-4 p-3 border-0 mb-4" do %>
-    <div class="row g-2 align-items-center">
-      <div class="col-6 col-lg-2 col-xl-1">
-        <%= label_tag :year, "Ano", class: "form-label small text-muted mb-1" %>
-        <%= select_tag :year, options_for_select(@years, @year), class: "form-select form-select-sm" %>
-      </div>
-      <div class="col-6 col-lg-3 col-xl-2">
-        <%= label_tag :state, "Estado", class: "form-label small text-muted mb-1" %>
-        <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states, @state), class: "form-select form-select-sm" %>
-      </div>
-      <div class="col-6 col-lg-3">
-        <%= label_tag :party, "Partido", class: "form-label small text-muted mb-1" %>
-        <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
-              class: "form-select form-select-sm" %>
-      </div>
-      <div class="col-6 col-lg-4 col-xl-2">
-        <%= label_tag :severity, "Gravidade mínima", class: "form-label small text-muted mb-1" %>
-        <%= select_tag :severity, options_for_select(ExpenseAlertsController::SEVERITY_LABELS.invert, @severity),
-              class: "form-select form-select-sm" %>
-      </div>
-      <div class="col-12 col-xl-4">
-        <%= label_tag :order, "Ordenar por", class: "form-label small text-muted mb-1" %>
-        <%= select_tag :order, options_for_select(ExpenseAlertsController::ORDERS.invert, @order),
-              class: "form-select form-select-sm" %>
-      </div>
-    </div>
-    <noscript><button type="submit" class="btn btn-sm btn-dark mt-2">Filtrar</button></noscript>
-  <% end %>
 
   <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <span class="text-muted small me-2"><%= @total %> <%= "deputado".pluralize(@total) %> com alertas</span>

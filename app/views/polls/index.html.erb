@@ -8,53 +8,88 @@
                     controller: "filter-form",
                     action: "input->filter-form#submit change->filter-form#submit"
                   },
-                  class: "search-card shadow-lg bg-white rounded-4 p-3 mb-4" do %>
-      <div class="row g-2 align-items-center">
-        <div class="col-12 panel-filter-col panel-filter-search">
+                  class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0 mb-4" do %>
+
+      <!-- LINHA 1: Barra de Pesquisa -->
+      <div class="row g-0 border-bottom pb-2 mb-2">
+        <div class="col-12 px-2">
           <div class="input-group border-0">
-            <span class="input-group-text bg-transparent border-0 text-muted">
-              <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+              <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
             </span>
             <%= text_field_tag :q, params[:q],
                   id: "poll-search",
                   placeholder: "Assunto da votação...",
-                  class: "form-control border-0 shadow-none bg-transparent fw-medium",
+                  aria: { label: "Buscar votações" },
+                  class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium",
                   data: { turbo_permanent: true } %>
           </div>
         </div>
+      </div>
 
-        <div class="col-6 col-lg-3 panel-filter-col">
-          <%= select_tag :year,
-                options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
-        </div>
-
-        <div class="col-6 col-lg-5 panel-filter-col">
-          <%= select_tag :theme,
-                options_for_select([["Todos os temas", ""]] + @themes.select { |t| @theme_counts[t.id].to_i.positive? || params[:theme].to_s == t.id.to_s }.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] }, params[:theme]),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
-        </div>
-
-        <div class="col-6 col-lg-4 panel-filter-col">
-          <%= select_tag :approval,
-                options_for_select(
-                  [["Qualquer resultado", ""], ["Aprovadas", "1"], ["Rejeitadas", "0"]],
-                  params[:approval]
-                ),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
-        </div>
-
-<div class="col-6 col-lg-4 panel-filter-col panel-filter-newline">
-  <%= select_tag :governo,
-        options_for_select([["Governo: todas", ""], ["Governo venceu", "venceu"], ["Governo perdeu", "perdeu"]], params[:governo]),
-        class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
-</div>
-
-        <div class="col-12 col-lg-8 panel-filter-col">
-          <div class="form-check">
-            <%= check_box_tag :all, "1", params[:all] == "1", class: "form-check-input" %>
-            <%= label_tag :all, "Incluir sem votos nominais", class: "form-check-label small text-muted" %>
+      <!-- LINHA 2: Filtros de Seleção -->
+      <div class="row g-0 align-items-center">
+        <!-- Filtro: Ano -->
+        <div class="col-md-6 col-xxl-2 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Ano">
+              <i class="fa-solid fa-calendar text-gold"></i>
+            </span>
+            <%= select_tag :year,
+                  options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
+                  aria: { label: "Ano" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
           </div>
+        </div>
+
+        <!-- Filtro: Tema -->
+        <div class="col-md-6 col-xxl-4 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Tema">
+              <i class="fa-solid fa-tags text-gold"></i>
+            </span>
+            <%= select_tag :theme,
+                  options_for_select([["Todos os temas", ""]] + @themes.select { |t| @theme_counts[t.id].to_i.positive? || params[:theme].to_s == t.id.to_s }.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] }, params[:theme]),
+                  aria: { label: "Tema" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
+        </div>
+
+        <!-- Filtro: Resultado -->
+        <div class="col-md-6 col-xxl-3 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Resultado">
+              <i class="fa-solid fa-gavel text-gold"></i>
+            </span>
+            <%= select_tag :approval,
+                  options_for_select([["Qualquer resultado", ""], ["Aprovadas", "1"], ["Rejeitadas", "0"]], params[:approval]),
+                  aria: { label: "Resultado" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
+        </div>
+
+        <!-- Filtro: Governo -->
+        <div class="col-md-6 col-xxl-3 px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Governo">
+              <i class="fa-solid fa-landmark text-gold"></i>
+            </span>
+            <%= select_tag :governo,
+                  options_for_select([["Governo: todas", ""], ["Governo venceu", "venceu"], ["Governo perdeu", "perdeu"]], params[:governo]),
+                  aria: { label: "Governo" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
+        </div>
+      </div>
+
+      <!-- LINHA 3: Votações sem votos nominais -->
+      <div class="border-top pt-2 mt-2 px-2">
+        <div class="form-check form-switch mb-0">
+          <%= check_box_tag :all, "1", params[:all] == "1", class: "form-check-input", role: "switch" %>
+          <%= label_tag :all, class: "form-check-label small fw-medium text-navy" do %>
+            <i class="fa-solid fa-list-check text-gold me-1"></i>
+            Incluir votações sem votos nominais
+          <% end %>
         </div>
       </div>
     <% end %>

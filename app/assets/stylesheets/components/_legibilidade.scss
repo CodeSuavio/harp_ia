@@ -1,14 +1,3 @@
-// Filtros: a busca fica na linha de cima e os filtros dividem a de baixo, sem cortar os rótulos
-.panel-filter-search {
-  padding-bottom: .25rem;
-  border-bottom: 1px solid rgba(10, 17, 40, .08);
-}
-
-.panel-filter-search + .panel-filter-col,
-.panel-filter-col.panel-filter-newline {
-  border-left: 0 !important;
-}
-
 // Alertas de gastos: gravidade sem alerta aparece apagada, para as três ficarem sempre visíveis
 .badge.is-zero {
   color: #6B7280 !important;
