@@ -54,7 +54,7 @@
          aria-label="<%= blocs.filter_map { |bloc, data| "#{bloc_labels[bloc]}: #{data[:seats]} cadeiras" if data[:seats].positive? }.join(', ') %>">
       <% blocs.each do |bloc, data| %>
         <% next if data[:seats].zero? %>
-        <div class="bloc-segment bloc-<%= bloc.to_s.dasherize %>" style="flex-grow: <%= data[:seats] %>"
+        <div class="bloc-segment bloc-<%= bloc.to_s.dasherize %>" style="flex: <%= data[:seats] %> 1 0"
              title="<%= bloc_labels[bloc] %>: <%= data[:seats] %> cadeiras (<%= data[:parties].map(&:label).join(', ') %>)">
           <% if data[:seats] * 100 / total_seats >= 8 %><span><%= data[:seats] %></span><% end %>
         </div>
@@ -64,27 +64,45 @@
       </div>
     </div>
 
-    <div class="row g-3">
+    <%# Cada bloco embaixo da sua parcela da barra: mesma proporção (flex) e a mesma ordem.
+        "Sem dados" ocupa só o espaço dele aqui e é explicado na linha de baixo. %>
+    <div class="bloc-legend">
       <% blocs.each do |bloc, data| %>
-        <% next if data[:parties].empty? %>
-        <div class="col-md-6 col-lg">
-          <div class="d-flex align-items-baseline gap-2 mb-1">
+        <% next if data[:seats].zero? %>
+        <% if bloc == PartyComparison::NO_DATA %>
+          <div class="bloc-legend-spacer" style="flex: <%= data[:seats] %> 1 0" aria-hidden="true"></div>
+          <% next %>
+        <% end %>
+        <div class="bloc-legend-item bloc-<%= bloc.to_s.dasherize %>" style="flex: <%= data[:seats] %> 1 0">
+          <div class="d-flex flex-wrap align-items-baseline column-gap-2 mb-1">
             <span class="bloc-swatch bloc-<%= bloc.to_s.dasherize %>" aria-hidden="true"></span>
             <strong class="text-navy"><%= bloc_labels[bloc] %></strong>
             <span class="small text-muted"><%= data[:seats] %> <%= "cadeira".pluralize(data[:seats]) %></span>
           </div>
-          <p class="small text-muted mb-2">
-            <%= PartyComparison::BLOCS.dig(bloc, :description) || "votou em poucas votações com orientação do Governo" %>
-          </p>
+          <p class="small text-muted mb-2"><%= PartyComparison::BLOCS.dig(bloc, :description) %></p>
           <div class="d-flex flex-wrap gap-1">
             <% data[:parties].each do |row| %>
               <%= link_to row.label, party_path(row.party), class: "panel-chip",
-                    title: (row.governism ? "#{row.party.name}: segue o Governo em #{row.governism_pct}%" : row.party.name) %>
+                    title: "#{row.party.name}: segue o Governo em #{row.governism_pct}%" %>
             <% end %>
           </div>
         </div>
       <% end %>
     </div>
+
+    <% no_data = blocs[PartyComparison::NO_DATA] %>
+    <% if no_data[:parties].any? %>
+      <p class="small text-muted border-top pt-3 mt-3 mb-0 d-flex flex-wrap align-items-center gap-2">
+        <span class="bloc-swatch bloc-no-data" aria-hidden="true"></span>
+        <span>
+          <strong class="text-navy">Sem dados</strong> (<%= no_data[:seats] %> <%= "cadeira".pluralize(no_data[:seats]) %>):
+          votou em poucas votações com orientação do Governo para entrar num bloco.
+        </span>
+        <% no_data[:parties].each do |row| %>
+          <%= link_to row.label, party_path(row.party), class: "panel-chip", title: row.party.name %>
+        <% end %>
+      </p>
+    <% end %>
   </div>
 
   <!-- Mapa de posicionamento -->
@@ -98,7 +116,8 @@
       </h2>
       <p class="small text-muted mb-3">
         Para a direita, mais votos com o Governo; para cima, bancada mais unida. O tamanho da bolha é a bancada.
-        Passe o mouse ou toque numa bolha para ver os números; clique para abrir o partido.
+        Passe o mouse pelo mapa: o partido mais perto do cursor fica em destaque, com os números. Clique para abrir o partido.
+        No celular, toque perto de uma bolha para ver os números.
       </p>
 
       <div class="d-flex flex-wrap gap-3 small text-muted mb-2" aria-hidden="true">
@@ -108,8 +127,12 @@
       </div>
 
       <div class="positioning-scroll">
+      <div class="position-relative" data-controller="positioning-chart"
+           data-action="keydown.esc->positioning-chart#close">
       <svg class="positioning-chart" viewBox="0 0 <%= dims[:width] %> <%= dims[:height] %>" role="group"
-           aria-label="Partidos por governismo (eixo horizontal) e coesão (eixo vertical)">
+           aria-label="Partidos por governismo (eixo horizontal) e coesão (eixo vertical)"
+           data-positioning-chart-target="svg"
+           data-action="pointerdown->positioning-chart#pointerdown pointermove->positioning-chart#move pointerleave->positioning-chart#leave click->positioning-chart#click">
         <%# Grade e eixos %>
         <% chart[:y_ticks].each do |pct, y| %>
           <line class="grid" x1="<%= dims[:left] %>" x2="<%= dims[:left] + chart[:plot_w] %>" y1="<%= y %>" y2="<%= y %>"></line>
@@ -136,7 +159,15 @@
         <%# Bolhas: maiores primeiro, para as pequenas ficarem por cima %>
         <% chart[:points].each do |point| %>
           <% row = point[:row] %>
-          <a href="<%= party_path(row.party) %>" class="bubble bloc-<%= row.bloc.to_s.dasherize %>"
+          <a href="<%= party_path(row.party) %>" class="bubble bloc-<%= row.bloc.to_s.dasherize %> <%= 'is-covering' if point[:covering] %>"
+             data-positioning-chart-target="point"
+             data-overlaps="<%= point[:overlaps].join(', ') %>"
+             data-action="focus->positioning-chart#focus blur->positioning-chart#blur"
+             data-label="<%= row.label %>" data-name="<%= row.party.name %>"
+             data-seats="<%= row.seats %> <%= "deputado".pluralize(row.seats) %>"
+             data-bloc="Bloco: <%= bloc_labels[row.bloc] %>"
+             data-governism="Segue o Governo em <%= row.governism_pct %>% (<%= row.governism[:followed] %> de <%= row.governism[:total] %> votações)"
+             data-cohesion="Coesão da bancada: <%= row.cohesion %>%"
              aria-label="<%= row.label %>: <%= row.seats %> <%= "deputado".pluralize(row.seats) %>, segue o Governo em <%= row.governism_pct %>%, coesão <%= row.cohesion %>%">
             <title><%= row.label %> · <%= row.seats %> <%= "deputado".pluralize(row.seats) %>&#10;Governismo <%= row.governism_pct %>% (<%= row.governism[:followed] %> de <%= row.governism[:total] %> votações)&#10;Coesão <%= row.cohesion %>%</title>
             <circle class="hit" cx="<%= point[:cx] %>" cy="<%= point[:cy] %>" r="<%= [point[:r] + 4, 12].max %>"></circle>
@@ -149,7 +180,32 @@
                 x="<%= label[:x] %>" y="<%= label[:y] %>" text-anchor="<%= label[:anchor] %>"><%= point[:row].label %></text>
         <% end %>
       </svg>
+
+      <%# Cartão com os números do partido em destaque (preenchido pelo positioning-chart) %>
+      <div class="positioning-tooltip" data-positioning-chart-target="tooltip" role="status" aria-live="polite" hidden>
+        <strong class="d-block text-navy" data-positioning-chart-target="name"></strong>
+        <span class="d-block small text-muted mb-1" data-positioning-chart-target="fullName"></span>
+        <ul class="list-unstyled small mb-2" data-positioning-chart-target="detail"></ul>
+        <a href="#" class="small fw-bold text-gold text-decoration-none" data-positioning-chart-target="link">
+          Abrir o partido<%= internal_link_icon %>
+        </a>
       </div>
+      </div>
+      </div>
+
+      <%# Bolhas que cobrem outras: a menor de cada par, com o que ela cobre %>
+      <% covered = chart[:overlaps].group_by { |overlap| overlap[:small] } %>
+      <% if covered.any? %>
+        <p class="small text-muted mt-2 mb-0">
+          <i class="fa-solid fa-layer-group text-gold me-1" aria-hidden="true"></i>
+          Bolhas sobrepostas no mapa:
+          <%= safe_join(covered.map do |row, list|
+                where = list.map { |overlap| "#{overlap[:inside] ? 'dentro do' : 'sobre o'} #{overlap[:big].label}" }.join(", ")
+                safe_join([link_to(row.label, party_path(row.party), class: "text-navy fw-medium"), " (#{where})"])
+              end, ", ") %>.
+          Passe o mouse em cima da bolha menor para ver os números dela.
+        </p>
+      <% end %>
 
       <% left_out = @comparison.rows - positioned %>
       <% if left_out.any? %>
@@ -304,6 +360,25 @@
           </tbody>
         </table>
       </div>
+
+      <% if (left_out = affinity[:left_out]).any? %>
+        <details class="mt-4 small">
+          <summary class="text-muted">
+            <%= left_out.size %> <%= left_out.size == 1 ? "partido com bancada fica" : "partidos com bancada ficam" %> fora da matriz, sem votações suficientes para comparar
+          </summary>
+          <p class="text-muted mt-2 mb-2">
+            Para entrar, o partido precisa ter maioria (Sim ou Não) em ao menos <%= PartyStats::AFFINITY_MIN_POLLS %> votações em comum com outra bancada.
+          </p>
+          <div class="d-flex flex-wrap gap-2">
+            <% left_out.each do |row| %>
+              <%= link_to party_path(row.party), class: "panel-chip d-inline-flex align-items-center gap-1",
+                    title: "#{row.party.name}: #{row.seats} #{"deputado".pluralize(row.seats)}" do %>
+                <%= party_logo(row.party, css: "party-logo-xs") %><%= row.label %>
+              <% end %>
+            <% end %>
+          </div>
+        </details>
+      <% end %>
     </div>
   <% end %>
 

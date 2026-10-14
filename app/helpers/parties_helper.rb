@@ -66,6 +66,8 @@ module PartiesHelper
   # Largura média de um caractere do rótulo (11px, negrito) para evitar rótulos sobrepostos
   LABEL_CHAR_WIDTH = 7.2
   LABEL_HEIGHT = 12
+  # Sobreposição mínima (unidades do viewBox) para duas bolhas contarem como sobrepostas
+  OVERLAP_MIN = 2
 
   # { x_ticks:, y_ticks:, points: [{ row:, cx:, cy:, r:, label: { x:, y:, anchor:, inside: } | nil }] }
   # x = governismo (0 a 100%), y = coesão (do menor valor arredondado para baixo até 100%),
@@ -84,6 +86,7 @@ module PartiesHelper
       { row: row, cx: x.call(row.governism_pct).round(1), cy: y.call(row.cohesion).round(1),
         r: (4 + (20 * Math.sqrt(row.seats / max_seats))).round(1) }
     end
+    overlaps = bubble_overlaps(points)
     bounds = [chart[:left], chart[:top], chart[:width] - chart[:right], chart[:top] + plot_h]
     bubbles = points.map { |p| [p[:cx] - p[:r], p[:cy] - p[:r], p[:cx] + p[:r], p[:cy] + p[:r]] }
 
@@ -105,8 +108,26 @@ module PartiesHelper
       y_ticks: (y_min..100).step(5).map { |pct| [pct, y.call(pct).round(1)] },
       government_x: x.call(PartyComparison::BLOCS[:government][:min]).round(1),
       center_x: x.call(PartyComparison::BLOCS[:center][:min]).round(1),
-      points: points
+      points: points, overlaps: overlaps
     }
+  end
+
+  # Bolhas que se cobrem no mapa (sobrepostas em ao menos OVERLAP_MIN unidades):
+  # marca em cada ponto os vizinhos (:overlaps, para o cartão) e se ele está por cima de
+  # outro (:covering, contorno mais forte), e devolve [{ small:, big:, inside: }] para a
+  # lista abaixo do mapa. inside = a menor fica inteira dentro da maior.
+  # Os pontos vêm da maior bancada para a menor, então a menor de cada par vem depois.
+  def bubble_overlaps(points)
+    points.each { |point| point[:overlaps] = [] }
+    points.combination(2).filter_map do |big, small|
+      distance = Math.hypot(big[:cx] - small[:cx], big[:cy] - small[:cy])
+      next unless distance < big[:r] + small[:r] - OVERLAP_MIN
+
+      big[:overlaps] << small[:row].label
+      small[:overlaps] << big[:row].label
+      small[:covering] = true
+      { small: small[:row], big: big[:row], inside: distance + small[:r] <= big[:r] }
+    end
   end
 
   # Fundo da célula da matriz de afinidade: azul mais forte = mais votos iguais
