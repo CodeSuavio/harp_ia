@@ -1,4 +1,4 @@
-<% counts = DeputyOverview::VOTE_ORDER.filter_map { |label| [label, tallies[[poll.id, label]]] if tallies[[poll.id, label]].to_i.positive? } %>
+<% counts = (DeputyOverview::VOTE_ORDER - [PollBreakdown::NON_VOTING]).filter_map { |label| [label, tallies[[poll.id, label]]] if tallies[[poll.id, label]].to_i.positive? } %>
 <% total = counts.sum { |_, count| count } %>
 <% unanimous = unanimous_vote(counts) %>
 

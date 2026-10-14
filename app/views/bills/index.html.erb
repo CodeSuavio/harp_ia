@@ -1,5 +1,5 @@
 <%= render "painel/hero", title: "Projetos", highlight: "e propostas",
-      subtitle: "Propostas apresentadas na Câmara em 2026 e as de anos anteriores que foram a votação." %>
+      subtitle: "Propostas apresentadas na Câmara em 2026 e as de anos anteriores que foram à votação." %>
 
 <section class="container search-container pb-5">
   <%= turbo_frame_tag "bills_list", data: { turbo_action: "advance" } do %>
@@ -30,7 +30,7 @@
       <!-- LINHA 2: Filtros de Seleção -->
       <div class="row g-0 align-items-center">
         <!-- Filtro: Ano -->
-        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+        <div class="col-md-6 border-end-lg px-2 py-2">
           <div class="input-group border-0">
             <span class="input-group-text bg-transparent border-0 text-muted" title="Ano">
               <i class="fa-solid fa-calendar text-gold"></i>
@@ -43,7 +43,7 @@
         </div>
 
         <!-- Filtro: Tema -->
-        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+        <div class="col-md-6 px-2 py-2">
           <div class="input-group border-0">
             <span class="input-group-text bg-transparent border-0 text-muted" title="Tema">
               <i class="fa-solid fa-tags text-gold"></i>
@@ -59,26 +59,26 @@
         </div>
 
         <!-- Filtro: Partido -->
-        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+        <div class="col-md-6 border-end-lg px-2 py-2">
           <div class="input-group border-0">
             <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
               <i class="fa-solid fa-flag text-gold"></i>
             </span>
             <%= select_tag :party,
-                  options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
+                  options_for_select([["Todos os partidos", ""]] + @parties.select { |p| @party_counts[p.id].to_i.positive? || params[:party].to_s == p.id.to_s }.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] }, params[:party]),
                   aria: { label: "Partido" },
                   class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
           </div>
         </div>
 
         <!-- Filtro: Tipo -->
-        <div class="col-lg col-md-6 px-2 py-2">
+        <div class="col-md-6 px-2 py-2">
           <div class="input-group border-0">
             <span class="input-group-text bg-transparent border-0 text-muted" title="Tipo">
               <i class="fa-solid fa-file-lines text-gold"></i>
             </span>
             <%= select_tag :type,
-                  options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.map { |t| [t, t] }), params[:type]),
+                  options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.select { |t| @type_counts[t].to_i.positive? || params[:type] == t }.map { |t| [t, t] }).map { |label, value| value.present? ? [label.sub(/\A(\S+)/) { "#{$1} (#{@type_counts[value].to_i})" }, value] : [label, value] }, params[:type]),
                   aria: { label: "Tipo" },
                   class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
           </div>

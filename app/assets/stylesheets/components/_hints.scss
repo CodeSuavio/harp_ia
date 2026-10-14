@@ -101,63 +101,61 @@
   &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
 }
 
-// ---------- Ponto (beacon) ----------
+// ---------- "?" das dicas ----------
 .has-hint-beacon { position: relative; }
 
 .hint-beacon {
-  position: absolute;
+  position: relative;
   z-index: 3;
-  width: 32px;
-  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin-left: .3rem;
   padding: 0;
   border: 0;
   border-radius: 50%;
   background: transparent;
-  translate: -50% -50%;
+  color: #D9662B; // laranja com contraste de 3,6:1 sobre branco
+  font-size: 1.05rem;
+  line-height: 1;
+  vertical-align: middle;
   cursor: pointer;
   -webkit-tap-highlight-color: transparent;
   animation: hint-beacon-in .24s cubic-bezier(.2, .8, .2, 1) both;
 
-  &::before,
   &::after {
     content: "";
     position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 12px;
-    height: 12px;
-    margin: -6px 0 0 -6px;
+    inset: 2px;
     border-radius: 50%;
-    background: var(--hint-coral);
+    opacity: 0;
+    pointer-events: none;
   }
 
-  // anel branco + contorno navy: visível em fundo claro e escuro
-  &::before { box-shadow: 0 0 0 2px #fff, 0 0 0 3.5px var(--hint-navy); }
-  &::after { opacity: 0; pointer-events: none; }
-  &:hover::before { background: var(--hint-coral-press); }
-  &:focus-visible { outline: 2px solid var(--hint-navy); outline-offset: 0; box-shadow: 0 0 0 4px #fff; }
+  &:hover { color: #B54D24; }
+  &:focus-visible { outline: 2px solid var(--hint-navy); outline-offset: 1px; }
 }
 
-// Ponto colado ao texto de títulos
-.hint-beacon.hint-beacon--inline {
-  position: relative;
-  display: inline-block;
-  width: 28px;
-  height: 28px;
-  margin: -6px 0 -6px .25rem;
-  vertical-align: middle;
-  translate: none;
+// Dentro do campo de seleção, antes da setinha
+.hint-beacon.hint-beacon--select {
+  position: absolute;
+  margin: 0;
+  translate: -50% -50%;
 }
 
-// Enquanto o balão está aberto, o ponto some para não cobrir o recurso
+.hint-select-target { padding-right: 4rem !important; }
+
+// Enquanto o balão está aberto, o "?" some para não cobrir o recurso
 .hint-beacon.is-open { visibility: hidden; }
 
-// Só um ponto pulsa por vez, duas vezes, e para (menos de 5 s)
-.hint-beacon--pulse::after { animation: hint-pulse 1.8s cubic-bezier(.2, .8, .2, 1) .4s 2; }
+// Só um "?" pulsa por vez, duas vezes, e para (menos de 5 s)
+.hint-beacon--pulse::after { animation: hint-pulse 1.8s ease-out .4s 2; }
 
 @keyframes hint-pulse {
-  0% { transform: scale(1); opacity: .55; }
-  70%, 100% { transform: scale(3); opacity: 0; }
+  0% { opacity: 1; box-shadow: 0 0 0 0 rgba(240, 138, 93, .55); }
+  100% { opacity: 0; box-shadow: 0 0 0 10px rgba(240, 138, 93, 0); }
 }
 
 @keyframes hint-beacon-in {
@@ -218,7 +216,6 @@
 }
 
 @media (pointer: coarse) {
-  .hint-beacon:not(.hint-beacon--inline) { width: 44px; height: 44px; }
   .hint-toast-undo { min-height: 44px; }
 }
 
@@ -234,7 +231,7 @@
 @media (forced-colors: active) {
   .popover.hint-pop,
   .hint-toast { border: 1px solid CanvasText; }
-  .hint-beacon::before { background: Highlight; }
+  .hint-beacon { color: Highlight; }
   .hint-target { outline-color: Highlight; box-shadow: none; }
 }
 

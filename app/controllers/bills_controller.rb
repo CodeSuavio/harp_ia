@@ -10,6 +10,8 @@ class BillsController < ApplicationController
     scope = search.results
 
     @theme_counts = BillTheme.where(bill_id: search.results(except: :theme).select(:id)).group(:theme_id).count
+    @party_counts = search.results(except: :party).group(:party_id).count
+    @type_counts = search.results(except: :type).group(:bill_type).count
 
     @total = scope.count
     @total_pages = [(@total / PER_PAGE.to_f).ceil, 1].max

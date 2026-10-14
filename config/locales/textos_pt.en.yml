@@ -1,0 +1,41 @@
+# Nomes de campos e mensagens de validação em português (o site usa o locale padrão :en)
+en:
+  activerecord:
+    attributes:
+      user:
+        email: "E-mail"
+        password: "Senha"
+        password_confirmation: "Confirmação da senha"
+        current_password: "Senha atual"
+        first_name: "Nome"
+        last_name: "Sobrenome"
+        remember_me: "Lembrar de mim"
+  errors:
+    format: "%{attribute} %{message}"
+    messages:
+      accepted: "precisa ser aceito"
+      blank: "não pode ficar em branco"
+      confirmation: "não confere com %{attribute}"
+      empty: "não pode ficar vazio"
+      equal_to: "precisa ser igual a %{count}"
+      exclusion: "não está disponível"
+      greater_than: "precisa ser maior que %{count}"
+      greater_than_or_equal_to: "precisa ser maior ou igual a %{count}"
+      inclusion: "não está na lista"
+      invalid: "não é válido"
+      less_than: "precisa ser menor que %{count}"
+      less_than_or_equal_to: "precisa ser menor ou igual a %{count}"
+      not_a_number: "não é um número"
+      not_an_integer: "precisa ser um número inteiro"
+      present: "precisa ficar em branco"
+      required: "é obrigatório"
+      taken: "já está em uso"
+      too_long:
+        one: "é muito longo (máximo de 1 caractere)"
+        other: "é muito longo (máximo de %{count} caracteres)"
+      too_short:
+        one: "é muito curto (mínimo de 1 caractere)"
+        other: "é muito curto (mínimo de %{count} caracteres)"
+      wrong_length:
+        one: "tem o tamanho errado (precisa ter 1 caractere)"
+        other: "tem o tamanho errado (precisa ter %{count} caracteres)"

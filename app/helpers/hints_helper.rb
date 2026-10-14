@@ -15,8 +15,6 @@ module HintsHelper
     "polls#show" => [
       { id: "poll-selo", selector: ".badge[title*='orientou']", label: "selo de vitória ou derrota do governo",
         text: "Compara a orientação do governo com o resultado: venceu se coincidem, perdeu se não." },
-      { id: "poll-artigo17", selector: "span", contains: "Artigo 17", label: "voto Artigo 17",
-        text: "Artigo 17 marca quem presidia a sessão. Pelo Regimento da Câmara, o presidente só vota para desempatar." },
       { id: "poll-contra", selector: "h2", contains: "Votaram contra", label: "votos contra a maioria do partido",
         text: "Votaram diferente da maioria do próprio partido. O selo “contra a orientação” marca quem também votou contra o que o líder do partido orientou." }
     ],

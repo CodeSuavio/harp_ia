@@ -155,8 +155,7 @@
               <div class="d-flex flex-wrap align-items-center gap-1 mb-3">
                 <span class="small text-muted me-1"><%= pluralize(row[:count], "alerta", plural: "alertas") %>:</span>
                 <% severity_badges.each do |severity, (css, icon, label)| %>
-                  <% next if row[severity].to_i.zero? %>
-                  <span class="badge rounded-pill <%= css %> fw-medium" title="Alertas de gravidade <%= label %>">
+                  <span class="badge rounded-pill <%= css %> fw-medium<%= " is-zero" if row[severity].to_i.zero? %>" title="Alertas de gravidade <%= label %>">
                     <i class="fa-solid <%= icon %> me-1" aria-hidden="true"></i><%= row[severity] %> <%= row[severity] == 1 ? label : "#{label}s" %>
                   </span>
                 <% end %>

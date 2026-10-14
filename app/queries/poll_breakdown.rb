@@ -1,3 +1,4 @@
+# O voto "Artigo 17" (quem preside a sessão, que só vota para desempatar) fica fora das contagens e dos totais.
 class PollBreakdown
   NON_VOTING = "Artigo 17".freeze
 
@@ -11,7 +12,7 @@ class PollBreakdown
   end
 
   def tally
-    @tally ||= DeputyOverview::VOTE_ORDER.filter_map do |label|
+    @tally ||= (DeputyOverview::VOTE_ORDER - [NON_VOTING]).filter_map do |label|
       total = counts.sum { |(_, _, vote), count| vote == label ? count : 0 }
       [label, total] if total.positive?
     end
@@ -28,7 +29,7 @@ class PollBreakdown
   def by_party
     @by_party ||= counts.group_by { |(id, label, _), _| [id, label] }.map do |(id, label), rows|
       votes = rows.to_h { |(_, _, vote), count| [vote, count] }
-      ordered = DeputyOverview::VOTE_ORDER.filter_map { |vote| [vote, votes[vote]] if votes[vote].to_i.positive? }
+      ordered = (DeputyOverview::VOTE_ORDER - [NON_VOTING]).filter_map { |vote| [vote, votes[vote]] if votes[vote].to_i.positive? }
 
       {
         party_id: id,

@@ -10,7 +10,7 @@
     <%= poll_result_badge(@poll) %>
     <% if @breakdown.unanimous %>
       <span class="badge bg-navy">UNANIMIDADE: <%= @breakdown.unanimous %></span>
-      <%= info_tip("Todos os votos nominais foram iguais. O voto do presidente da sessão (Art. 17) não entra na conta.") %>
+      <%= info_tip("Todos os votos nominais foram iguais.") %>
     <% end %>
   </div>
 
