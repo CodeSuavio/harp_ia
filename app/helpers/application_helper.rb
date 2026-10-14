@@ -2,6 +2,13 @@ module ApplicationHelper
   # Ícone de link externo (abre em nova aba), no fim do texto do link.
   # Usa a cor do próprio link (currentColor): dourado nos links de texto,
   # azul-marinho ou escuro nos botões. O aviso em texto é para leitores de tela.
+  # Ícone de link para outra página do próprio site, no fim do texto dos botões.
+  # Mesma regra de cor e tamanho do external_link_icon (currentColor); css:
+  # troca a cor quando o ícone precisa se destacar (ex.: "text-gold" nos selos).
+  def internal_link_icon(css: nil)
+    tag.i(class: ["fa-solid fa-link internal-link-icon", css].compact.join(" "), aria: { hidden: true })
+  end
+
   def external_link_icon
     safe_join([
                 tag.i(class: "fa-solid fa-arrow-up-right-from-square external-link-icon", aria: { hidden: true }),

@@ -15,7 +15,7 @@
   <% if parties.size < 2 %>
     <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
       <p class="text-muted mb-3">Selecione de 2 a <%= PartiesController::COMPARE_LIMIT %> partidos na lista de partidos para compará-los.</p>
-      <%= link_to "Ir para a lista de partidos", root_path(anchor: "partidos"), class: "btn btn-auth rounded-pill px-4 mx-auto" %>
+      <%= link_to root_path(anchor: "partidos"), class: "btn btn-auth rounded-pill px-4 mx-auto" do %>Ir para a lista de partidos<%= internal_link_icon %><% end %>
     </div>
   <% else %>
     <p class="small text-muted mb-3">

@@ -395,6 +395,18 @@ a.party-badge {
   position: relative;
   z-index: 2;
   text-decoration: none;
+  // Sigla e ícone de link lado a lado: a sigla longa é cortada, o ícone fica sempre visível
+  display: inline-flex;
+  align-items: center;
+  max-width: 90px;
+
+  .party-badge-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .internal-link-icon { flex-shrink: 0; }
 
   &:hover,
   &:focus-visible {

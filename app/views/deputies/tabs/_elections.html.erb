@@ -38,7 +38,7 @@
 
     <div class="mt-3">
       <%= link_to candidate_path(@candidate), class: "btn btn-light border rounded-pill px-4 text-navy fw-medium", data: { turbo_frame: "_top" } do %>
-        Ver ficha de candidatura <i class="fa-solid fa-arrow-right ms-1"></i>
+        Ver ficha de candidatura<%= internal_link_icon %>
       <% end %>
     </div>
   <% end %>
