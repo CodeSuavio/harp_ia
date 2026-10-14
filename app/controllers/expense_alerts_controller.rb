@@ -5,8 +5,8 @@ class ExpenseAlertsController < ApplicationController
   skip_before_action :authenticate_user!, only: [:index]
 
   PER_PAGE = 24
-  SEVERITY_LABELS = { "low" => "Todas", "medium" => "Média e alta", "high" => "Só alta" }.freeze
-  ORDERS = { "score" => "Pontuação dos alertas", "share" => "% do gasto em notas com alerta" }.freeze
+  SEVERITY_LABELS = { "low" => "Todas as gravidades", "medium" => "Gravidade média e alta", "high" => "Só gravidade alta" }.freeze
+  ORDERS = { "score" => "Pontuação dos alertas", "share" => "% do gasto em alerta" }.freeze
 
   def index
     authorize ExpenseAlert

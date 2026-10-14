@@ -290,35 +290,51 @@
       <% end %>
     </div>
 
-    <!-- Filtros da tabela -->
+    <!-- Filtros da tabela (mesmo padrão das barras de filtro do site) -->
     <%= form_with url: deputy_path(@deputy), method: :get,
           data: { controller: "filter-form", action: "change->filter-form#submit" },
-          class: "row g-2 align-items-end small mb-3" do %>
+          class: "card search-card search-card-inline bg-white rounded-4 p-2 mb-3" do %>
       <%= hidden_field_tag :tab, "expenses", id: nil %>
       <%= hidden_field_tag :year, @year, id: nil %>
       <%= hidden_field_tag :expense_type, @expense_type, id: nil if @expense_type %>
       <%# Sem o mês do gráfico: mudar o período desfaz o filtro de mês, para os dois não se contradizerem %>
       <% months = (1..12).map { |m| [month_label(m), m] } %>
-      <div class="col-6 col-md-auto">
-        <%= label_tag :expense_from, "De", class: "form-label text-muted mb-1" %>
-        <%= select_tag :from, options_for_select([["Jan", ""]] + months.drop(1), @from),
-              id: "expense_from", class: "form-select form-select-sm" %>
+      <div class="row g-0 align-items-center">
+        <!-- Filtro: De -->
+        <div class="col-md-6 border-end-lg px-2 py-1">
+          <div class="input-group border-0">
+            <%= label_tag :expense_from, class: "input-group-text bg-transparent border-0 text-muted" do %>
+              <i class="fa-solid fa-calendar text-gold me-2" aria-hidden="true"></i>De
+            <% end %>
+            <%= select_tag :from, options_for_select([["Jan", ""]] + months.drop(1), @from),
+                  id: "expense_from", class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
+        </div>
+
+        <!-- Filtro: Até -->
+        <div class="col-md-6 px-2 py-1">
+          <div class="input-group border-0">
+            <%= label_tag :expense_to, class: "input-group-text bg-transparent border-0 text-muted" do %>
+              <i class="fa-solid fa-calendar-check text-gold me-2" aria-hidden="true"></i>Até
+            <% end %>
+            <%= select_tag :to, options_for_select(months.first(11) + [["Dez", ""]], @to),
+                  id: "expense_to", class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
+        </div>
       </div>
-      <div class="col-6 col-md-auto">
-        <%= label_tag :expense_to, "Até", class: "form-label text-muted mb-1" %>
-        <%= select_tag :to, options_for_select(months.first(11) + [["Dez", ""]], @to),
-              id: "expense_to", class: "form-select form-select-sm" %>
-      </div>
-      <div class="col-12 col-md-auto ms-md-2">
-        <div class="form-check form-switch mb-1">
+
+      <!-- Só notas com alerta -->
+      <div class="border-top pt-2 mt-1 px-2 pb-1">
+        <div class="form-check form-switch mb-0">
           <%= check_box_tag :alerts, "1", @alerts_only, id: "expense_alerts_only", class: "form-check-input", role: "switch",
                 disabled: @anomaly_expense_ids.empty? && !@alerts_only %>
-          <%= label_tag :expense_alerts_only, class: "form-check-label text-navy fw-medium" do %>
+          <%= label_tag :expense_alerts_only, class: "form-check-label small fw-medium text-navy" do %>
+            <i class="fa-solid fa-triangle-exclamation text-gold me-1" aria-hidden="true"></i>
             Só notas com alerta (<%= @anomaly_expense_ids.size %>)
           <% end %>
         </div>
       </div>
-      <noscript><div class="col-auto"><button type="submit" class="btn btn-sm btn-dark">Filtrar</button></div></noscript>
+      <noscript><button type="submit" class="btn btn-sm btn-dark mt-2">Filtrar</button></noscript>
     <% end %>
 
     <div class="table-responsive">

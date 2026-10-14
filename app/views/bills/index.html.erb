@@ -8,45 +8,80 @@
                     controller: "filter-form",
                     action: "input->filter-form#submit change->filter-form#submit"
                   },
-                  class: "search-card shadow-lg bg-white rounded-4 p-3 mb-4" do %>
-      <div class="row g-2 align-items-center">
-        <div class="col-lg-4 panel-filter-col">
+                  class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0 mb-4" do %>
+
+      <!-- LINHA 1: Barra de Pesquisa -->
+      <div class="row g-0 border-bottom pb-2 mb-2">
+        <div class="col-12 px-2">
           <div class="input-group border-0">
-            <span class="input-group-text bg-transparent border-0 text-muted">
-              <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+              <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
             </span>
             <%= text_field_tag :q, params[:q],
                   id: "bill-search",
                   placeholder: "Assunto ou número (ex.: PL 1822)...",
-                  class: "form-control border-0 shadow-none bg-transparent fw-medium",
+                  aria: { label: "Buscar projetos" },
+                  class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium",
                   data: { turbo_permanent: true } %>
           </div>
         </div>
+      </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :year,
-                options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+      <!-- LINHA 2: Filtros de Seleção -->
+      <div class="row g-0 align-items-center">
+        <!-- Filtro: Ano -->
+        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Ano">
+              <i class="fa-solid fa-calendar text-gold"></i>
+            </span>
+            <%= select_tag :year,
+                  options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
+                  aria: { label: "Ano" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :theme,
-                options_for_select(
-                  [["Todos os temas", ""]] + @themes.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] },
-                  params[:theme]
-                ),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        <!-- Filtro: Tema -->
+        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Tema">
+              <i class="fa-solid fa-tags text-gold"></i>
+            </span>
+            <%= select_tag :theme,
+                  options_for_select(
+                    [["Todos os temas", ""]] + @themes.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] },
+                    params[:theme]
+                  ),
+                  aria: { label: "Tema" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :party,
-                options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        <!-- Filtro: Partido -->
+        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
+              <i class="fa-solid fa-flag text-gold"></i>
+            </span>
+            <%= select_tag :party,
+                  options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
+                  aria: { label: "Partido" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :type,
-                options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.map { |t| [t, t] }), params[:type]),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+
+        <!-- Filtro: Tipo -->
+        <div class="col-lg col-md-6 px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Tipo">
+              <i class="fa-solid fa-file-lines text-gold"></i>
+            </span>
+            <%= select_tag :type,
+                  options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.map { |t| [t, t] }), params[:type]),
+                  aria: { label: "Tipo" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
           <%= hidden_field_tag :author, params[:author] if params[:author].present? %>
         </div>
       </div>

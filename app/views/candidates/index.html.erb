@@ -8,58 +8,92 @@
                     controller: "filter-form",
                     action: "input->filter-form#submit change->filter-form#submit"
                   },
-                  class: "search-card shadow-lg bg-white rounded-4 p-3 mb-4" do %>
-      <div class="row g-2 align-items-center">
-        <div class="col-lg-4 panel-filter-col">
+                  class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0 mb-4" do %>
+
+      <!-- LINHA 1: Barra de Pesquisa -->
+      <div class="row g-0 border-bottom pb-2 mb-2">
+        <div class="col-12 px-2">
           <div class="input-group border-0">
-            <span class="input-group-text bg-transparent border-0 text-muted">
-              <i class="fa-solid fa-magnifying-glass"></i>
+            <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+              <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
             </span>
             <%= text_field_tag :q, params[:q],
                   id: "candidate-search",
                   placeholder: "Nome do candidato ou sigla do partido...",
-                  class: "form-control border-0 shadow-none bg-transparent fw-medium",
+                  aria: { label: "Buscar candidatos" },
+                  class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium",
                   data: { turbo_permanent: true } %>
           </div>
         </div>
+      </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :state,
-                options_for_select(
-                  [["Todos os estados", ""]] + @states.map { |s| ["#{s} (#{@state_counts[s].to_i})", s] },
-                  params[:state]
-                ),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+      <!-- LINHA 2: Filtros de Seleção -->
+      <div class="row g-0 align-items-center">
+        <!-- Filtro: Estado -->
+        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
+              <i class="fa-solid fa-location-crosshairs text-gold"></i>
+            </span>
+            <%= select_tag :state,
+                  options_for_select(
+                    [["Todos os estados", ""]] + @states.map { |s| ["#{s} (#{@state_counts[s].to_i})", s] },
+                    params[:state]
+                  ),
+                  aria: { label: "Estado" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <% ordered_parties = @parties.sort_by { |p| [-@party_counts[p.id].to_i, p.label] } %>
-          <%= select_tag :party,
-                options_for_select(
-                  [["Todos os partidos", ""]] + ordered_parties.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] },
-                  params[:party]
-                ),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        <!-- Filtro: Partido -->
+        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
+              <i class="fa-solid fa-flag text-gold"></i>
+            </span>
+            <% ordered_parties = @parties.sort_by { |p| [-@party_counts[p.id].to_i, p.label] } %>
+            <%= select_tag :party,
+                  options_for_select(
+                    [["Todos os partidos", ""]] + ordered_parties.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] },
+                    params[:party]
+                  ),
+                  aria: { label: "Partido" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :gender,
-                options_for_select(
-                  [["Todos os gêneros", ""],
-                   ["Feminino (#{@gender_counts['FEMININO'].to_i})", "FEMININO"],
-                   ["Masculino (#{@gender_counts['MASCULINO'].to_i})", "MASCULINO"]],
-                  params[:gender]
-                ),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        <!-- Filtro: Gênero -->
+        <div class="col-lg col-md-6 border-end-lg px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Gênero">
+              <i class="fa-solid fa-venus-mars text-gold"></i>
+            </span>
+            <%= select_tag :gender,
+                  options_for_select(
+                    [["Todos os gêneros", ""],
+                     ["Feminino (#{@gender_counts['FEMININO'].to_i})", "FEMININO"],
+                     ["Masculino (#{@gender_counts['MASCULINO'].to_i})", "MASCULINO"]],
+                    params[:gender]
+                  ),
+                  aria: { label: "Gênero" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
-          <%= select_tag :sort,
-                options_for_select(
-                  [["Ordenar por nome", "name"], ["Ordenar por estado", "state"], ["Ordenar por número", "number"]],
-                  params[:sort]
-                ),
-                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        <!-- Filtro: Ordenar -->
+        <div class="col-lg col-md-6 px-2 py-2">
+          <div class="input-group border-0">
+            <span class="input-group-text bg-transparent border-0 text-muted" title="Ordenar">
+              <i class="fa-solid fa-arrow-down-a-z text-gold"></i>
+            </span>
+            <%= select_tag :sort,
+                  options_for_select(
+                    [["Ordenar por nome", "name"], ["Ordenar por estado", "state"], ["Ordenar por número", "number"]],
+                    params[:sort]
+                  ),
+                  aria: { label: "Ordenar por" },
+                  class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+          </div>
         </div>
       </div>
     <% end %>
