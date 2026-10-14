@@ -129,7 +129,7 @@
   <% if contested.any? %>
     <ul class="list-group list-group-flush">
       <% contested.each do |poll, row| %>
-        <li class="list-group-item px-0">
+        <li class="list-group-item px-3 py-3">
           <div class="d-flex flex-wrap align-items-center gap-2 mb-1">
             <span class="data-label text-muted small"><%= poll.date&.strftime("%d/%m/%Y") %></span>
             <%= poll_result_badge(poll) %>
