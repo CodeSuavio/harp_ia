@@ -14,7 +14,18 @@ body {
 
 // --- CLASSES UTILITÁRIAS GERAIS ---
 .text-navy { color: $navy-blue !important; }
-.text-gold { color: $gold !important; }
+// Texto e ícones dourados: o tom escuro em fundo claro (5,7:1) e o dourado claro
+// nas áreas azul-marinho (7,6:1), para passar no contraste WCAG AA nos dois casos
+.text-gold { color: $gold-dark !important; }
+
+.hero-section,
+.custom-navbar,
+.custom-footer,
+.bg-navy,
+.text-bg-dark,
+.chat-widget-header {
+  .text-gold { color: $gold !important; }
+}
 .text-pastel-yellow { color: $pastel-yellow !important; }
 .bg-gold { background-color: $gold !important; }
 .bg-navy { background-color: $navy-blue !important; }
@@ -59,17 +70,25 @@ body {
 
   // O botão de destaque "SIGN UP / LOG OUT"
   .btn-auth {
-    background-color: $gold;
-    color: white !important;
     font-size: 0.8rem;
     letter-spacing: 1px;
-    border: none;
-    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+}
 
-    &:hover {
-      opacity: 0.85;
-      transform: translateY(-1px);
-    }
+// Botão de destaque dourado, no site todo (antes só existia dentro da navbar e,
+// fora dela, os botões btn-auth ficavam sem fundo). Texto azul-marinho: branco no
+// dourado tem 2,5:1 e não passa no WCAG; azul-marinho tem 7,6:1
+.btn-auth {
+  background-color: $gold;
+  color: $navy-blue !important;
+  border: none;
+  transition: background-color 0.2s ease, transform 0.2s ease;
+
+  &:hover,
+  &:focus-visible {
+    background-color: lighten($gold, 6%);
+    color: $navy-blue !important;
+    transform: translateY(-1px);
   }
 }
 
@@ -113,7 +132,7 @@ body {
   }
 
   .input-group-text i {
-    color: $gold; // Ícones da busca em dourado/laranja
+    color: $gold-dark; // Ícones da busca: dourado escuro no branco (5,7:1)
   }
 }
 
@@ -153,7 +172,7 @@ body {
   height: 100%;
   background-color: rgba($gold, 0.1);
   font-size: 1.8rem;
-  color: $gold;
+  color: $gold-dark;
 }
 
 // Tipografia e Barras de Progresso dentro do cartão
@@ -373,7 +392,7 @@ body {
 
   .footer-copyright {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.4);
+    color: rgba(255, 255, 255, 0.6); // 7,2:1 no azul-marinho (40% tinha 3,8:1)
     letter-spacing: 0.5px;
   }
 }

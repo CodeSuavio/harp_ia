@@ -31,10 +31,16 @@
     transition: fill 0.15s ease;
   }
 
+  // Halo na cor oposta atrás do texto (paint-order): a sigla fica legível em qualquer
+  // opacidade do estado, sem uma faixa intermediária em que nenhuma cor passa no WCAG
   text {
     fill: $navy-blue;
     text-anchor: middle;
     pointer-events: none;
+    paint-order: stroke;
+    stroke: rgba(#fff, 0.85);
+    stroke-width: 3px;
+    stroke-linejoin: round;
   }
 
   // Tamanhos em unidades do viewBox: o SVG encolhe com a tela, então no celular a fonte cresce
@@ -46,7 +52,8 @@
     .uf-seats { font-size: 15px; }
   }
 
-  &.is-strong > text:not(.uf-callout) { fill: #fff; }
+  // Texto branco só a partir de 70% de opacidade (abaixo disso, branco no azul fica < 4,5:1)
+  &.is-strong > text:not(.uf-callout) { fill: #fff; stroke: rgba($navy-blue, 0.6); }
 
   // Rótulos fora do mapa (estados pequenos): texto sempre escuro, sobre o fundo branco
   .uf-callout { text-anchor: start; }
@@ -74,7 +81,8 @@
       fill-opacity: 1;
     }
 
-    > text:not(.uf-callout) { fill: #fff; }
+    // Azul-marinho no dourado (7,6:1); branco teria 2,5:1
+    > text:not(.uf-callout) { fill: $navy-blue; stroke: rgba(#fff, 0.85); }
     .uf-callout { font-weight: 800; }
     .uf-leader { stroke: $gold; stroke-width: 1.5; }
   }
@@ -216,7 +224,9 @@ $bloc-opposition: #c27c00;
     &:last-of-type { border-radius: 0 4px 4px 0; }
   }
 
-  .bloc-center span { color: $navy-blue; }
+  // Azul-marinho onde o branco não chega a 4,5:1 (centro 7,8:1 e oposição 5,5:1)
+  .bloc-center span,
+  .bloc-opposition span { color: $navy-blue; }
 
   .bloc-majority {
     position: absolute;
@@ -313,7 +323,8 @@ $bloc-opposition: #c27c00;
 
     // Dentro da bolha: branco sobre violeta e âmbar, azul-escuro sobre o cinza do centro
     &.is-inside { fill: #fff; }
-    &.is-inside.bloc-center { fill: $navy-blue; }
+    &.is-inside.bloc-center,
+    &.is-inside.bloc-opposition { fill: $navy-blue; }
   }
 }
 
