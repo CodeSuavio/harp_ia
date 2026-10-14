@@ -87,7 +87,7 @@
               <p class="small text-muted mb-0 mt-1"><%= proposal.excerpt.truncate(180) %></p>
             <% end %>
             <% if proposal.source_url.present? %>
-              <%= link_to "Fonte", proposal.source_url, target: "_blank", rel: "noopener", class: "small text-gold fw-bold text-decoration-none" %>
+              <%= link_to proposal.source_url, target: "_blank", rel: "noopener", class: "small text-gold fw-bold text-decoration-none" do %>Fonte<%= external_link_icon %><% end %>
             <% end %>
           </div>
         </div>

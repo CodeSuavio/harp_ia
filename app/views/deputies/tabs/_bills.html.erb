@@ -102,7 +102,7 @@
             <% end %>
             <% if bill.url.present? %>
               <%= link_to bill.url, target: "_blank", rel: "noopener", class: "small text-gold text-decoration-none ms-auto" do %>
-                Tramitação na Câmara <i class="fa-solid fa-arrow-up-right-from-square ms-1" aria-hidden="true"></i>
+                Tramitação na Câmara<%= external_link_icon %>
               <% end %>
             <% end %>
           </div>
