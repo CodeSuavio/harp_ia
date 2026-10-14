@@ -12,11 +12,14 @@ $font-size-base:         1rem;
 
 // Colors
 $body-color: $gray;
-$primary:    $blue;
-$success:    $green;
+// Cores de tema na paleta da Harpia e com contraste WCAG AA (4,5:1) como texto no branco
+// e como fundo de selo com texto branco (ver docs de acessibilidade no README)
+$primary:    $royal-blue; // links, checkboxes e foco: 10,4:1
+$success:    #157347;     // 5,9:1 (o $green do template tinha 1,8:1)
 $info:       $yellow;
-$danger:     $red;
-$warning:    $orange;
+$danger:     #B02A37;     // 6,5:1 (o $red tinha 4,0:1)
+$warning:    #9A5B00;     // 5,4:1 (o $orange tinha 2,9:1)
+$dark:       $navy-blue;  // btn-dark e text-bg-dark no azul-marinho da paleta
 
 // Buttons & inputs' radius
 $border-radius-sm:            .0625rem;

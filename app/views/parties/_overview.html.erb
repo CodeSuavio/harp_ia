@@ -27,7 +27,7 @@
           <% BrazilMap::PATHS.each do |uf, path| %>
             <% seats = @state_seats[uf] %>
             <% weight = 0.15 + 0.85 * seats / max_seats %>
-            <g class="uf-tile <%= 'is-strong' if weight > 0.5 %>"
+            <g class="uf-tile <%= 'is-strong' if weight > 0.7 %>"
                role="button" tabindex="0" aria-pressed="false"
                aria-label="<%= PartiesController::STATES[uf] %>: <%= seats %> <%= "deputado".pluralize(seats) %>"
                data-uf="<%= uf %>"

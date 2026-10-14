@@ -29,14 +29,14 @@
   }
 
   .page-item.active .page-link {
-    color: #fff;
+    color: $navy-blue;
     background-color: $gold;
     border-color: $gold;
     font-weight: 700;
   }
 
   .page-item.disabled .page-link {
-    color: rgba($navy-blue, 0.35);
+    color: rgba($navy-blue, 0.55);
     background-color: transparent;
     border-color: rgba($navy-blue, 0.06);
   }

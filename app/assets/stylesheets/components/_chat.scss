@@ -90,14 +90,14 @@
 
 // Resposta a uma pergunta fora do escopo da Harpia.
 .assistant-message--out-of-scope {
-  border-left: 3px solid $orange !important;
-  background-color: rgba($orange, 0.08) !important;
+  border-left: 3px solid $gold !important;
+  background-color: rgba($gold, 0.08) !important;
 }
 
 // Aviso exibido quando a Harpia não consegue gerar uma resposta.
 .assistant-message--error {
-  border-left: 3px solid $orange !important;
-  background-color: rgba($orange, 0.08) !important;
+  border-left: 3px solid $gold !important;
+  background-color: rgba($gold, 0.08) !important;
   font-size: 0.95rem;
 }
 

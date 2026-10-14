@@ -649,6 +649,29 @@ Services e queries guardam as contas que várias páginas usam; helpers formatam
 | `bin/rails harpia:suppliers[limite]` | Consulta na hora (sem a fila) o CNAE e a situação cadastral dos fornecedores pendentes, com limite opcional, e recalcula os alertas de gastos no fim. Demora: uma consulta por CNPJ, cerca de 2,5 horas para a base inteira. Não roda no `db:seed`. |
 | `bin/rails harpia:expense_alerts` | Recalcula os alertas de gastos gravados (ranking `/alertas`) de todos os anos. |
 
+## Cores e acessibilidade
+
+A paleta fica em `app/assets/stylesheets/config/_colors.scss` e as cores de tema do Bootstrap em `config/_bootstrap_variables.scss`. Toda combinação de texto e fundo segue o WCAG 2.1 AA, conferido com a mesma fórmula do [verificador de contraste da Accessible Web](https://accessibleweb.com/color-contrast-checker/): 4,5:1 para texto normal, 3:1 para texto grande (18 pt, ou 14 pt em negrito) e para ícones e componentes.
+
+| Cor | Valor | Onde usar | Contraste |
+|---|---|---|---|
+| `$navy-blue` | #0A1128 | Navbar, hero, rodapé, textos (`text-navy`), `btn-dark` / `text-bg-dark` (`$dark`) | branco sobre ele: 18,7:1 |
+| `$royal-blue` | #1C3B87 | Links, checkboxes e foco (`$primary`), mapa de partidos | no branco: 10,4:1 |
+| `$gold` | #F08A5D | Fundos de botão (`btn-auth`, `btn-gold`, paginação ativa), chips, barras, bordas e texto **em fundo azul-marinho** | azul-marinho sobre ele: 7,6:1 · no navy: 7,6:1 |
+| `$gold-dark` | #B14210 | Texto e ícones dourados **em fundo claro** (`text-gold` fora das áreas azul-marinho) | no branco: 5,7:1 · no fundo da página: 5,3:1 |
+| `$success` | #157347 | `text-success`, selos | 5,9:1 |
+| `$danger` | #B02A37 | `text-danger`, selos de gravidade alta | 6,5:1 |
+| `$warning` | #9A5B00 | `text-warning`, selos de gravidade média | 5,4:1 |
+
+Regras:
+
+- **Nada de texto branco no `$gold`** (2,5:1). Botões e selos dourados usam texto azul-marinho.
+- **`text-gold`** vira `$gold-dark` em fundo claro e volta ao `$gold` dentro de `.hero-section`, `.custom-navbar`, `.custom-footer`, `.bg-navy`, `.text-bg-dark` e `.chat-widget-header`.
+- **`btn-auth`** vale no site todo (antes só tinha estilo dentro da navbar).
+- **Mapa de partidos:** as siglas têm um halo na cor oposta (`paint-order: stroke`), e o texto só fica branco quando o estado passa de 70% de opacidade.
+- **Fora da paleta:** cores novas não entram direto no SCSS nem em `style=""`. O `$orange` e o `$red`/`$green`/`$blue` do template não são mais usados.
+- **Cores dos blocos:** as cores de governista (#5b48c2), centro (#a8a8a0) e oposição (#c27c00) são uma paleta à parte, só para gráficos. O número dentro da parcela usa branco no governista e azul-marinho nos outros dois.
+
 ## Glossário de Rails e Ruby
 
 Métodos que se repetem em várias páginas, com o motivo de uso no projeto.
