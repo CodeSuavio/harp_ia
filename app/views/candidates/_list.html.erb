@@ -33,5 +33,6 @@
                locals: { metrics: @metrics, deputies: @deputies_by_json_id } %>
   </div>
 
-  <%= render "painel/pagination", path_helper: :candidates_path %>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+        path_for: ->(p) { candidates_path(request.query_parameters.except("page").merge(page: p)) } %>
 <% end %>

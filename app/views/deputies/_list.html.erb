@@ -118,5 +118,5 @@
   </div>
 
   <%= render "shared/pagination", page: @page, total_pages: @total_pages,
-        path_for: ->(p) { deputies_path(request.query_parameters.merge(page: p)) } %>
+        path_for: ->(p) { deputies_path(request.query_parameters.except("page").merge(page: p)) } %>
 <% end %>

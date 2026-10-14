@@ -34,5 +34,6 @@
     <%= render partial: "painel/bill_card", collection: @bills, as: :bill %>
   </div>
 
-  <%= render "painel/pagination", path_helper: :bills_path %>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+        path_for: ->(p) { bills_path(request.query_parameters.except("page").merge(page: p)) } %>
 <% end %>
