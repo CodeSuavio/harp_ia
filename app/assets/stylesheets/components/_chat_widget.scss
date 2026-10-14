@@ -45,12 +45,22 @@
 }
 
 // Janela principal do chatbot.
+// Sem altura fixa: a janela começa compacta (só a saudação) e cresce com a
+// conversa até 500px; a partir daí o scroll fica só em .chat-widget-messages.
+// Em telas baixas, o limite diminui para o topo da janela ficar sempre abaixo
+// da navbar (sticky, até 100px quando os links quebram em duas linhas), com 16px
+// de margem. O espaço reservado soma a navbar (100px), a margem (16px) e a
+// distância do fundo da tela até a base da janela (24px).
+// clamp em vez de min(): o sassc trata min() como função do Sass e falha com calc().
+// bottom: 0 porque o botão flutuante fica escondido com a janela aberta: a
+// janela ocupa o canto dele, com a mesma margem embaixo e à direita.
 .chat-widget-window {
   position: absolute;
   right: 0;
-  bottom: 80px;
+  bottom: 0;
   width: 360px;
-  height: 480px;
+  max-height: clamp(0px, calc(100vh - 140px), 500px);
+  max-height: clamp(0px, calc(100dvh - 140px), 500px); // desconta as barras do navegador no celular
   display: flex;
   flex-direction: column;
   background-color: white;
@@ -65,7 +75,7 @@
   align-items: center;
   justify-content: space-between;
   padding: 12px 16px;
-  background-color: $navy-blue; // como a navbar; laranja com texto branco tinha 2,9:1
+  background-color: $orange;
   border-bottom: 2px solid $gold;
   color: white;
 }
@@ -130,7 +140,7 @@
   margin-left: auto;
   margin-bottom: 14px;
   padding: 10px 14px;
-  background-color: $navy-blue; // igual ao chat principal; laranja com branco tinha 2,9:1
+  background-color: $orange;
   color: white;
   border-radius: 14px 14px 4px 14px;
   font-size: 15px;
@@ -190,7 +200,7 @@
 .chat-widget-input button {
   border: none;
   background: none;
-  color: $gold-dark;
+  color: $orange;
   font-size: 20px;
 }
 
