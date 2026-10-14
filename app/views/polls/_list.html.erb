@@ -35,5 +35,6 @@
                locals: { tallies: @tallies, government: @government } %>
   </div>
 
-  <%= render "painel/pagination", path_helper: :polls_path %>
+  <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+        path_for: ->(p) { polls_path(request.query_parameters.except("page").merge(page: p)) } %>
 <% end %>

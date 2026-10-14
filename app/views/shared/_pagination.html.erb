@@ -1,22 +1,39 @@
+<%# Paginação única do site (listagens, abas do perfil, alertas e panorama de deputados).
+    path_for: lambda que recebe o número da página e devolve o link.
+    frame: turbo frame a atualizar (nil = o frame em que a paginação está). %>
 <%# locals: (page:, total_pages:, path_for:, frame: nil) %>
 <% if total_pages > 1 %>
   <% window = ([1, total_pages] + ((page - 2)..(page + 2)).to_a).select { |p| p.between?(1, total_pages) }.uniq.sort %>
-  <nav aria-label="Paginação" class="mt-4">
-    <ul class="pagination pagination-sm justify-content-center flex-wrap mb-0">
+  <nav aria-label="Paginação" class="harpia-pagination mt-4">
+    <ul class="pagination justify-content-center flex-wrap mb-0">
       <li class="page-item <%= 'disabled' if page == 1 %>">
-        <%= link_to "Anterior", path_for.call(page - 1), class: "page-link", data: { turbo_frame: frame } %>
+        <% if page > 1 %>
+          <%= link_to path_for.call(page - 1), class: "page-link", rel: "prev", data: { turbo_frame: frame } do %>
+            <i class="fa-solid fa-chevron-left me-1" aria-hidden="true"></i>Anterior
+          <% end %>
+        <% else %>
+          <span class="page-link"><i class="fa-solid fa-chevron-left me-1" aria-hidden="true"></i>Anterior</span>
+        <% end %>
       </li>
       <% window.each_with_index do |p, i| %>
         <% if i.positive? && p - window[i - 1] > 1 %>
           <li class="page-item disabled"><span class="page-link">…</span></li>
         <% end %>
         <li class="page-item <%= 'active' if p == page %>">
-          <%= link_to p, path_for.call(p), class: "page-link", aria: { current: ("page" if p == page) }, data: { turbo_frame: frame } %>
+          <%= link_to p, path_for.call(p), class: "page-link", aria: { current: ("page" if p == page), label: "Página #{p}" },
+                data: { turbo_frame: frame } %>
         </li>
       <% end %>
       <li class="page-item <%= 'disabled' if page == total_pages %>">
-        <%= link_to "Próxima", path_for.call(page + 1), class: "page-link", data: { turbo_frame: frame } %>
+        <% if page < total_pages %>
+          <%= link_to path_for.call(page + 1), class: "page-link", rel: "next", data: { turbo_frame: frame } do %>
+            Próxima<i class="fa-solid fa-chevron-right ms-1" aria-hidden="true"></i>
+          <% end %>
+        <% else %>
+          <span class="page-link">Próxima<i class="fa-solid fa-chevron-right ms-1" aria-hidden="true"></i></span>
+        <% end %>
       </li>
     </ul>
+    <p class="data-label text-muted text-center small mt-2 mb-0">Página <%= page %> de <%= total_pages %></p>
   </nav>
 <% end %>

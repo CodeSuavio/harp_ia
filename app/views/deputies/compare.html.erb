@@ -290,7 +290,8 @@
     </div>
 
     <div class="px-4 pb-4">
-      <%= render "painel/pagination", path_helper: :compare_deputies_path %>
+      <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+            path_for: ->(p) { compare_deputies_path(request.query_parameters.except("page").merge(page: p)) } %>
     </div>
     <% end %>
   </div>
