@@ -296,7 +296,6 @@ Na view:
 - `content_for :title` e `content_for :head`: título da aba e metatags (descrição para compartilhamento).
 - `@candidate.photo.attached? ? @candidate.photo : deputy&.photo`: usa a foto do candidato ou, sem ela, a do deputado.
 - `@candidate.name.casecmp?(...)`: só mostra o nome civil se for diferente do nome de urna.
-- `render "painel/ask_harpia", question: harpia_question(...)`: botão que abre a Harpia com uma pergunta pronta sobre o candidato. Sem login, mostra o link para entrar.
 - `render "deputies/party_history", affiliations: deputy.party_affiliations.includes(:party), candidate: @candidate`: só para quem já é deputado. Mostra a linha do tempo de partidos e fecha com a candidatura de 2026, avisando se é "pelo mesmo partido".
 - `render "deputies/spending"` e `render "deputies/votes"`: blocos de gastos e votos, reaproveitados do perfil do deputado.
 
@@ -441,7 +440,7 @@ Na view (`expense_alerts/index`): `painel/hero` no topo e um aviso fixo de que a
 4. `PartyStats.new(@party, @deputies)`: todos os indicadores do partido (ver Services).
 5. `@party.candidates.count`: candidatos de 2026.
 
-Na view: o link "Voltar para Partidos" leva a `root_path(anchor: "partidos")`. `@party.leader` busca o líder; `party_logo(...) || tag.i(...)` mostra a logo ou um ícone de bandeira; `party_harpia_question` monta a pergunta pronta para a Harpia; `render "parties/tabs/#{@tab}"` abre a aba.
+Na view: o link "Voltar para Partidos" leva a `root_path(anchor: "partidos")`. `@party.leader` busca o líder; `party_logo(...) || tag.i(...)` mostra a logo ou um ícone de bandeira; `render "parties/tabs/#{@tab}"` abre a aba.
 
 | Aba | O que chama | Para quê |
 |---|---|---|
@@ -537,8 +536,8 @@ São as únicas páginas que exigem login (`before_action :authenticate_user!`).
 
 1. `ChatsController#index`: `policy_scope(Chat)` traz só os chats do usuário (`ChatPolicy::Scope#resolve` filtra por `user`).
 2. `set_chat`: `current_user.chats.find(params[:id])` garante que ninguém abra o chat de outra pessoa.
-3. `#show`: `authorize @chat`. Em `format.turbo_stream`, devolve o estado atual da conversa, pedido pelo Stimulus `chat` quando a resposta demora a chegar pelo WebSocket; enquanto a Harpia ainda responde (`awaiting_response?`), devolve `head(:no_content)` para a tela não pular.
-4. `#create`: cria o chat com `current_user.chats.new`. Se já veio uma pergunta (`params.dig(:message, :content)`, como no widget e no botão "Perguntar à Harpia"), chama `MessageProcessorService` com a página de origem (`page_path`).
+3. `#show`: `authorize @chat`. Pedido em Turbo Stream com cabeçalho `Turbo-Frame` (`turbo_frame_request?`): devolve o estado atual da conversa, pedido pelo Stimulus `chat` quando a resposta demora a chegar pelo WebSocket; enquanto a Harpia ainda responde (`awaiting_response?`), devolve `head(:no_content)` para a tela não pular. Os demais pedidos recebem a página HTML, inclusive o redirect do botão "Novo Chat", que o Turbo segue pedindo Turbo Stream sem `Turbo-Frame`.
+4. `#create`: cria o chat com `current_user.chats.new`. Se já veio uma pergunta (`params.dig(:message, :content)`, como no widget), chama `MessageProcessorService` com a página de origem (`page_path`).
 5. `#destroy`: `authorize @chat` (só o dono, `ChatPolicy#destroy?`) e apaga.
 6. `MessagesController#create`: monta a mensagem com `Message.new` só para o `authorize` (`MessagePolicy#create?` checa se o chat é do usuário). Uma pergunta por vez: se `@chat.awaiting_response?`, responde "Aguarde a Harpia terminar a resposta anterior". `message_params` aceita só `content` e `page_path`. `rescue ActiveRecord::RecordInvalid` mostra "Não foi possível enviar a mensagem".
 7. `ChatResponder` (concern dos dois controllers): `respond_with_conversation` lê o cabeçalho `Turbo-Frame` e responde só o que cada tela precisa: o widget (`chat_widget_messages`) recebe as mensagens e a lista de "Meus Chats"; o chat principal (`chat_conversation`) recebe as mensagens e o título; os demais pedidos são redirecionados para a conversa.
@@ -618,7 +617,6 @@ Services e queries guardam as contas que várias páginas usam; helpers formatam
 | `PartiesHelper` | `positioning_chart`, `affinity_cell_style`, `party_sort_link`, `party_sort_aria` | Gráfico de bolhas, cor da matriz de afinidade e cabeçalhos ordenáveis da comparação (`party_sort_aria` também é usado no panorama de deputados). |
 | `DeputiesHelper` | `deputy_panorama_sort_link`, `deputy_positioning_chart` | Cabeçalho ordenável da tabela do panorama de deputados (mantém os filtros de estado e partido) e posições dos pontos do mapa governismo × alinhamento ao partido. |
 | `PainelHelper` | `bar_percent`, `vote_color`, `unanimous_vote`, `poll_summary` | Largura das barras, cor do voto, voto unânime e descrição sem o placar. |
-| `HarpiaHelper` | `harpia_question`, `party_harpia_question` | Perguntas prontas para a Harpia sobre um candidato ou partido. |
 | `ProposicoesHelper` | `proposicao_label` | "PL 123/2025" ou "Proposição nº ...". |
 | `VotacoesHelper` | `poll_result_badge` | Selo Aprovada, Rejeitada ou Texto mantido. |
 

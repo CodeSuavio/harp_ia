@@ -11,15 +11,18 @@ class ChatsController < ApplicationController
   def show
     authorize @chat
 
-    respond_to do |format|
-      format.html
-      # Estado atual da conversa, pedido pelo chat_controller quando a resposta
-      # demora a chegar pelo WebSocket (ex.: conexão caiu no meio do caminho).
-      # Enquanto a Harpia ainda responde, nada mudou: a tela não é renderizada
-      # de novo, evitando saltos na rolagem da conversa.
-      format.turbo_stream do
-        @chat.awaiting_response? ? head(:no_content) : respond_with_conversation
-      end
+    # Estado atual da conversa, pedido pelo chat_controller quando a resposta
+    # demora a chegar pelo WebSocket (ex.: conexão caiu no meio do caminho).
+    # Enquanto a Harpia ainda responde, nada mudou: a tela não é renderizada
+    # de novo, evitando saltos na rolagem da conversa.
+    if request.format.turbo_stream? && turbo_frame_request?
+      @chat.awaiting_response? ? head(:no_content) : respond_with_conversation
+    else
+      # Página da conversa. Também atende o redirect do botão "Novo Chat":
+      # o Turbo segue o redirect pedindo Turbo Stream, mas sem Turbo-Frame.
+      # Responder com respond_with_conversation redirecionaria para esta
+      # mesma página, em loop, e a conversa nunca abriria.
+      render :show, formats: :html
     end
   end
 
@@ -34,8 +37,8 @@ class ChatsController < ApplicationController
     end
 
     # Quando o chat já é iniciado com uma pergunta, como acontece
-    # no widget e no botão "Perguntar à Harpia", salva a pergunta e
-    # agenda a resposta da IA (ver MessageProcessorService).
+    # no widget, salva a pergunta e agenda a resposta da IA
+    # (ver MessageProcessorService).
     if params.dig(:message, :content).present?
       MessageProcessorService.new(
         @chat,
