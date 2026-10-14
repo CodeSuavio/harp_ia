@@ -1,0 +1,66 @@
+// Legibilidade: texto sobre coral, verde e vermelho com contraste de pelo menos 4,5:1
+
+// Botão Entrar / Cadastre-se do menu: texto navy sobre coral (7,6:1; branco dava 2,5:1)
+.custom-navbar a.btn-auth,
+.custom-navbar a.btn-auth:hover {
+  color: #0A1128 !important;
+}
+
+// Página atual da paginação
+.harpia-pagination .page-item.active .page-link {
+  color: #0A1128;
+}
+
+// Link em coral sobre fundo claro: coral mais escuro (5,2:1; o coral do tema dava 2,3:1)
+a.text-gold {
+  color: #B54D24 !important;
+
+  &:hover,
+  &:focus-visible {
+    color: #9C4119 !important;
+  }
+}
+
+// Botão coral "Ver os candidatos" (aba Candidatos do partido): texto navy
+.btn.btn-gold,
+.btn.btn-gold:hover {
+  color: #0A1128;
+}
+
+// Selo verde com texto navy (10,5:1); o vermelho foi padronizado na cor do tema ($red)
+.badge.bg-success {
+  color: #0A1128;
+}
+
+
+// Assistente: texto navy sobre o laranja (6,6:1; branco dava 2,9:1)
+.chat-widget-header,
+.chat-widget-header .chat-widget-close,
+.chat-widget .chat-widget-user-message {
+  color: #0A1128;
+}
+
+// Filtros: a busca fica na linha de cima e os filtros dividem a de baixo, sem cortar os rótulos
+.panel-filter-search {
+  padding-bottom: .25rem;
+  border-bottom: 1px solid rgba(10, 17, 40, .08);
+}
+
+.panel-filter-search + .panel-filter-col {
+  border-left: 0 !important;
+}
+
+// Alertas de gastos: as três gravidades sempre visíveis, em cores suaves e legíveis
+.severity-badge {
+  border: 1px solid transparent;
+  font-weight: 600;
+}
+
+.severity-high { color: #8F1D1D; background-color: #FDE4E4; border-color: #F5B5B5; }
+.severity-medium { color: #7A4100; background-color: #FFEFD6; border-color: #F7CF8F; }
+.severity-low { color: #4A5260; background-color: #ECEEF2; border-color: #D5D9E0; }
+
+.severity-badge.is-zero {
+  color: #6B7280;
+  background-color: #FFFFFF;
+}

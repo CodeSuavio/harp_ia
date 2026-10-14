@@ -92,6 +92,7 @@ export default class extends Controller {
     const beacon = document.createElement("button")
     beacon.type = "button"
     beacon.className = "hint-beacon"
+    beacon.innerHTML = '<i class="fa-solid fa-circle-question" aria-hidden="true"></i>'
     beacon.setAttribute("aria-label", `Dica: ${item.label}`)
     beacon.setAttribute("aria-expanded", "false")
     beacon.addEventListener("click", (event) => {
@@ -100,16 +101,20 @@ export default class extends Controller {
       this.current?.item === item ? this.close() : this.open(item)
     })
 
-    item.inline = item.target.matches(INLINE)
-    if (item.inline) {
-      beacon.classList.add("hint-beacon--inline")
-      item.target.appendChild(beacon)
-    } else {
+    // O "?" vem logo depois do texto; no campo de seleção, fica dentro da caixa, antes da setinha
+    item.select = item.target.matches("select")
+    if (item.select) {
       const host = item.target.parentElement
       if (getComputedStyle(host).position === "static") {
         host.classList.add("has-hint-beacon")
         item.host = host
       }
+      beacon.classList.add("hint-beacon--select")
+      item.target.classList.add("hint-select-target")
+      item.target.insertAdjacentElement("afterend", beacon)
+    } else if (item.target.matches(INLINE)) {
+      item.target.appendChild(beacon)
+    } else {
       item.target.insertAdjacentElement("afterend", beacon)
     }
 
@@ -126,18 +131,13 @@ export default class extends Controller {
     item.target.addEventListener(event, item.onUse, { once: true })
   }
 
-  // Ponto no canto superior direito do recurso, sem passar da borda da tela
+  // No campo de seleção, o "?" fica dentro da caixa, antes da setinha
   place(item) {
-    const { target, beacon, inline } = item
-    if (!beacon || inline) return
+    const { target, beacon, select } = item
+    if (!beacon || !select) return
 
-    // Em selo e legenda (baixos), o ponto vai acima do texto, como expoente, para não cobrir o número
-    const half = beacon.offsetWidth / 2
-    const room = document.documentElement.clientWidth - target.getBoundingClientRect().right
-    const small = target.offsetHeight < 28
-    const shift = Math.min(small ? 6 : 2, room - half - 4)
-    beacon.style.left = `${target.offsetLeft + target.offsetWidth + shift}px`
-    beacon.style.top = `${target.offsetTop + (small ? 0 : 6)}px`
+    beacon.style.left = `${target.offsetLeft + target.offsetWidth - 44}px`
+    beacon.style.top = `${target.offsetTop + target.offsetHeight / 2}px`
   }
 
   pulseFirst() {
@@ -219,6 +219,7 @@ export default class extends Controller {
     item.beacon.remove()
     item.beacon = null
     item.host?.classList.remove("has-hint-beacon")
+    item.target.classList.remove("hint-select-target")
     this.beacons = this.beacons.filter((other) => other !== item)
     this.pulseFirst()
   }

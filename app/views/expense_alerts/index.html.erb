@@ -5,7 +5,7 @@
 
 <% filter_params = { year: @year, state: @state, party: @party&.id, severity: (@severity unless @severity == "low"),
                     order: (@order unless @order == "score") }.compact %>
-<% severity_badges = { high: ["text-bg-danger", "alta"], medium: ["text-bg-warning", "média"], low: ["text-bg-secondary", "baixa"] } %>
+<% severity_badges = { high: ["severity-badge severity-high", "alta"], medium: ["severity-badge severity-medium", "média"], low: ["severity-badge severity-low", "baixa"] } %>
 
 <section class="container search-container pb-5">
   <!-- Aviso fixo -->
@@ -121,8 +121,7 @@
 
               <div class="d-flex flex-wrap gap-1">
                 <% severity_badges.each do |severity, (css, label)| %>
-                  <% next if row[severity].to_i.zero? %>
-                  <span class="badge <%= css %>" title="Alertas de gravidade <%= label %>">
+                  <span class="badge <%= css %><%= " is-zero" if row[severity].to_i.zero? %>" title="Alertas de gravidade <%= label %>">
                     <%= label.capitalize %>: <%= row[severity] %>
                   </span>
                 <% end %>

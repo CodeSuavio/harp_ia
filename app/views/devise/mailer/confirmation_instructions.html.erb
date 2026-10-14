@@ -1,5 +1,5 @@
-<p>Boa tarde <%= @email %>!</p>
+<p>Olá, <%= @email %>.</p>
 
-<p>Você pode confirmar a sua conta ao clicar no link abaixo:</p>
+<p>Para confirmar o e-mail da sua conta no Harpia, use o link abaixo:</p>
 
-<p><%= link_to 'Confirm my account', confirmation_url(@resource, confirmation_token: @token) %></p>
+<p><%= link_to "Confirmar meu e-mail", confirmation_url(@resource, confirmation_token: @token) %></p>

@@ -1,5 +1,5 @@
 <%= render "painel/hero", title: "Projetos", highlight: "e propostas",
-      subtitle: "Propostas apresentadas na Câmara em 2026 e as de anos anteriores que foram a votação." %>
+      subtitle: "Propostas apresentadas na Câmara em 2026 e as de anos anteriores que foram à votação." %>
 
 <section class="container search-container pb-5">
   <%= turbo_frame_tag "bills_list", data: { turbo_action: "advance" } do %>
@@ -10,7 +10,7 @@
                   },
                   class: "search-card shadow-lg bg-white rounded-4 p-3 mb-4" do %>
       <div class="row g-2 align-items-center">
-        <div class="col-lg-4 panel-filter-col">
+        <div class="col-12 panel-filter-col panel-filter-search">
           <div class="input-group border-0">
             <span class="input-group-text bg-transparent border-0 text-muted">
               <i class="fa-solid fa-magnifying-glass"></i>
@@ -23,7 +23,7 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 col-lg-2 panel-filter-col">
           <%= select_tag :year,
                 options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
@@ -40,12 +40,12 @@
 
         <div class="col-6 col-lg panel-filter-col">
           <%= select_tag :party,
-                options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, params[:party]),
+                options_for_select([["Todos os partidos", ""]] + @parties.select { |p| @party_counts[p.id].to_i.positive? || params[:party].to_s == p.id.to_s }.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] }, params[:party]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 col-lg-4 panel-filter-col">
           <%= select_tag :type,
-                options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.map { |t| [t, t] }), params[:type]),
+                options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.select { |t| @type_counts[t].to_i.positive? || params[:type] == t }.map { |t| [t, t] }).map { |label, value| value.present? ? [label.sub(/\A(\S+)/) { "#{$1} (#{@type_counts[value].to_i})" }, value] : [label, value] }, params[:type]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
           <%= hidden_field_tag :author, params[:author] if params[:author].present? %>
         </div>
