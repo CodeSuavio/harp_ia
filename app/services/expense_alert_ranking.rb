@@ -45,6 +45,16 @@ class ExpenseAlertRanking
     end
   end
 
+  # { deputy_id => [[kind, quantidade], ...] } dos deputados pedidos, do tipo mais frequente para o
+  # menos, com os mesmos filtros do ranking. Mostra no cartão o que foi encontrado.
+  def kinds(deputy_ids)
+    alerts.where(deputy_id: deputy_ids).group(:deputy_id, :kind).count
+          .group_by { |(deputy_id, _), _| deputy_id }
+          .transform_values do |pairs|
+            pairs.map { |(_, kind), count| [kind, count] }.sort_by { |kind, count| [-count, kind] }
+          end
+  end
+
   private
 
   # Uma consulta agregada, da maior pontuação para a menor (desempate pelo valor sinalizado)

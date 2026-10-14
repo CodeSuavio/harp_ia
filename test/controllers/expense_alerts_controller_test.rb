@@ -15,7 +15,8 @@ class ExpenseAlertsControllerTest < ActionDispatch::IntegrationTest
     get expense_alerts_path
     assert_response :success
     assert_equal ["Davi Rocha", "Ana Souza", "Bruno Lima"], card_names
-    assert_select "a[href=?]", deputy_path(deputies(:davi), tab: "expenses", year: 2025)
+    # O cartão leva à aba Gastos já filtrada nas notas com alerta
+    assert_select "a[href=?]", deputy_path(deputies(:davi), tab: "expenses", year: 2025, alerts: "1")
     assert_match "Alerta não é prova de irregularidade", response.body
   end
 
@@ -37,16 +38,18 @@ class ExpenseAlertsControllerTest < ActionDispatch::IntegrationTest
 
   test "mostra badges por gravidade e o total gasto no ano" do
     get expense_alerts_path(state: "SP")
-    assert_select ".badge.text-bg-danger", text: /Alta: 1/
-    assert_select ".badge.text-bg-warning", text: /Média: 2/
+    assert_select ".badge.text-bg-danger", text: /1 alta/
+    assert_select ".badge.text-bg-warning", text: /2 médias/
+    # O que foi encontrado: o tipo do alerta com a contagem
+    assert_select ".alert-rank-card li", text: /Nota acima do padrão\s+×2/
     assert_match "R$ 3.000", response.body # total de Bruno em 2025
   end
 
   test "ordena pela parte do gasto em notas com alerta, contando cada nota uma vez" do
     get expense_alerts_path(order: "share")
     assert_equal ["Bruno Lima", "Ana Souza", "Davi Rocha"], card_names
-    assert_match "100,0% do gasto", response.body
-    assert_match "30,0% do gasto", response.body
+    assert_select ".alert-rank-money strong", text: "100,0%"
+    assert_select ".alert-rank-money strong", text: "30,0%"
   end
 
   test "mostra quando os alertas foram calculados e avisa quando o ano ainda não foi" do
