@@ -338,8 +338,25 @@ body {
     letter-spacing: 2px;
   }
 
+  // Links lado a lado numa linha: nenhum nome quebra ao meio. No celular a
+  // fonte e o espaço diminuem para os quatro caberem; em telas muito estreitas
+  // (menos de ~340px) o último passa para baixo em vez de sair da tela
   .footer-links {
+    flex-wrap: wrap;
+    column-gap: 1.5rem;
+    row-gap: 0.5rem;
+
+    @media (max-width: 575.98px) {
+      column-gap: 0.75rem;
+
+      a {
+        font-size: 0.7rem;
+        letter-spacing: 0.5px;
+      }
+    }
+
     a {
+      white-space: nowrap;
       color: rgba(255, 255, 255, 0.7);
       text-decoration: none;
       font-size: 0.85rem;
@@ -395,6 +412,18 @@ a.party-badge {
   position: relative;
   z-index: 2;
   text-decoration: none;
+  // Sigla e ícone de link lado a lado: a sigla longa é cortada, o ícone fica sempre visível
+  display: inline-flex;
+  align-items: center;
+  max-width: 90px;
+
+  .party-badge-label {
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .internal-link-icon { flex-shrink: 0; }
 
   &:hover,
   &:focus-visible {

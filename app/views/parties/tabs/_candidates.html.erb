@@ -31,7 +31,7 @@
         <i class="fa-solid fa-id-card me-2 text-gold"></i>Perfil das candidaturas
       </h2>
       <%= link_to candidates_path(party: @party.id), class: "btn btn-gold btn-sm rounded-pill px-3 fw-bold" do %>
-        Ver os candidatos <i class="fa-solid fa-arrow-right ms-1"></i>
+        Ver os candidatos<%= internal_link_icon %>
       <% end %>
     </div>
 

@@ -93,8 +93,8 @@
                         <span class="text-muted">
                           <%= proposal.author.presence || proposal.deputy&.name || proposal.party&.label %>
                           <% if proposal.source_url.present? %>
-                            · <%= link_to "fonte", proposal.source_url, target: "_blank", rel: "noopener", class: "text-gold",
-                                    aria: { label: "Fonte da proposta #{proposal.title} (abre em nova aba)" } %>
+                            · <%= link_to proposal.source_url, target: "_blank", rel: "noopener", class: "text-gold",
+                                    aria: { label: "Fonte da proposta #{proposal.title} (abre em nova aba)" } do %>fonte<i class="fa-solid fa-arrow-up-right-from-square external-link-icon" aria-hidden="true"></i><% end %>
                           <% end %>
                         </span>
                       </li>

@@ -11,7 +11,7 @@
     </h2>
     <% if bills_count.positive? %>
       <%= link_to bills_path(party: @party.id), class: "btn btn-light border btn-sm rounded-pill px-3 fw-medium text-navy" do %>
-        Ver todos os <%= bills_count %> <i class="fa-solid fa-arrow-right ms-1 text-gold"></i>
+        Ver todos os <%= bills_count %><%= internal_link_icon %>
       <% end %>
     <% end %>
   </div>
@@ -87,7 +87,7 @@
               <p class="small text-muted mb-0 mt-1"><%= proposal.excerpt.truncate(180) %></p>
             <% end %>
             <% if proposal.source_url.present? %>
-              <%= link_to "Fonte", proposal.source_url, target: "_blank", rel: "noopener", class: "small text-gold fw-bold text-decoration-none" %>
+              <%= link_to proposal.source_url, target: "_blank", rel: "noopener", class: "small text-gold fw-bold text-decoration-none" do %>Fonte<%= external_link_icon %><% end %>
             <% end %>
           </div>
         </div>

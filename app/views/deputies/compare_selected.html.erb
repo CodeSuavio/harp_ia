@@ -15,8 +15,8 @@
     <div class="card border-0 shadow-sm rounded-4 p-5 bg-white text-center">
       <p class="text-muted mb-3">Selecione de 2 a <%= DeputiesController::COMPARE_LIMIT %> deputados na listagem para compará-los.</p>
       <div class="d-flex flex-wrap justify-content-center gap-2">
-        <%= link_to "Ir para a listagem", deputies_path, class: "btn btn-auth rounded-pill px-4" %>
-        <%= link_to "Ver o panorama da Câmara", compare_deputies_path, class: "btn btn-outline-secondary rounded-pill px-4" %>
+        <%= link_to deputies_path, class: "btn btn-auth rounded-pill px-4" do %>Ir para a listagem<%= internal_link_icon %><% end %>
+        <%= link_to compare_deputies_path, class: "btn btn-outline-secondary rounded-pill px-4" do %>Ver o panorama da Câmara<%= internal_link_icon %><% end %>
       </div>
     </div>
   <% else %>

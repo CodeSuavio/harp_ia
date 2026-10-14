@@ -42,7 +42,7 @@
           </div>
           <% if @candidate.party %>
             <%= link_to party_path(@candidate.party), class: "badge badge-wrap bg-navy text-white px-3 py-2 fw-medium tracking-wider text-decoration-none" do %>
-              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @candidate.party.label %>
+              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @candidate.party.label %><%= internal_link_icon(css: "text-gold") %>
             <% end %>
           <% end %>
           <% if @candidate.state_label.present? %>
@@ -60,7 +60,7 @@
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
           <% if deputy %>
             <%= link_to deputy_path(deputy), class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
-              <i class="fa-solid fa-chart-line me-2 text-gold"></i> Painel do deputado
+              <i class="fa-solid fa-chart-line me-2 text-gold"></i> Painel do deputado<%= internal_link_icon %>
             <% end %>
           <% end %>
         </div>

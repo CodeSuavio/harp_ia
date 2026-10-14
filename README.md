@@ -316,7 +316,7 @@ Na view:
 
 Na view: `data-controller="compare-selection"` liga o modo "Comparar", com `data-compare-selection-key-value="deputy-compare"` (chave no `sessionStorage`) e `data-compare-selection-limit-value` = `COMPARE_LIMIT` (3). O Stimulus guarda a seleção no `sessionStorage` (sobrevive à troca de página) e é o mesmo usado na lista de partidos da home. Cada card usa `deputy.photo.attached?` + `cl_image_tag` para a foto, `brl` para o gasto e `percent` para a participação.
 
-No topo da listagem, o botão "Ranking de alertas de gastos" leva a `/alertas`. Abaixo dos filtros, o cartão "Comparar deputados" (o mesmo estilo `party-compare-cta` do "Comparar partidos") leva ao panorama `/deputies/compare`; como fica dentro do turbo frame da lista, usa `data: { turbo_frame: "_top" }`.
+No topo, `render "painel/hero"` (como nas outras listagens), com os filtros flutuando sobre ele. Abaixo dos filtros, dois cartões lado a lado no estilo `party-compare-cta` do "Comparar partidos": "Comparar deputados" leva ao panorama `/deputies/compare` e "Ranking de alertas de gastos" leva a `/alertas`; como ficam dentro do turbo frame da lista, usam `data: { turbo_frame: "_top" }`.
 
 ### Deputado — perfil (`/deputies/:id`)
 
@@ -324,7 +324,7 @@ No topo da listagem, o botão "Ranking de alertas de gastos" leva a `/alertas`. 
 
 1. `Deputy.includes(:party).find(params[:id])` e `authorize @deputy`.
 2. `LEGACY_TABS.fetch(params[:tab], params[:tab])`: traduz links antigos em português (`?tab=gastos`) para a chave nova (`expenses`).
-3. `TABS.key?(tab) ? tab : "overview"`: aba inválida cai na Visão geral.
+3. `TABS.key?(tab) ? tab : "overview"`: aba inválida ou escondida cai na Visão geral. `TABS` é `ALL_TABS` sem as abas de `HIDDEN_TABS`.
 4. `DeputyStats.new(@deputy)`: objeto com os indicadores individuais (ver Services).
 5. `@deputy.candidates.first`: a candidatura de 2026, se houver.
 6. `send("load_#{@tab}")`: chama só o método da aba aberta (`load_overview`, `load_expenses`…), para não calcular o que não será mostrado.
@@ -367,6 +367,8 @@ Na view: `content_for :head` põe as metatags de compartilhamento (`deputy_url`,
 - `.joins(:poll).includes(poll: :bill)`: junta a votação para ordenar pela data e carrega o projeto de cada uma.
 
 **Aba Promessas × Atuação** (`load_promises`)
+
+Escondida por enquanto: `"promises"` está em `DeputiesController::HIDDEN_TABS`, então a aba não aparece no perfil e `?tab=promises` cai na Visão geral. O código (`load_promises`, `deputies/tabs/_promises.html.erb` e os testes, com `skip`) continua no projeto; para reativar, tire a chave de `HIDDEN_TABS`.
 
 - `DeputyThemeProfile.new(@deputy)`: cruza, por tema, as propostas (do deputado e do partido) com os projetos e votos dele.
 - `@profile.rows`: uma linha por tema; `@profile.coherence`: % de votos no sentido que cumpre as propostas. Se `conclusive` for falso, a view avisa que há pouca evidência (menos de `MIN_EVIDENCE` votos).

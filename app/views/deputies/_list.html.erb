@@ -78,7 +78,7 @@
 
               <h3 class="h6 mb-1"><%= link_to deputy.name, deputy_path(deputy), class: "text-reset text-decoration-none stretched-link", data: { turbo_frame: "_top" } %></h3>
               <p class="text-brand small fw-bold text-uppercase mb-2">
-                <% if deputy.party %><%= link_to deputy.party.label, party_path(deputy.party), class: "text-reset position-relative z-2 link-underline-opacity-0 link-underline-opacity-100-hover", title: deputy.party.name, data: { turbo_frame: "_top" } %> &middot;<% end %>
+                <% if deputy.party %><%= link_to party_path(deputy.party), class: "text-reset position-relative z-2 link-underline-opacity-0 link-underline-opacity-100-hover", title: deputy.party.name, data: { turbo_frame: "_top" } do %><%= deputy.party.label %><%= internal_link_icon(css: "text-gold") %><% end %> &middot;<% end %>
                 <%= deputy.state_label %>
               </p>
 
@@ -118,5 +118,5 @@
   </div>
 
   <%= render "shared/pagination", page: @page, total_pages: @total_pages,
-        path_for: ->(p) { deputies_path(request.query_parameters.merge(page: p)) } %>
+        path_for: ->(p) { deputies_path(request.query_parameters.except("page").merge(page: p)) } %>
 <% end %>

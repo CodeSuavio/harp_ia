@@ -5,17 +5,12 @@
   <div class="container pt-5 pb-4">
     <div class="row align-items-center">
 
-      <!-- Chat bot -->
-      <div class="col-md-4 text-center text-md-start mb-3 mb-md-0">
-        <%= link_to "", class: "btn btn-auth rounded-pill px-4 py-2 fw-bold text-uppercase d-inline-flex align-items-center shadow-sm text-white" %>
-        <%# <%= link_to chats_path, class: "btn btn-auth rounded-pill px-4 py-2 fw-bold text-uppercase d-inline-flex align-items-center shadow-sm text-white" do %>
-          <%# <i class="fa-solid fa-robot me-2 text-gold"></i> Fale com o Chatbot %>
-        <%# <% end %>
-      </div>
+      <!-- Coluna vazia: mantém os links no centro e o copyright à direita -->
+      <div class="col-lg-3 d-none d-lg-block"></div>
 
-      <!-- Links Úteis -->
-      <div class="col-md-4 mb-3 mb-md-0">
-        <div class="footer-links d-flex justify-content-center gap-4">
+      <!-- Links Úteis: lado a lado, numa linha só -->
+      <div class="col-md-8 col-lg-6 mb-3 mb-md-0">
+        <div class="footer-links d-flex justify-content-center">
           <a href="#onboarding-modal" data-bs-toggle="modal">Como funciona</a>
           <a href="#" data-hints-reset>Rever dicas</a>
           <%= link_to "Sobre Nós", about_path %>
@@ -24,7 +19,7 @@
       </div>
 
       <!-- Direitos Reservados e Ano Dinâmico -->
-      <div class="col-md-4 text-center text-md-end footer-copyright">
+      <div class="col-md-4 col-lg-3 text-center text-md-end footer-copyright">
         &copy; <%= Time.current.year %> HarpIA. <br class="d-md-none">
         Todos os direitos reservados.
       </div>

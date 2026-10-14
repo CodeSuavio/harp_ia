@@ -36,8 +36,11 @@ module PartiesHelper
 
   # Sigla do partido com link para a página dele. Nos cartões que já são um link
   # (stretched-link), a classe party-badge fica por cima e recebe o clique
+  # O ícone de link em dourado mostra que a sigla leva à página do partido.
   def party_badge_link(party, css: "party-badge mt-2")
-    link_to party.label, party_path(party), class: css, title: party.name, data: { turbo_frame: "_top" }
+    link_to party_path(party), class: css, title: party.name, data: { turbo_frame: "_top" } do
+      safe_join([tag.span(party.label, class: "party-badge-label"), internal_link_icon(css: "text-gold")])
+    end
   end
 
   def party_logo(party, css: "party-logo")

@@ -1,20 +1,13 @@
 <% content_for :title, "Deputados federais · Harpia" %>
 
-<div class="container py-5"
+<%= render "painel/hero", title: "Deputados", highlight: "federais",
+      subtitle: "Os 513 deputados em exercício na Câmara: como votam, quanto gastam da cota parlamentar e o que apresentam." %>
+
+<div class="container pb-5"
      data-controller="compare-selection"
      data-compare-selection-url-value="<%= compare_deputies_path %>"
      data-compare-selection-key-value="deputy-compare"
      data-compare-selection-limit-value="<%= DeputiesController::COMPARE_LIMIT %>">
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h4 fw-bold text-navy mb-0">Deputados federais</h1>
-    <div class="d-flex flex-wrap align-items-center justify-content-end gap-3">
-      <span class="text-muted small d-none d-md-inline">Câmara dos Deputados · diretório e monitoramento</span>
-      <%= link_to expense_alerts_path, class: "btn btn-sm btn-outline-secondary rounded-pill px-3" do %>
-        <i class="fa-solid fa-triangle-exclamation text-warning me-1" aria-hidden="true"></i> Ranking de alertas de gastos
-      <% end %>
-    </div>
-  </div>
-
   <%= turbo_frame_tag "deputies_list", data: { turbo_action: "advance" } do %>
 
     <!-- Barra de Pesquisa e Filtros (Estilo HARPIA Dashboard) -->
@@ -134,15 +127,31 @@
         </div>
       <% end %>
 
-      <%= link_to compare_deputies_path, class: "party-compare-cta d-flex align-items-center gap-3 p-3 mt-3 rounded-3 text-decoration-none",
-            data: { turbo_frame: "_top" } do %>
-        <i class="fa-solid fa-scale-balanced fa-lg text-gold" aria-hidden="true"></i>
-        <span class="flex-grow-1">
-          <strong class="d-block text-navy">Comparar deputados</strong>
-          <span class="small text-muted">Quem vota com o Governo, quem segue o partido, quem gasta e quem produz mais</span>
-        </span>
-        <i class="fa-solid fa-chevron-right text-muted" aria-hidden="true"></i>
-      <% end %>
+      <!-- Atalhos: panorama de comparação e ranking de alertas -->
+      <div class="row g-3 mt-0">
+        <div class="col-md-6">
+          <%= link_to compare_deputies_path, class: "party-compare-cta d-flex align-items-center gap-3 p-3 h-100 rounded-3 text-decoration-none",
+                data: { turbo_frame: "_top" } do %>
+            <i class="fa-solid fa-scale-balanced fa-lg text-gold" aria-hidden="true"></i>
+            <span class="flex-grow-1">
+              <strong class="d-block text-navy">Comparar deputados</strong>
+              <span class="small text-muted">Quem vota com o Governo, quem segue o partido, quem gasta e quem produz mais</span>
+            </span>
+            <i class="fa-solid fa-chevron-right text-muted" aria-hidden="true"></i>
+          <% end %>
+        </div>
+        <div class="col-md-6">
+          <%= link_to expense_alerts_path, class: "party-compare-cta d-flex align-items-center gap-3 p-3 h-100 rounded-3 text-decoration-none",
+                data: { turbo_frame: "_top" } do %>
+            <i class="fa-solid fa-triangle-exclamation fa-lg text-warning" aria-hidden="true"></i>
+            <span class="flex-grow-1">
+              <strong class="d-block text-navy">Ranking de alertas de gastos</strong>
+              <span class="small text-muted">Deputados com mais gastos fora do padrão na cota parlamentar</span>
+            </span>
+            <i class="fa-solid fa-chevron-right text-muted" aria-hidden="true"></i>
+          <% end %>
+        </div>
+      </div>
 
       <!-- Modo de comparação -->
       <div class="d-flex flex-wrap align-items-center gap-2 gap-md-3 mt-3 px-1">
@@ -163,7 +172,7 @@
           <span class="small text-navy fw-medium"><span data-compare-selection-target="count">0</span> de <%= DeputiesController::COMPARE_LIMIT %> selecionados</span>
           <button type="button" class="btn btn-sm btn-link text-muted text-decoration-none p-0" data-action="compare-selection#clear">Limpar</button>
           <a href="#" class="btn btn-sm btn-auth rounded-pill px-3 fw-bold" data-compare-selection-target="link" data-turbo-frame="_top">
-            <i class="fa-solid fa-scale-balanced me-1"></i> Comparar
+            <i class="fa-solid fa-scale-balanced me-1"></i> Comparar<%= internal_link_icon %>
           </a>
         </div>
       </div>

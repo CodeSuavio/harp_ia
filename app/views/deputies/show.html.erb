@@ -38,7 +38,7 @@
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
           <% if @deputy.party %>
             <%= link_to party_path(@deputy.party), class: "badge badge-wrap bg-navy text-white px-3 py-2 fw-medium tracking-wider text-decoration-none" do %>
-              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %>
+              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %><%= internal_link_icon(css: "text-gold") %>
             <% end %>
           <% end %>
           <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
@@ -54,7 +54,7 @@
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start">
           <%= link_to "https://www.camara.leg.br/deputados/#{@deputy.json_id}", target: "_blank", rel: "noopener",
                 class: "btn btn-light border rounded-pill px-4 fw-medium text-navy" do %>
-            <i class="fa-solid fa-landmark me-2 text-gold"></i> Página na Câmara
+            <i class="fa-solid fa-landmark me-2 text-gold"></i> Página na Câmara<%= external_link_icon %>
           <% end %>
         </div>
       </div>
