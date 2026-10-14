@@ -8,7 +8,7 @@
     <% seats = seats_by_state[uf].to_i %>
     <% weight = bench_map_weight(seats, max_seats) %>
     <% name = PartiesController::STATES[uf] %>
-    <a href="<%= root_path(uf: uf, anchor: "partidos") %>" class="uf-tile <%= 'is-strong' if weight > 0.5 %>"
+    <a href="<%= root_path(uf: uf, anchor: "partidos") %>" class="uf-tile <%= 'is-strong' if weight > 0.7 %>"
        aria-label="<%= name %>: <%= seats %> <%= "deputado".pluralize(seats) %>. Ver todos os partidos do estado">
       <title><%= name %> · <%= seats %> <%= "deputado".pluralize(seats) %></title>
       <path class="uf-shape" d="<%= path %>" fill-opacity="<%= weight.round(2) %>"></path>

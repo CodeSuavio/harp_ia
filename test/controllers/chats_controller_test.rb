@@ -20,6 +20,14 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to chat_path(@user.chats.last)
+
+    # O Turbo segue o redirect com o mesmo Accept do formulário e sem
+    # Turbo-Frame: a página da conversa deve abrir, sem novo redirect.
+    get response.location, headers: { "Accept" => TURBO_STREAM }
+
+    assert_response :success
+    assert_equal "text/html", response.media_type
+    assert_select "turbo-frame#chat_conversation"
   end
 
   test "widget inicia a conversa sem sair da página" do
@@ -35,15 +43,14 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_with(job: ChatResponseJob, args: [chat.messages.sole])
   end
 
-  test "Perguntar à Harpia registra a página de origem e abre o chat principal" do
+  test "widget registra a página de origem da pergunta" do
     deputy = deputies(:ana)
 
     post chats_path,
          params: { message: { content: "Resuma este deputado", page_path: "/deputies/#{deputy.id}" } },
-         headers: { "Accept" => TURBO_STREAM }
+         headers: { "Accept" => TURBO_STREAM, "Turbo-Frame" => ChatResponder::WIDGET_FRAME }
 
     chat = @user.chats.last
-    assert_redirected_to chat_path(chat)
     assert_includes chat.messages.find_by(role: "user").page_context, deputy.name
   end
 

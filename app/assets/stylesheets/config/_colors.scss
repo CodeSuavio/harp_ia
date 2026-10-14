@@ -13,5 +13,9 @@ $light-gray: #F4F4F4;
 $navy-blue: #0A1128;      // Azul escuro profundo (fundo principal e Navbar)
 $royal-blue: #1C3B87;     // Azul médio
 $gold: #F08A5D;           // Alaranjado/Dourado inspirado na referência "Harpia"
+// Dourado para TEXTO e ícones em fundo claro (branco, fundo da página, chips dourados):
+// o $gold tem só 2,5:1 no branco; este tem 5,7:1 (WCAG AA). Em fundo azul-marinho
+// (hero, rodapé, navbar) continua o $gold, que lá tem 7,6:1
+$gold-dark: #B14210;
 $pastel-yellow: #FFF8E7;  // Amarelo pastel como luz de fundo
 $bg-color: #F4F6F9;       // Cinza muito claro para o fundo da página
