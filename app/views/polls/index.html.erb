@@ -23,19 +23,19 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 col-lg-3 panel-filter-col">
           <%= select_tag :year,
                 options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 col-lg-5 panel-filter-col">
           <%= select_tag :theme,
                 options_for_select([["Todos os temas", ""]] + @themes.select { |t| @theme_counts[t.id].to_i.positive? || params[:theme].to_s == t.id.to_s }.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] }, params[:theme]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 col-lg-4 panel-filter-col">
           <%= select_tag :approval,
                 options_for_select(
                   [["Qualquer resultado", ""], ["Aprovadas", "1"], ["Rejeitadas", "0"]],
@@ -44,13 +44,13 @@
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
 
-<div class="col-6 col-lg panel-filter-col">
+<div class="col-6 col-lg-4 panel-filter-col panel-filter-newline">
   <%= select_tag :governo,
         options_for_select([["Governo: todas", ""], ["Governo venceu", "venceu"], ["Governo perdeu", "perdeu"]], params[:governo]),
         class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
 </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-12 col-lg-8 panel-filter-col">
           <div class="form-check">
             <%= check_box_tag :all, "1", params[:all] == "1", class: "form-check-input" %>
             <%= label_tag :all, "Incluir sem votos nominais", class: "form-check-label small text-muted" %>

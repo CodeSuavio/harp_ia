@@ -31,25 +31,25 @@
         data: { controller: "filter-form", action: "change->filter-form#submit" },
         class: "card search-card shadow-sm bg-white rounded-4 p-3 border-0 mb-4" do %>
     <div class="row g-2 align-items-center">
-      <div class="col-6 col-lg">
+      <div class="col-6 col-lg-2 col-xl-1">
         <%= label_tag :year, "Ano", class: "form-label small text-muted mb-1" %>
         <%= select_tag :year, options_for_select(@years, @year), class: "form-select form-select-sm" %>
       </div>
-      <div class="col-6 col-lg">
+      <div class="col-6 col-lg-3 col-xl-2">
         <%= label_tag :state, "Estado", class: "form-label small text-muted mb-1" %>
         <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states, @state), class: "form-select form-select-sm" %>
       </div>
-      <div class="col-6 col-lg">
+      <div class="col-6 col-lg-3">
         <%= label_tag :party, "Partido", class: "form-label small text-muted mb-1" %>
         <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
               class: "form-select form-select-sm" %>
       </div>
-      <div class="col-6 col-lg">
+      <div class="col-6 col-lg-4 col-xl-2">
         <%= label_tag :severity, "Gravidade mínima", class: "form-label small text-muted mb-1" %>
         <%= select_tag :severity, options_for_select(ExpenseAlertsController::SEVERITY_LABELS.invert, @severity),
               class: "form-select form-select-sm" %>
       </div>
-      <div class="col-12 col-lg">
+      <div class="col-12 col-xl-4">
         <%= label_tag :order, "Ordenar por", class: "form-label small text-muted mb-1" %>
         <%= select_tag :order, options_for_select(ExpenseAlertsController::ORDERS.invert, @order),
               class: "form-select form-select-sm" %>

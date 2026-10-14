@@ -23,13 +23,13 @@
           </div>
         </div>
 
-        <div class="col-6 col-lg-2 panel-filter-col">
+        <div class="col-6 panel-filter-col">
           <%= select_tag :year,
                 options_for_select([["Todos os anos", ""]] + @years.map { |y| [y, y] }, params[:year]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 panel-filter-col">
           <%= select_tag :theme,
                 options_for_select(
                   [["Todos os temas", ""]] + @themes.map { |t| ["#{t.name} (#{@theme_counts[t.id].to_i})", t.id] },
@@ -38,12 +38,12 @@
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
 
-        <div class="col-6 col-lg panel-filter-col">
+        <div class="col-6 panel-filter-col panel-filter-newline">
           <%= select_tag :party,
                 options_for_select([["Todos os partidos", ""]] + @parties.select { |p| @party_counts[p.id].to_i.positive? || params[:party].to_s == p.id.to_s }.map { |p| ["#{p.label} (#{@party_counts[p.id].to_i})", p.id] }, params[:party]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
         </div>
-        <div class="col-6 col-lg-4 panel-filter-col">
+        <div class="col-6 panel-filter-col">
           <%= select_tag :type,
                 options_for_select(tipos_de_proposicao([["Todos os tipos", ""]] + @types.select { |t| @type_counts[t].to_i.positive? || params[:type] == t }.map { |t| [t, t] }).map { |label, value| value.present? ? [label.sub(/\A(\S+)/) { "#{$1} (#{@type_counts[value].to_i})" }, value] : [label, value] }, params[:type]),
                 class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
