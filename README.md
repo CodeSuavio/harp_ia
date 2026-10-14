@@ -325,7 +325,7 @@ No topo da listagem, o botão "Ranking de alertas de gastos" leva a `/alertas`. 
 
 1. `Deputy.includes(:party).find(params[:id])` e `authorize @deputy`.
 2. `LEGACY_TABS.fetch(params[:tab], params[:tab])`: traduz links antigos em português (`?tab=gastos`) para a chave nova (`expenses`).
-3. `TABS.key?(tab) ? tab : "overview"`: aba inválida cai na Visão geral.
+3. `TABS.key?(tab) ? tab : "overview"`: aba inválida ou escondida cai na Visão geral. `TABS` é `ALL_TABS` sem as abas de `HIDDEN_TABS`.
 4. `DeputyStats.new(@deputy)`: objeto com os indicadores individuais (ver Services).
 5. `@deputy.candidates.first`: a candidatura de 2026, se houver.
 6. `send("load_#{@tab}")`: chama só o método da aba aberta (`load_overview`, `load_expenses`…), para não calcular o que não será mostrado.
@@ -368,6 +368,8 @@ Na view: `content_for :head` põe as metatags de compartilhamento (`deputy_url`,
 - `.joins(:poll).includes(poll: :bill)`: junta a votação para ordenar pela data e carrega o projeto de cada uma.
 
 **Aba Promessas × Atuação** (`load_promises`)
+
+Escondida por enquanto: `"promises"` está em `DeputiesController::HIDDEN_TABS`, então a aba não aparece no perfil e `?tab=promises` cai na Visão geral. O código (`load_promises`, `deputies/tabs/_promises.html.erb` e os testes, com `skip`) continua no projeto; para reativar, tire a chave de `HIDDEN_TABS`.
 
 - `DeputyThemeProfile.new(@deputy)`: cruza, por tema, as propostas (do deputado e do partido) com os projetos e votos dele.
 - `@profile.rows`: uma linha por tema; `@profile.coherence`: % de votos no sentido que cumpre as propostas. Se `conclusive` for falso, a view avisa que há pouca evidência (menos de `MIN_EVIDENCE` votos).

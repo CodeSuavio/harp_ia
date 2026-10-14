@@ -228,7 +228,19 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
     assert_match "Nenhum projeto de lei encontrado", response.body
   end
 
+  test "aba de promessas fica escondida e o link cai na visão geral" do
+    get deputy_path(deputies(:ana))
+    assert_select ".deputy-tabs .nav-link", text: "Promessas × Atuação", count: 0
+
+    %w[promises promessas].each do |tab|
+      get deputy_path(deputies(:ana), tab: tab)
+      assert_response :success
+      assert_select ".deputy-tabs .nav-link.active", text: "Visão geral"
+    end
+  end
+
   test "aba de promessas cruza propostas com a atuação" do
+    skip "aba Promessas × Atuação escondida (DeputiesController::HIDDEN_TABS)"
     get deputy_path(deputies(:ana), tab: "promises")
     assert_response :success
     assert_match "Mais transparência nos gastos públicos", response.body
@@ -238,6 +250,7 @@ class DeputiesControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "aba de promessas sem propostas mostra só a atuação" do
+    skip "aba Promessas × Atuação escondida (DeputiesController::HIDDEN_TABS)"
     get deputy_path(deputies(:davi), tab: "promises")
     assert_response :success
     assert_match "Nenhuma proposta cadastrada", response.body
