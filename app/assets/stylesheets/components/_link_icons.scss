@@ -1,0 +1,22 @@
+// Ícones de link (helpers external_link_icon e internal_link_icon): menores
+// que o texto e na cor do próprio link, para combinar com o dourado dos links
+// de texto e com o azul-marinho, o branco ou o cinza de cada botão
+.external-link-icon,
+.internal-link-icon {
+  font-size: 0.7em;
+  margin-left: 0.35em;
+  opacity: 0.75;
+  vertical-align: 0.05em;
+  transition: opacity 0.15s ease, transform 0.15s ease;
+}
+
+a:hover .external-link-icon,
+a:focus-visible .external-link-icon {
+  opacity: 1;
+  transform: translate(1px, -1px);
+}
+
+a:hover .internal-link-icon,
+a:focus-visible .internal-link-icon {
+  opacity: 1;
+}

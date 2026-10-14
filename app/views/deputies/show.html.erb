@@ -38,7 +38,7 @@
         <div class="d-flex flex-wrap gap-2 justify-content-center justify-content-md-start mb-3">
           <% if @deputy.party %>
             <%= link_to party_path(@deputy.party), class: "badge badge-wrap bg-navy text-white px-3 py-2 fw-medium tracking-wider text-decoration-none" do %>
-              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %>
+              <i class="fa-solid fa-flag me-1 text-gold"></i> <%= @deputy.party.label %><%= internal_link_icon(css: "text-gold") %>
             <% end %>
           <% end %>
           <div class="badge badge-wrap bg-light text-navy border px-3 py-2 fw-medium tracking-wider">
