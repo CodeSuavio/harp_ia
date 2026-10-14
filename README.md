@@ -317,7 +317,7 @@ Na view:
 
 Na view: `data-controller="compare-selection"` liga o modo "Comparar", com `data-compare-selection-key-value="deputy-compare"` (chave no `sessionStorage`) e `data-compare-selection-limit-value` = `COMPARE_LIMIT` (3). O Stimulus guarda a seleção no `sessionStorage` (sobrevive à troca de página) e é o mesmo usado na lista de partidos da home. Cada card usa `deputy.photo.attached?` + `cl_image_tag` para a foto, `brl` para o gasto e `percent` para a participação.
 
-No topo da listagem, o botão "Ranking de alertas de gastos" leva a `/alertas`. Abaixo dos filtros, o cartão "Comparar deputados" (o mesmo estilo `party-compare-cta` do "Comparar partidos") leva ao panorama `/deputies/compare`; como fica dentro do turbo frame da lista, usa `data: { turbo_frame: "_top" }`.
+No topo, `render "painel/hero"` (como nas outras listagens), com os filtros flutuando sobre ele. Abaixo dos filtros, dois cartões lado a lado no estilo `party-compare-cta` do "Comparar partidos": "Comparar deputados" leva ao panorama `/deputies/compare` e "Ranking de alertas de gastos" leva a `/alertas`; como ficam dentro do turbo frame da lista, usam `data: { turbo_frame: "_top" }`.
 
 ### Deputado — perfil (`/deputies/:id`)
 
