@@ -9,7 +9,7 @@
 # somente as atualizações dos seus elementos:
 # - widget            → mensagens e formulário do widget + lista de "Meus Chats"
 # - chat principal    → mensagens, formulário e título da conversa
-# - demais requisições (botão "Novo Chat", "Perguntar à Harpia", sem JS)
+# - demais requisições (botão "Novo Chat", sem JS)
 #   → redireciona para a página da conversa
 module ChatResponder
   extend ActiveSupport::Concern
