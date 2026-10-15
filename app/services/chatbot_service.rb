@@ -119,9 +119,10 @@ class ChatbotService
       por um indicador (cadeiras, gastos, coesão, participação etc.); o
       deputy_ranking com bills aceita um tema (quem tem mais projetos sobre
       saúde);
-    - party_comparison: os gráficos da comparação de partidos (blocos,
-      mapa de posicionamento, quem vota com quem e destaques), com os mesmos
-      números da página;
+    - party_comparison e deputy_panorama: os gráficos da comparação de
+      partidos e do panorama de deputados, com os mesmos números das páginas;
+      deputy_panorama também diz quantos deputados a tabela mostra com os
+      filtros de estado e partido, e as médias desse recorte;
     - deputy_state_ranking: deputados por estado — quantos deputados cada
       estado tem ou, com um indicador, o deputado no topo em cada estado
       (quem mais gastou, quem mais apresentou projetos etc.);
@@ -198,11 +199,13 @@ class ChatbotService
     tabelas. Explique em uma frase como o indicador é calculado (campo
     "como_e_calculado"). Mostre cada valor com a unidade do campo "unidade"
     (ex.: 99%, R$ 45.000,00, 98 deputados).
-    As ferramentas trazem 5 itens por vez. Quando houver o campo "recorte",
-    a resposta mostra só uma parte da lista: deixe isso claro no texto, por
+    As ferramentas trazem 5 itens por vez. Quando você mostrar uma lista com
+    o campo "recorte", ela é só uma parte: deixe isso claro no texto, por
     exemplo "Os 5 deputados com maior gasto mensal em 2025 são:", e diga de
     quantos itens é o ranking (campo "de"). Nunca apresente uma parte como a
-    lista completa.
+    lista completa. Quando a resposta não mostrar a lista (uma contagem, uma
+    média, um total), não fale dela, do recorte nem de limites de exibição,
+    e não escolha "Ver mais" nem "Ver lista completa".
     Nunca conte nem ordene os itens de uma lista com "recorte" para
     responder outra pergunta (por exemplo, quem aparece mais vezes entre os
     projetos listados): uma parte não representa o total. Quando nenhuma
@@ -220,7 +223,7 @@ class ChatbotService
     candidatos?"), destaque o primeiro em uma frase e mostre a lista.
     Perguntas de contagem ("quantas mulheres concorrem em SP?", "quantos
     candidatos o PT tem?") não são rankings: responda com o número pedido,
-    sem lista.
+    sem lista e sem mencionar as ferramentas ou como a consulta foi feita.
     No deputy_state_ranking com indicador, cada item mostra a UF, o deputado,
     o partido e o valor, por exemplo: "1. RR — Gabriel Mota (UNIÃO):
     R$ 621.578,60".
@@ -339,6 +342,7 @@ class ChatbotService
     CandidateDetailsTool,
     PartyRankingTool,
     PartyComparisonTool,
+    DeputyPanoramaTool,
     DeputyRankingTool,
     DeputyStateRankingTool,
     CandidateRankingTool,
@@ -444,13 +448,13 @@ class ChatbotService
   PREVIOUS_QUESTIONS = 20
 
   # Página atual, com as seções quando ela tem gráficos (PageGuide), os
-  # gráficos das páginas anteriores, como referência, e os títulos repetidos
+  # gráficos das páginas anteriores, como referência, e as seções repetidas
   # entre páginas, que admitem mais de uma interpretação
   def page_instructions
     previous = previous_chart_pages
     [current_page_instructions,
      *previous.map { |message, guide| previous_page_text(message, guide) },
-     shared_titles_text(previous.map(&:last))].compact.join("\n\n").presence
+     shared_sections_text(previous.map(&:last))].compact.join("\n\n").presence
   end
 
   def current_page_instructions
@@ -482,21 +486,29 @@ class ChatbotService
       "Gráficos dessa página, só para reconhecer um gráfico citado: #{guide.summary}."
   end
 
-  # Fora de uma página com gráficos, o mesmo título em páginas diferentes
-  # (anteriores ou com ferramenta de dados) é calculado aqui, em vez de
+  # Fora de uma página com gráficos, a mesma seção em páginas diferentes
+  # (anteriores ou com ferramenta de dados) é calculada aqui, em vez de
   # depender de a IA perceber a coincidência
-  def shared_titles_text(previous_guides)
-    return if previous_guides.empty? || current_guide
+  def shared_sections_text(previous_guides)
+    return if current_guide
 
-    shared = PageGuide.shared_titles(previous_guides + PageGuide.with_data)
+    shared = PageGuide.shared_sections(previous_guides + PageGuide.with_data)
     return if shared.empty?
 
-    titles = shared.map do |title, pages|
-      "#{title} (#{pages.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ')})"
-    end
-    "GRÁFICOS COM O MESMO NOME EM MAIS DE UMA PÁGINA: #{titles.join('; ')}. O usuário não está em " \
-      "nenhuma dessas páginas agora: se ele citar um desses gráficos sem dizer a página, pergunte qual, " \
-      "mesmo que a pergunta anterior tenha sido feita numa delas."
+    "GRÁFICOS PARECIDOS EM MAIS DE UMA PÁGINA (#{shared_groups(shared)}). O usuário não está em nenhuma " \
+      "dessas páginas agora: se ele citar um desses gráficos sem dizer a página, pergunte qual, mesmo que a " \
+      "pergunta anterior tenha sido feita numa delas. Se a pergunta já disser de quem é o gráfico " \
+      "(\"dos partidos\", \"dos deputados\", \"quais partidos votam juntos\"), não pergunte: " \
+      "use o gráfico dessa página."
+  end
+
+  # "comparação de partidos e panorama de deputados: Mapa de posicionamento; ...",
+  # citando cada conjunto de páginas uma vez
+  def shared_groups(shared)
+    shared.group_by { |section| section[:pages] }.map do |pages, sections|
+      "#{pages.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ')}: " \
+        "#{sections.map { |section| section[:titles].join(' ou ') }.join('; ')}"
+    end.join(". ")
   end
 
   def previous_questions

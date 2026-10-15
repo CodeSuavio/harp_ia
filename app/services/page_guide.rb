@@ -16,7 +16,11 @@ class PageGuide
       sections: PartyComparison::SECTIONS,
       data: "use party_comparison com o id da seção; para a tabela de indicadores, party_ranking"
     },
-    "deputies#compare" => { name: "panorama de deputados", sections: DeputyPanorama::SECTIONS, data: nil }
+    "deputies#compare" => {
+      name: "panorama de deputados",
+      sections: DeputyPanorama::SECTIONS,
+      data: "use deputy_panorama com o id da seção; os filtros de estado e partido da página valem para indicators"
+    }
   }.freeze
   NO_DATA = "a Harpia ainda não tem os números destas seções: explique pelo texto de cada seção " \
             "e diga que os números estão na página".freeze
@@ -33,22 +37,25 @@ class PageGuide
     GUIDES.filter_map { |key, guide| new(key) if guide[:data] }
   end
 
-  # { título => [nomes das páginas] } dos gráficos com o mesmo título em mais
-  # de uma das páginas: citados sem a página, admitem mais de uma interpretação
-  def self.shared_titles(guides)
-    guides.uniq(&:key).flat_map { |guide| guide.titles.map { |title| [title, guide.name] } }
-          .group_by(&:first).transform_values { |pairs| pairs.map(&:last) }
-          .select { |_, names| names.size > 1 }
+  # [{ titles:, pages: }] das seções presentes em mais de uma das páginas,
+  # agrupadas pelo id da seção ("A Câmara em blocos" e "A Câmara em blocos,
+  # deputado a deputado" são o mesmo gráfico, em páginas diferentes): citadas
+  # sem a página, admitem mais de uma interpretação
+  def self.shared_sections(guides)
+    guides.uniq(&:key).flat_map { |guide| guide.sections.map { |id, section| [id, section[:title], guide.name] } }
+          .group_by(&:first).values.select { |rows| rows.size > 1 }
+          .map { |rows| { titles: rows.map { |_, title, _| title }.uniq.sort, pages: rows.map(&:last).sort } }
   end
 
-  def initialize(key)
+  # guide: o guia de GUIDES, ou outro no mesmo formato (testes)
+  def initialize(key, guide = GUIDES.fetch(key))
     @key = key
-    @guide = GUIDES.fetch(key)
+    @guide = guide
   end
 
   def name = @guide[:name]
 
-  def titles = sections.values.pluck(:title)
+  def sections = @guide[:sections]
 
   # Seções da página atual, com o que cada gráfico mostra
   def text
@@ -63,8 +70,4 @@ class PageGuide
   def summary
     sections.values.map { |section| "#{section[:title]} (#{section[:chart]})" }.join("; ")
   end
-
-  private
-
-  def sections = @guide[:sections]
 end
