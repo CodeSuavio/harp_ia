@@ -1,5 +1,6 @@
 <% meta title: "Comparar partidos", noindex: true %>
 <% parties = @selection.parties %>
+<% sections = PartySelectionComparison::SECTIONS %>
 
 <div class="container py-5">
   <div class="mb-4">
@@ -21,8 +22,7 @@
     <p class="small text-muted mb-3">
       <span class="compare-legend compare-best me-1" aria-hidden="true"></span> melhor da linha
       <span class="compare-legend compare-worst ms-3 me-1" aria-hidden="true"></span> pior da linha.
-      Gastos menores, mais participação, mais projetos por deputado e mais mulheres candidatas contam como melhor.
-      Governismo, coesão e disciplina não têm lado melhor.
+      <%= sections["table"][:reading] %>
     </p>
 
     <div class="table-responsive card border-0 shadow-sm rounded-4 bg-white mb-4">
@@ -69,8 +69,8 @@
     <!-- Afinidade entre eles -->
     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
       <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">
-        Como votaram entre si
-        <%= info_tip("Nas votações em que as duas bancadas tiveram maioria (Sim ou Não), em quantas a maioria das duas foi a mesma. Só pares com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum.") %>
+        <%= sections["votes"][:title] %>
+        <%= info_tip(sections["votes"][:how]) %>
       </h2>
       <ul class="list-unstyled mb-0">
         <% @selection.affinities.each do |a, b, cell| %>

@@ -121,6 +121,7 @@ class ChatbotServiceTest < ActiveSupport::TestCase
     assert_includes prompt, "a plataforma não tem esse gráfico"
     assert_includes ChatbotService::TOOLS, PartyComparisonTool
     assert_includes ChatbotService::TOOLS, DeputyPanoramaTool
+    assert_includes ChatbotService::TOOLS, SelectionComparisonTool
   end
 
   test "as ferramentas, instanciadas com o registro de ações, mantêm a descrição e o nome do RubyLLM" do

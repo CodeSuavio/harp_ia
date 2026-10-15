@@ -62,9 +62,27 @@ class PageContextServiceGuideTest < ActiveSupport::TestCase
     assert_equal "deputies#compare", PageContextService.new("/deputies/compare?state=SP").guide.key
   end
 
-  test "sem guia nas páginas sem gráficos mapeados e nas comparações de registros escolhidos" do
-    assert_nil PageContextService.new("/parties/compare?ids[]=1&ids[]=2").guide
-    assert_nil PageContextService.new("/deputies/compare?ids[]=1").guide
+  test "comparações por seleção têm guia só com ao menos 2 escolhidos" do
+    two = "ids[]=#{parties(:pt).id}&ids[]=#{parties(:mdb).id}"
+    assert_equal "parties#compare_selected", PageContextService.new("/parties/compare?#{two}").guide.key
+    assert_equal "deputies#compare_selected",
+                 PageContextService.new("/deputies/compare?ids[]=1&ids[]=2").guide.key
+    assert_nil PageContextService.new("/parties/compare?ids[]=#{parties(:pt).id}").guide
+    assert_nil PageContextService.new("/deputies/compare?ids[]=1&ids[]=1").guide
+  end
+
+  test "descreve os escolhidos na ordem da escolha, em português" do
+    ana, bruno, davi = %i[ana bruno davi].map { |name| deputies(name) }
+    context = PageContextService.new("/deputies/compare?ids[]=#{davi.id}&ids[]=#{ana.id}&ids[]=#{bruno.id}").call
+
+    assert_equal "Comparação entre os deputados #{davi.name} (deputy_id #{davi.id}), " \
+                 "#{ana.name} (deputy_id #{ana.id}) e #{bruno.name} (deputy_id #{bruno.id})", context
+    assert_equal "Comparação entre os partidos PT (party_id #{parties(:pt).id}) e MDB (party_id #{parties(:mdb).id})",
+                 PageContextService.new("/parties/compare?ids[]=#{parties(:pt).id}&ids[]=#{parties(:mdb).id}").call
+    assert_nil PageContextService.new("/parties/compare?ids[]=999999").call
+  end
+
+  test "sem guia nas páginas sem gráficos mapeados" do
     assert_nil PageContextService.new("/deputies/#{deputies(:ana).id}").guide
     assert_nil PageContextService.new("/chats/1").guide
     assert_nil PageContextService.new(nil).guide

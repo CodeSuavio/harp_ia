@@ -3,7 +3,7 @@ class PartiesController < ApplicationController
 
   skip_before_action :authenticate_user!, only: %i[index show compare]
 
-  COMPARE_LIMIT = 4
+  COMPARE_LIMIT = PartySelectionComparison::LIMIT
 
   TABS = {
     "overview" => "Visão geral",
@@ -44,9 +44,7 @@ class PartiesController < ApplicationController
 
     # Partidos escolhidos na listagem (?ids[]=): comparação lado a lado
     if params.key?(:ids)
-      ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT).map(&:to_i)
-      rows = @comparison.rows.index_by { |row| row.party.id }
-      @selection = PartySelectionComparison.new(rows.values_at(*ids).compact.uniq, @comparison)
+      @selection = PartySelectionComparison.for(params[:ids], @comparison)
       return render :compare_selected
     end
 

@@ -10,6 +10,8 @@ class PageGuide
   # números de cada uma (data nil: a Harpia reconhece os gráficos, mas ainda
   # não tem ferramenta com os números). A chave é a página renderizada
   # ("controller#action", com "_selected" nas comparações de registros escolhidos).
+  # selection: o conteúdo depende dos registros escolhidos, então a página só
+  # vale como atual ou anterior, e não entre os gráficos conhecidos em qualquer pergunta.
   GUIDES = {
     "parties#compare" => {
       name: "comparação de partidos",
@@ -20,6 +22,18 @@ class PageGuide
       name: "panorama de deputados",
       sections: DeputyPanorama::SECTIONS,
       data: "use deputy_panorama com o id da seção; os filtros de estado e partido da página valem para indicators"
+    },
+    "parties#compare_selected" => {
+      name: "comparação dos partidos escolhidos",
+      sections: PartySelectionComparison::SECTIONS,
+      data: "use selection_comparison com kind partidos e os party_id da página",
+      selection: true
+    },
+    "deputies#compare_selected" => {
+      name: "comparação dos deputados escolhidos",
+      sections: DeputyComparison::SECTIONS,
+      data: "use selection_comparison com kind deputados e os deputy_id da página",
+      selection: true
     }
   }.freeze
   NO_DATA = "a Harpia ainda não tem os números destas seções: explique pelo texto de cada seção " \
@@ -32,9 +46,10 @@ class PageGuide
   end
 
   # Páginas cujos gráficos têm ferramenta com os números: a Harpia os conhece
-  # em qualquer pergunta, pela descrição da ferramenta
+  # em qualquer pergunta, pela descrição da ferramenta. As comparações por
+  # seleção ficam de fora: sem os registros escolhidos, não há o que reconhecer
   def self.with_data
-    GUIDES.filter_map { |key, guide| new(key) if guide[:data] }
+    GUIDES.filter_map { |key, guide| new(key) if guide[:data] && !guide[:selection] }
   end
 
   # [{ titles:, pages: }] das seções presentes em mais de uma das páginas,
