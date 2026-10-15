@@ -1,4 +1,6 @@
 class PartiesController < ApplicationController
+  include PartyOverview
+
   skip_before_action :authenticate_user!, only: %i[index show compare]
 
   COMPARE_LIMIT = PartySelectionComparison::LIMIT
@@ -21,10 +23,8 @@ class PartiesController < ApplicationController
     "SP" => "São Paulo", "SE" => "Sergipe", "TO" => "Tocantins"
   }.freeze
 
-  # A visão geral dos partidos fica na home; mantém links antigos (inclusive ?uf=)
   def index
-    skip_policy_scope
-    redirect_to root_path(uf: params[:uf].presence, anchor: "partidos"), status: :moved_permanently
+    load_party_overview
   end
 
   def show

@@ -2,18 +2,12 @@
 <% page_description = "Bancada, votações, gastos, projetos e candidatos de #{@party.label} na Câmara dos Deputados." %>
 <% federation = @stats.federation %>
 <% leader = @party.leader %>
-<% content_for :title, "#{page_title} · Harpia" %>
-<% content_for :head do %>
-  <meta name="description" content="<%= page_description %>">
-  <meta property="og:title" content="<%= page_title %>">
-  <meta property="og:description" content="<%= page_description %>">
-  <meta property="og:url" content="<%= party_url(@party) %>">
-<% end %>
+<% meta title: page_title, description: page_description %>
 
 <div class="container py-5">
   <!-- Botão Voltar -->
   <div class="mb-4">
-    <%= link_to root_path(anchor: "partidos"), class: "text-decoration-none text-muted fw-medium transition" do %>
+    <%= link_to parties_path, class: "text-decoration-none text-muted fw-medium transition" do %>
       <i class="fa-solid fa-arrow-left me-2"></i> Voltar para Partidos
     <% end %>
   </div>

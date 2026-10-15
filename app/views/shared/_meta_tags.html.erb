@@ -1,0 +1,25 @@
+<%# Título, descrição, endereço oficial e cartões de compartilhamento (ver MetaTagsHelper) %>
+<title><%= meta_title %></title>
+<meta name="description" content="<%= meta_description %>">
+<link rel="canonical" href="<%= meta_canonical_url %>">
+<% if meta_noindex? %>
+  <meta name="robots" content="noindex, nofollow">
+<% end %>
+<meta name="theme-color" content="#0A1128">
+
+<meta property="og:site_name" content="<%= MetaTagsHelper::SITE_NAME %>">
+<meta property="og:locale" content="pt_BR">
+<meta property="og:type" content="<%= meta_og_type %>">
+<meta property="og:title" content="<%= meta_og_title %>">
+<meta property="og:description" content="<%= meta_description %>">
+<meta property="og:url" content="<%= meta_canonical_url %>">
+<meta property="og:image" content="<%= meta_image_url %>">
+<% if meta_default_image? %>
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="<%= MetaTagsHelper::DEFAULT_IMAGE_ALT %>">
+<% end %>
+<meta name="twitter:card" content="<%= meta_default_image? ? "summary_large_image" : "summary" %>">
+<meta name="twitter:title" content="<%= meta_og_title %>">
+<meta name="twitter:description" content="<%= meta_description %>">
+<meta name="twitter:image" content="<%= meta_image_url %>">

@@ -1,17 +1,6 @@
 <% page_title = "#{@deputy.name} (#{[@deputy.party&.label, @deputy.state_label].compact.join('-')})" %>
 <% page_description = "Gastos, projetos de lei e votações de #{@deputy.name} na Câmara dos Deputados." %>
-<% content_for :title, "#{page_title} · Harpia" %>
-<% content_for :head do %>
-  <meta name="description" content="<%= page_description %>">
-  <meta property="og:type" content="profile">
-  <meta property="og:title" content="<%= page_title %>">
-  <meta property="og:description" content="<%= page_description %>">
-  <meta property="og:url" content="<%= deputy_url(@deputy) %>">
-  <% if @deputy.photo_url.present? %>
-    <meta property="og:image" content="<%= @deputy.photo_url %>">
-  <% end %>
-  <meta name="twitter:card" content="summary">
-<% end %>
+<% meta title: page_title, description: page_description, type: "profile", image: (@deputy.photo.attached? ? cl_image_path(@deputy.photo.key, width: 400, height: 400, crop: :fill, gravity: :face) : @deputy.photo_url.presence) %>
 
 <div class="container py-5">
   <!-- Botão Voltar -->
