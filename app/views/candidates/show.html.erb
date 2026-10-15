@@ -1,12 +1,7 @@
 <% deputy = @candidate.current_deputy %>
 <% status = @candidate.candidacy_status.to_s %>
 <% page_title = "#{@candidate.ballot_name} (#{[@candidate.party&.label, @candidate.state_label].compact.join('-')})" %>
-<% content_for :title, "#{page_title} · Harpia" %>
-<% content_for :head do %>
-  <meta name="description" content="<%= "Candidatura de #{@candidate.ballot_name} a deputado federal em 2026." %>">
-  <meta property="og:type" content="profile">
-  <meta property="og:title" content="<%= page_title %>">
-<% end %>
+<% meta title: page_title, description: "Candidatura de #{@candidate.ballot_name} a deputado federal em 2026.", type: "profile" %>
 
 <div class="container py-5">
   <!-- Botão Voltar -->

@@ -1,3 +1,4 @@
+<% meta title: "#{proposicao_label(@bill)}: #{truncate(@bill.summary.to_s, length: 50, separator: " ")}", description: @bill.summary %>
 <% words = @bill.keywords.to_s.split(/[;,]/).map(&:strip).reject(&:blank?) %>
 <% coauthors = @bill.authors.reject { |deputy| deputy.id == @bill.deputy_id }.sort_by(&:name) %>
 

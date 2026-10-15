@@ -1,11 +1,5 @@
 <% page_description = "Compare as bancadas de deputados federais na Câmara dos Deputados: governismo, coesão, disciplina, gastos, projetos e candidaturas de 2026." %>
-<% content_for :title, "Comparar partidos · Harpia" %>
-<% content_for :head do %>
-  <meta name="description" content="<%= page_description %>">
-  <meta property="og:title" content="Comparar partidos">
-  <meta property="og:description" content="<%= page_description %>">
-  <meta property="og:url" content="<%= compare_parties_url %>">
-<% end %>
+<% meta title: "Comparar partidos", description: page_description %>
 
 <% blocs = @comparison.blocs %>
 <% total_seats = [@comparison.total_seats, 1].max %>
