@@ -1,0 +1,13 @@
+<% page_description = "Bancada de cada partido na Câmara dos Deputados, no Brasil e por estado, com comparação entre partidos." %>
+<% content_for :title, "Partidos · Harpia" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= page_description %>">
+  <meta property="og:title" content="Partidos na Câmara dos Deputados">
+  <meta property="og:description" content="<%= page_description %>">
+  <meta property="og:url" content="<%= parties_url %>">
+<% end %>
+
+<%= render "painel/hero", title: "Partidos", highlight: "na Câmara",
+      subtitle: "Quantos deputados cada partido tem no Brasil e em cada estado. Escolha um estado no mapa ou compare os partidos." %>
+
+<%= render "parties/overview" %>
