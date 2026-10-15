@@ -5,7 +5,7 @@ class ChatsController < ApplicationController
   before_action :set_chat, only: %i[show destroy]
 
   def index
-    @chats = policy_scope(Chat)
+    @chats = policy_scope(Chat).in_history
     @query = params[:q].to_s.strip
     return if @query.blank?
 

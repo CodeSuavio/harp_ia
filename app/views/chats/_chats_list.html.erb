@@ -40,9 +40,10 @@
                 <%= chat.title.presence || "Nova conversa" %>
               </h3>
 
+              <!-- Última atividade: a mesma data que ordena a lista -->
               <p class="text-muted small mb-0">
                 <i class="fa-regular fa-clock me-1"></i>
-                <%= chat.created_at.strftime("%d/%m/%Y às %H:%M") %>
+                <%= chat.last_message_at.strftime("%d/%m/%y, %H:%M") %>
               </p>
 
             </div>

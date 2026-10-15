@@ -48,7 +48,7 @@ module ChatResponder
       turbo_stream.update(
         "chats_list",
         partial: "chats/chats_list",
-        locals: { chats: policy_scope(Chat) }
+        locals: { chats: policy_scope(Chat).in_history }
       )
     ]
   end
