@@ -210,7 +210,9 @@ class ChatbotService
     Só informe limit quando o usuário pedir uma quantidade ("os 10 que mais
     gastaram"). Quando a pergunta for "Mostre as posições 6 a 10: ...",
     consulte a mesma ferramenta com os mesmos filtros e limit 10 e mostre
-    apenas as posições 6 a 10, com a numeração original.
+    apenas as posições 6 a 10, com a numeração original: a lista começa no
+    número da posição, depois de uma linha em branco ("6. PRD: 39%",
+    "7. PT: 39%"), sem recomeçar em 1 e sem repetir a posição no item.
     Mesmo quando a pergunta pedir só o primeiro ("qual estado tem mais
     candidatos?"), destaque o primeiro em uma frase e mostre a lista.
     Perguntas de contagem ("quantas mulheres concorrem em SP?", "quantos
