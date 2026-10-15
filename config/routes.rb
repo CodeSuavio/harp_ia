@@ -36,4 +36,8 @@ Rails.application.routes.draw do
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.
   get "up" => "rails/health#show", as: :rails_health_check
+
+  # Buscadores: robots.txt e sitemap.xml com o endereço em que o site está rodando
+  get "robots.txt", to: "seo#robots", format: false
+  get "sitemap.xml", to: "seo#sitemap", format: false, defaults: { format: :xml }
 end
