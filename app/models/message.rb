@@ -14,6 +14,8 @@ class Message < ApplicationRecord
   # - failed:   a IA não conseguiu responder
   enum :status, { pending: "pending", answered: "answered", failed: "failed" }, default: :answered
 
+  after_create :register_chat_activity
+
   # Primeira mensagem de cada conversa que menciona o termo, por chat_id.
   # Mostrada em "Meus Chats" para explicar por que a conversa apareceu na busca.
   def self.first_mentions(query, chats)
@@ -30,5 +32,16 @@ class Message < ApplicationRecord
 
   def response_failed?
     failed? || (pending? && !awaiting_response?)
+  end
+
+  private
+
+  # Última atividade da conversa, usada para ordenar "Meus Chats".
+  # Roda na mesma transação da criação: a mensagem nunca existe sem a data.
+  # Só a criação conta; mudanças de status ou de título não reordenam.
+  # GREATEST garante que a data só avança, mesmo quando uma pergunta e uma
+  # resposta são criadas ao mesmo tempo (o UPDATE trava a linha do chat).
+  def register_chat_activity
+    Chat.where(id: chat_id).update_all(["last_message_at = GREATEST(last_message_at, ?)", created_at])
   end
 end

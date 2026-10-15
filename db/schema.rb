@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_14_234220) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_15_025339) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -102,9 +102,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_14_234220) do
 
   create_table "chats", force: :cascade do |t|
     t.datetime "created_at", null: false
+    t.datetime "last_message_at"
     t.string "title"
     t.datetime "updated_at", null: false
     t.bigint "user_id", null: false
+    t.index ["user_id", "last_message_at"], name: "index_chats_on_user_id_and_last_message_at"
     t.index ["user_id"], name: "index_chats_on_user_id"
   end
 
