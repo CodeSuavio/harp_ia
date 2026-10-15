@@ -30,9 +30,10 @@
         <%= message.content %>
       <% end %>
 
-      <!-- Enquanto a Harpia responde, ou quando ela não conseguiu responder -->
+      <!-- Enquanto a Harpia responde, ou quando ela não conseguiu responder.
+        O texto da resposta substitui o aviso aos poucos, pelo id. -->
       <% if message.awaiting_response? %>
-        <%= render "chats/assistant_message", loading: true %>
+        <%= render "chats/assistant_message", loading: true, id: dom_id(chat, :stream_conversation) %>
       <% elsif message.response_failed? %>
         <%= render "chats/assistant_message", error: true do %>
           <%= ChatResponder::AI_ERROR_MESSAGE %>

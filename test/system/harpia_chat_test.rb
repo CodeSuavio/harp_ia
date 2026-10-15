@@ -201,4 +201,46 @@ class HarpiaChatTest < ApplicationSystemTestCase
 
     assert_selector ".assistant-message--error", text: ChatResponder::AI_ERROR_MESSAGE
   end
+
+  STREAMED_ANSWER = "Primeira parte da resposta. Segunda parte da resposta.".freeze
+
+  test "chat principal mostra a resposta aos poucos, sem duplicar" do
+    FakeChatbot.reply(STREAMED_ANSWER, delay: 1, pause: 0.4)
+    chat = @user.chats.create!
+
+    visit chat_path(chat)
+    fill_in "message[content]", with: "Quem é a deputada?"
+    find("#message_content").send_keys(:enter)
+    assert_text "Estamos de olho..."
+
+    # Texto parcial: substitui o aviso, com o formulário ainda bloqueado
+    assert_selector "##{dom_id(chat, :stream_conversation)}", text: "Primeira parte", wait: 5
+    assert_no_text "Estamos de olho..."
+    assert_selector "#chat_conversation button[type=submit][disabled]"
+
+    # Resposta completa
+    assert_selector "#chat_conversation button[type=submit]:not([disabled])", wait: 8
+    assert_no_selector "##{dom_id(chat, :stream_conversation)}"
+    assert_selector ".assistant-message", text: STREAMED_ANSWER, count: 1
+  end
+
+  test "widget mostra a resposta aos poucos, sem duplicar" do
+    FakeChatbot.reply(STREAMED_ANSWER, delay: 1, pause: 0.4)
+
+    visit chats_path
+    find(".chat-widget-button").click
+    within(".chat-widget-window") do
+      fill_in "message[content]", with: "Quem é a deputada?"
+      find("button[type=submit]").click
+      assert_text "Estamos de olho..."
+
+      assert_selector "[id^='stream_widget_'].chat-widget-assistant-message", text: "Primeira parte", wait: 5
+      assert_no_text "Estamos de olho..."
+      assert_selector "button[type=submit][disabled]"
+
+      assert_selector "button[type=submit]:not([disabled])", wait: 8
+      assert_no_selector "[id^='stream_widget_']"
+      assert_selector ".chat-widget-assistant-message", text: STREAMED_ANSWER, count: 1
+    end
+  end
 end

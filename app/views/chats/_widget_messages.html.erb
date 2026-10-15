@@ -32,9 +32,10 @@
         <%= message.content %>
       </div>
 
-      <!-- Enquanto a Harpia responde, ou quando ela não conseguiu responder -->
+      <!-- Enquanto a Harpia responde, ou quando ela não conseguiu responder.
+        O texto da resposta substitui o aviso aos poucos, pelo id. -->
       <% if message.awaiting_response? %>
-        <div class="chat-widget-loading" data-chat-loading>Estamos de olho...</div>
+        <div id="<%= dom_id(chat, :stream_widget) %>" class="chat-widget-loading" data-chat-loading>Estamos de olho...</div>
       <% elsif message.response_failed? %>
         <div class="chat-widget-error"><%= ChatResponder::AI_ERROR_MESSAGE %></div>
       <% end %>

@@ -1,0 +1,15 @@
+<%#
+  Resposta da Harpia enquanto a IA escreve (ChatResponseJob#broadcast_partial).
+  Substitui o "Estamos de olho..." e, a cada novo trecho, a si mesma, pelo
+  mesmo id. A resposta completa chega no final, com a conversa inteira.
+  widget: aparência do widget; senão, a do chat principal.
+%>
+<% if widget %>
+  <div id="<%= dom_id(chat, :stream_widget) %>" class="chat-widget-assistant-message">
+    <%= render_markdown(text) %>
+  </div>
+<% else %>
+  <%= render "chats/assistant_message", id: dom_id(chat, :stream_conversation) do %>
+    <%= render_markdown(text) %>
+  <% end %>
+<% end %>
