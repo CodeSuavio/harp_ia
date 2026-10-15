@@ -96,16 +96,18 @@ class ApplicationTool < RubyLLM::Tool
   end
 
   # description: o ranking em palavras, para a pergunta "Ver mais" ser
-  # entendida sozinha (ex.: "deputados por gasto mensal, do maior para o menor, em SP")
-  def continuation(shown:, total:, max:, description:, page: nil)
+  # entendida sozinha (ex.: "deputados por gasto mensal, do maior para o menor, em SP").
+  # required: false quando a lista é só uma parte da resposta, que a IA pode
+  # nem mostrar (ex.: o ranking que acompanha a contagem do panorama)
+  def continuation(shown:, total:, max:, description:, page: nil, required: true) # rubocop:disable Metrics/ParameterLists
     return if shown >= total
 
     upto = [shown + RANKING_LIMIT, max, total].min
     [
       (if upto > shown
-         question("Ver mais", "Mostre as posições #{shown + 1} a #{upto}: #{description}", required: true)
+         question("Ver mais", "Mostre as posições #{shown + 1} a #{upto}: #{description}", required: required)
        end),
-      (link("Ver lista completa", page, required: true) if page)
+      (link("Ver lista completa", page, required: required) if page)
     ].compact.presence
   end
 
