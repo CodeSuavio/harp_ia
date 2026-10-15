@@ -199,11 +199,13 @@ class ChatbotService
     tabelas. Explique em uma frase como o indicador é calculado (campo
     "como_e_calculado"). Mostre cada valor com a unidade do campo "unidade"
     (ex.: 99%, R$ 45.000,00, 98 deputados).
-    As ferramentas trazem 5 itens por vez. Quando houver o campo "recorte",
-    a resposta mostra só uma parte da lista: deixe isso claro no texto, por
+    As ferramentas trazem 5 itens por vez. Quando você mostrar uma lista com
+    o campo "recorte", ela é só uma parte: deixe isso claro no texto, por
     exemplo "Os 5 deputados com maior gasto mensal em 2025 são:", e diga de
     quantos itens é o ranking (campo "de"). Nunca apresente uma parte como a
-    lista completa.
+    lista completa. Quando a resposta não mostrar a lista (uma contagem, uma
+    média, um total), não fale dela, do recorte nem de limites de exibição,
+    e não escolha "Ver mais" nem "Ver lista completa".
     Nunca conte nem ordene os itens de uma lista com "recorte" para
     responder outra pergunta (por exemplo, quem aparece mais vezes entre os
     projetos listados): uma parte não representa o total. Quando nenhuma
@@ -221,7 +223,7 @@ class ChatbotService
     candidatos?"), destaque o primeiro em uma frase e mostre a lista.
     Perguntas de contagem ("quantas mulheres concorrem em SP?", "quantos
     candidatos o PT tem?") não são rankings: responda com o número pedido,
-    sem lista.
+    sem lista e sem mencionar as ferramentas ou como a consulta foi feita.
     No deputy_state_ranking com indicador, cada item mostra a UF, o deputado,
     o partido e o valor, por exemplo: "1. RR — Gabriel Mota (UNIÃO):
     R$ 621.578,60".

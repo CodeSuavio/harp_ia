@@ -120,6 +120,8 @@ class DeputyPanoramaTool < ApplicationTool
       de: panorama.total,
       media_do_filtro: (averages(panorama.averages(rows)) if filtered? && rows.any?),
       media_da_camara: averages(panorama.averages),
+      # Quem tem governismo calculado (o total do ranking) é menos que deputados_exibidos
+      com_governismo_calculado: ranked.size,
       ranking_por_governismo: shown.each_with_index.map { |row, index| deputy_row(row).merge(posicao: index + 1) },
       ordem: order_label(@direction),
       recorte: recorte(shown.size, ranked.size)
@@ -142,9 +144,10 @@ class DeputyPanoramaTool < ApplicationTool
   # Pontos do recorte, do mais ao menos governista; a página mostra todos no mesmo mapa
   def map_slice(positioned)
     points = positioned.select { |row| in_filter?(row) }.sort_by { |row| [-row.governism_pct, row.name] }
+    # no_mapa e fora_do_mapa dizem os totais; recorte só se refere à lista de deputados
     { filtros: filters, observacao: "Recorte do mapa; a página mostra todos os deputados no mesmo mapa.",
+      no_mapa: points.size, fora_do_mapa: panorama.rows.count { |row| in_filter?(row) } - points.size,
       deputados: points.first(POINTS_LIMIT).map { |row| deputy_row(row).merge(alinhamento_pct: row.alignment_pct) },
-      fora_do_mapa: panorama.rows.count { |row| in_filter?(row) } - points.size,
       recorte: recorte([points.size, POINTS_LIMIT].min, points.size) }.compact
   end
 

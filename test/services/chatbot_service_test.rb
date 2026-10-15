@@ -17,6 +17,9 @@ class ChatbotServiceTest < ActiveSupport::TestCase
     assert_includes ChatbotService::RESPONSE_SCHEMA[:required], "acoes"
     assert_includes ChatbotService::SYSTEM_PROMPT, "Só existem os passos devolvidos pelas ferramentas"
     assert_includes ChatbotService::SYSTEM_PROMPT, "Nunca apresente uma parte como a\nlista completa"
+    # Contagens, médias e totais não falam da lista que não mostraram
+    assert_includes ChatbotService::SYSTEM_PROMPT.squish, "Quando a resposta não mostrar a lista"
+    assert_includes ChatbotService::SYSTEM_PROMPT.squish, "sem mencionar as ferramentas ou como a consulta foi feita"
     assert_includes ChatbotService::SYSTEM_PROMPT, "Cada botão deve levar direto a uma resposta com dados"
   end
 

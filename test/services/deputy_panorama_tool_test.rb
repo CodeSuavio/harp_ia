@@ -41,6 +41,7 @@ class DeputyPanoramaToolTest < ActiveSupport::TestCase
     result = @tool.call("section" => "indicators")
 
     assert_equal 4, result[:deputados_exibidos]
+    assert_equal 4, result[:com_governismo_calculado]
     assert_equal @panorama.total, result[:de]
     assert_nil result[:media_do_filtro]
     assert_equal @panorama.averages[:governism_pct].round, result[:media_da_camara][:governismo_pct]
@@ -65,6 +66,7 @@ class DeputyPanoramaToolTest < ActiveSupport::TestCase
 
     assert_equal(["Davi Rocha"], result[:ranking_por_governismo].pluck(:nome))
     assert_equal({ exibindo: 1, de: 2 }, result[:recorte])
+    assert_equal 2, result[:com_governismo_calculado]
     more, page = result[:acoes].map { |action| @tool.actions.find(action[:id]) }
     assert_equal "Mostre as posições 2 a 2: deputados por governismo, do menor para o maior, em RJ", more.value
     assert_equal "/deputies/compare?dir=asc&state=RJ", page.value
@@ -94,8 +96,10 @@ class DeputyPanoramaToolTest < ActiveSupport::TestCase
     listed = slice[:deputados].map { |row| row.values_at(:nome, :governismo_pct, :alinhamento_pct) }
     assert_equal expected, listed
     assert_match(/página mostra todos/, slice[:observacao])
+    assert_equal mdb.size, slice[:no_mapa]
     # Davi, único deputado do PT, não tem alinhamento ao partido: fica fora do mapa
-    assert_equal 1, @tool.call("section" => "positioning", "party" => "PT")[:recorte_do_mapa][:fora_do_mapa]
+    pt = @tool.call("section" => "positioning", "party" => "PT")[:recorte_do_mapa]
+    assert_equal [0, 1], pt.values_at(:no_mapa, :fora_do_mapa)
   end
 
   test "sem deputados suficientes o mapa não é exibido" do
