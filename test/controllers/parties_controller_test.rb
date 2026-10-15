@@ -6,7 +6,7 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_select "h1", text: "MDB"
     assert_select ".party-bench-map a.uf-tile", 27
-    assert_select ".party-bench-map a[href=?] .uf-seats", root_path(uf: "SP", anchor: "partidos"), text: "2"
+    assert_select ".party-bench-map a[href=?] .uf-seats", parties_path(uf: "SP"), text: "2"
     assert_select "a[href=?]", deputy_path(deputies(:ana))
   end
 
@@ -74,12 +74,16 @@ class PartiesControllerTest < ActionDispatch::IntegrationTest
     assert_select ".party-compare-table tbody tr:first-child th a", text: "MDB"
   end
 
-  test "a antiga lista de partidos redireciona para a home, mantendo o ?uf=" do
+  test "lista de partidos tem o hero das páginas e o mapa de bancadas da home" do
     get parties_path
-    assert_redirected_to root_path(anchor: "partidos")
+    assert_response :success
+    assert_select ".panel-hero h1", text: /Partidos/
+    assert_select ".camera-viewfinder", 0
+    assert_select "#partidos[data-controller~='party-map'] .uf-tile", 27
+    assert_select "a[href=?]", compare_parties_path
 
-    get parties_path(uf: "SP")
-    assert_redirected_to root_path(uf: "SP", anchor: "partidos")
+    get parties_path(uf: "sp")
+    assert_select "#partidos[data-party-map-selected-value=?]", "SP"
   end
 
   test "comparação lado a lado dos partidos escolhidos" do
