@@ -9,20 +9,36 @@ class PageContextService
     @path = path.to_s
   end
 
-  # Texto curto para as instruções da IA, ou nil quando não reconhece a página
+  # Texto curto para as instruções da IA, ou nil quando não reconhece a página.
+  # Fica salvo com a pergunta e volta no histórico da conversa.
   def call
+    route, query = recognize
+    describe(route, query) if route
+  end
+
+  # Gráficos da página (PageGuide), ou nil quando ela não tem gráficos mapeados.
+  # Não é salvo com a pergunta, para não repetir o guia a cada mensagem do histórico.
+  def guide
+    route, query = recognize
+    PageGuide.find(page_key(route, query)) if route
+  end
+
+  private
+
+  def recognize
     return unless @path.start_with?("/") && !@path.start_with?("//")
 
     uri = URI.parse(@path)
-    route = Rails.application.routes.recognize_path(uri.path)
-    query = Rack::Utils.parse_nested_query(uri.query)
-
-    describe(route, query)
+    [Rails.application.routes.recognize_path(uri.path), Rack::Utils.parse_nested_query(uri.query)]
   rescue URI::InvalidURIError, ActionController::RoutingError
     nil
   end
 
-  private
+  # A comparação com registros escolhidos (?ids[]=) é outra página
+  def page_key(route, query)
+    key = "#{route[:controller]}##{route[:action]}"
+    route[:action] == "compare" && query.key?("ids") ? "#{key}_selected" : key
+  end
 
   def describe(route, query)
     id = route[:id]
@@ -35,8 +51,13 @@ class PageContextService
                                    DeputiesController::LEGACY_TABS.fetch(query['tab'], query['tab']))}\"" \
                 "#{year_text(query)}"
     when %w[deputies compare]
-      names = Deputy.where(id: Array(query["ids"])).map { |d| "#{d.name} (deputy_id #{d.id})" }
-      "Comparação entre os deputados #{names.to_sentence}" if names.any?
+      if query.key?("ids")
+        names = Deputy.where(id: Array(query["ids"])).map { |d| "#{d.name} (deputy_id #{d.id})" }
+        "Comparação entre os deputados #{names.to_sentence}" if names.any?
+      else
+        # Sem deputados escolhidos, é o panorama de todos os deputados
+        "Panorama de comparação entre os deputados#{filters_text(query)}#{sort_text(DeputyPanorama::SORTS, query)}"
+      end
     when %w[deputies index]
       "Lista de deputados#{filters_text(query)}#{sort_text(DeputiesController::SORTS, query)}"
     when %w[expenses index]
