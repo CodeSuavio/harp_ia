@@ -35,11 +35,20 @@ class PageContextServiceSortTest < ActiveSupport::TestCase
                  PageContextService.new("/deputies?sort=participation&dir=asc").call
   end
 
+  test "informa o partido filtrado pela sigla, e não pelo id da URL" do
+    assert_equal "Lista de deputados com os filtros state=SP, party=MDB",
+                 PageContextService.new("/deputies?state=SP&party=#{parties(:mdb).id}").call
+    assert_equal "Lista de deputados com os filtros party=999999", PageContextService.new("/deputies?party=999999").call
+  end
+
   test "identifica o panorama de deputados, com filtros e ordenação, e a comparação de deputados escolhidos" do
     assert_equal "Panorama de comparação entre os deputados",
                  PageContextService.new("/deputies/compare").call
     assert_equal "Panorama de comparação entre os deputados com os filtros state=SP, ordenada por \"Gasto mensal\"",
                  PageContextService.new("/deputies/compare?state=SP&sort=expenses").call
+
+    assert_equal "Panorama de comparação entre os deputados com os filtros party=PT",
+                 PageContextService.new("/deputies/compare?party=#{parties(:pt).id}").call
 
     ana = deputies(:ana)
     assert_includes PageContextService.new("/deputies/compare?ids[]=#{ana.id}").call,

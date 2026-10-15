@@ -113,9 +113,12 @@ class PageContextService
     query["year"].present? ? ", ano #{query['year'].to_i}" : ""
   end
 
-  # Filtros aplicados na listagem (busca, estado, partido...), para contexto
+  # Filtros aplicados na listagem (busca, estado, partido...), para contexto.
+  # O partido vem pelo id na URL e vai pela sigla, que é como a Harpia o
+  # informa às ferramentas
   def filters_text(query)
     filters = query.except("page", "sort", "dir").select { |_, value| value.is_a?(String) && value.present? }
+    filters["party"] = Party.find_by(id: filters["party"])&.label || filters["party"] if filters["party"]
     filters.any? ? " com os filtros #{filters.map { |k, v| "#{k}=#{v.truncate(40)}" }.join(', ')}" : ""
   end
 end
