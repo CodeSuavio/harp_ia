@@ -1,7 +1,7 @@
 # Harp_IA — passo a passo do que foi feito
 
 Este documento conta, em ordem, como o código do Harp_IA foi construído: do
-template inicial até a página de comparação de partidos (PR #110, 08/10/2026).
+template inicial até as respostas em tempo real da Harpia (PR #208, 15/10/2026).
 A ordem segue o histórico do git (`git log --reverse`); os números entre
 parênteses são os pull requests.
 
@@ -362,9 +362,85 @@ Depois do deploy, confira também:
 - `SolidQueue::Queue.find_by_name("default").paused?` → `true`.
 - `SolidQueue::RecurringTask.pluck(:key, :queue_name)` → as três tarefas na
   `maintenance`.
-- Uma pergunta à Harpia recebe resposta.
+- Uma pergunta à Harpia: o texto aparece aos poucos no lugar do "Estamos de
+  olho..." e termina numa única resposta, sem trechos repetidos, com o
+  formulário liberado e os botões de próximos passos (quando houver).
 - No dia seguinte: execuções em `SolidQueue::RecurringExecution` e
   `ExpenseAlert.count` maior que zero.
+
+## Etapa 9 — Respostas da Harpia em tempo real (15/10)
+
+Com a Etapa 8, a resposta deixou de prender a requisição, mas ainda aparecia
+inteira, de uma vez, depois de toda a geração. Agora o texto aparece aos
+poucos, enquanto a IA escreve, no chat principal e no widget (#208).
+
+### Fluxo do chat
+
+O que muda em relação à Etapa 8 fica dentro do `ChatResponseJob`:
+
+```
+ChatResponseJob (em segundo plano)
+  → ChatbotService#call { |texto| ... }   (resposta da IA em streaming)
+      a cada pedaço: StreamedContent extrai o texto parcial de "content"
+      → broadcast_partial: o texto inteiro até ali substitui o "Estamos de olho..."
+  → salva a resposta → pergunta "answered" (ou "failed")
+  → envia a conversa pelo WebSocket, que substitui o texto parcial
+  → gera o título
+```
+
+### Decisões de arquitetura
+
+1. **Streaming dentro do job da Etapa 8.** O texto parcial usa o mesmo canal
+   (`turbo_stream_from`), os mesmos alvos com `dom_id` e a mesma recuperação
+   (consulta do estado a cada 10 s). A resposta continua sendo gravada e
+   enviada inteira no final; o texto parcial só existe na tela, nunca no banco.
+2. **Cada envio leva o texto inteiro, não só o pedaço novo.** Substituir em
+   vez de acrescentar impede duplicação e dispensa controle de ordem: um envio
+   perdido (antes de a tela se inscrever no canal, numa queda de conexão) é
+   coberto pelo seguinte.
+3. **O texto vem de dentro do JSON da resposta.** A IA responde no formato de
+   `RESPONSE_SCHEMA` (texto, escopo e botões), e o OpenAI gera os campos na
+   ordem do schema, com `content` primeiro. O `StreamedContent` lê esse campo
+   enquanto o JSON chega. Se `content` não vier primeiro, não há texto parcial
+   e a resposta aparece inteira no final: a falha é segura.
+4. **Falhas do streaming isoladas, sem chave para desligá-lo.** Um erro ao ler
+   um pedaço ou ao enviá-lo à tela desliga o streaming só até o fim daquela
+   resposta, que chega inteira; a pergunta não é marcada como falha. Uma
+   variável de ambiente para desligar o streaming foi descartada: cobriria só
+   o que o isolamento já cobre, e o caminho desligado nunca seria exercitado
+   em produção. A recuperação é o `heroku rollback`, seguro porque a etapa não
+   tem migration.
+5. **Rolagem decidida pelo que está na tela.** A conversa acompanha o texto só
+   quando já está no fim; quem rola para cima não é puxado de volta. Na chegada
+   da resposta definitiva, o `chat_controller.js` decide pelo DOM
+   (`data-chat-streaming` no texto parcial, `data-chat-pending` na conversa),
+   e não pela ordem dos eventos, que pode variar na primeira pergunta do widget.
+
+### Parâmetros desta implementação
+
+| Parâmetro | Valor | Por quê |
+| --- | --- | --- |
+| `ChatResponseJob::STREAM_INTERVAL` | 0,1 s | É o intervalo de consulta do Solid Cable em produção (`config/cable.yml`): envios mais frequentes não chegam mais rápido. Medido com o gpt-5.4 (~160 caracteres por segundo), o texto saltava em média 44 caracteres com 0,25 s e passou a 23. |
+| `FOLLOW_TOLERANCE` (`chat_controller.js`) | 8 px | Depois de cada acompanhamento a conversa fica exatamente no fim; a margem só absorve arredondamentos, sem prender quem rolou para cima. |
+| Rolagem do acompanhamento | instantânea | Com até 10 atualizações por segundo, a rolagem suave seria interrompida a cada uma e a conversa tremeria. |
+
+### Listas que continuam um ranking
+
+No botão "Ver mais" (posições 6 a 10), a IA às vezes renumerava a lista a
+partir de 1 ("1. 6. PRD"). A renderização já estava certa (`<ol start="6">`);
+a causa era o texto gerado: nas conversas com listas escritas sem linha em
+branco antes, o Markdown só reconhece uma lista que começa em 1, e a IA
+renumerava para manter a formatação. O prompt passou a pedir a lista
+começando no número da posição, depois de uma linha em branco. É uma regra
+do prompt, não uma garantia do código.
+
+### Limitações conhecidas
+
+- O texto chega em pequenos saltos, com pausas curtas que vêm do próprio
+  OpenAI. Suavizar no navegador, como o ChatGPT, exigiria animar o texto no
+  `chat_controller.js`, e ficou de fora para não mexer no que já estava estável.
+- O destaque de "fora do escopo" só aparece no final, porque `out_of_scope`
+  vem depois de `content` no JSON.
 
 ---
 
