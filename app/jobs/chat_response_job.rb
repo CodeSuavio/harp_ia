@@ -85,6 +85,6 @@ class ChatResponseJob < ApplicationJob
     @chat.broadcast_update_to @chat,
                               target: "chats_list",
                               partial: "chats/chats_list",
-                              locals: { chats: @chat.user.chats }
+                              locals: { chats: @chat.user.chats.in_history }
   end
 end

@@ -39,6 +39,16 @@ class ChatResponseJobTest < ActiveJob::TestCase
     assert_equal answer.created_at, @chat.last_message_at
   end
 
+  test "lista de Meus Chats enviada pelo WebSocket traz a conversa respondida no topo" do
+    users(:renata).chats.create!(title: "Investigação anterior")
+                  .messages.create!(role: "user", content: "Pergunta", created_at: 1.hour.ago)
+
+    broadcasts = capture_turbo_stream_broadcasts(@chat) { ChatResponseJob.perform_now(@question) }
+
+    list = broadcasts.select { |stream| stream["target"] == "chats_list" }.last.to_html
+    assert_operator list.index("Título gerado"), :<, list.index("Investigação anterior")
+  end
+
   test "falha da IA mantém a pergunta como última atividade" do
     FakeChatbot.fail!
 

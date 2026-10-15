@@ -5,6 +5,11 @@ class Chat < ApplicationRecord
   belongs_to :user
   has_many :messages, dependent: :destroy
 
+  # Histórico de "Meus Chats": só conversas com mensagens, da última atividade
+  # mais recente para a mais antiga (last_message_at, mantida por Message).
+  # O id desempata, para a ordem nunca variar entre uma consulta e outra.
+  scope :in_history, -> { where.not(last_message_at: nil).order(last_message_at: :desc, id: :desc) }
+
   # Conversas cujo título ou alguma mensagem (pergunta ou resposta) menciona
   # o termo, para encontrar uma investigação antiga em "Meus Chats".
   # Ignora maiúsculas e acentos (extensão unaccent do PostgreSQL).

@@ -44,6 +44,17 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_enqueued_with(job: ChatResponseJob, args: [chat.messages.sole])
   end
 
+  test "conversa iniciada pelo widget aparece no topo de Meus Chats" do
+    chat_with_message("Investigação anterior", at: 1.hour.ago)
+
+    post chats_path,
+         params: { message: { content: "Quem é a deputada?" } },
+         headers: { "Accept" => TURBO_STREAM, "Turbo-Frame" => ChatResponder::WIDGET_FRAME }
+
+    list = response.body[%r{<turbo-stream action="update" target="chats_list">.*?</turbo-stream>}m]
+    assert_operator list.index("Nova conversa"), :<, list.index("Investigação anterior")
+  end
+
   test "widget registra a página de origem da pergunta" do
     deputy = deputies(:ana)
 
@@ -139,10 +150,9 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "Meus Chats busca pelo título e pelo que foi mencionado na conversa" do
-    titled = @user.chats.create!(title: "Emendas do Orçamento")
-    mentioned = @user.chats.create!(title: "Perguntas gerais")
-    mentioned.messages.create!(role: "user", content: "Quanto foi gasto em emendas parlamentares?")
-    @user.chats.create!(title: "Votação da reforma")
+    titled = chat_with_message("Emendas do Orçamento")
+    mentioned = chat_with_message("Perguntas gerais", content: "Quanto foi gasto em emendas parlamentares?")
+    chat_with_message("Votação da reforma")
 
     get chats_path(q: "emendas")
 
@@ -166,7 +176,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
 
   test "busca em Meus Chats não mostra conversas de outros usuários" do
     other = User.create!(email: "outra@example.com", password: "senha123", first_name: "Outra", last_name: "Pessoa")
-    other.chats.create!(title: "Emendas secretas")
+    other.chats.create!(title: "Emendas secretas").messages.create!(role: "user", content: "Emendas?")
 
     get chats_path(q: "emendas")
 
@@ -175,7 +185,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
   end
 
   test "Meus Chats sem busca mostra todos os chats na lista atualizada pelo Turbo" do
-    @user.chats.create!(title: "Emendas do Orçamento")
+    chat_with_message("Emendas do Orçamento")
 
     get chats_path
 
@@ -183,7 +193,78 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_select "#chats_list h3", text: "Emendas do Orçamento"
   end
 
+  test "Meus Chats ordena pela última atividade, da mais recente para a mais antiga" do
+    chat_with_message("Criada primeiro, ativa por último", at: 1.hour.ago)
+    chat_with_message("Mais antiga", at: 3.hours.ago)
+    chat_with_message("Intermediária", at: 2.hours.ago)
+
+    get chats_path
+
+    assert_equal ["Criada primeiro, ativa por último", "Intermediária", "Mais antiga"], listed_titles
+  end
+
+  test "conversa antiga retomada sobe para o topo de Meus Chats" do
+    old = chat_with_message("Investigação antiga", at: 2.days.ago)
+    chat_with_message("Investigação recente", at: 1.hour.ago)
+
+    old.messages.create!(role: "user", content: "Retomando a conversa")
+    get chats_path
+
+    assert_equal ["Investigação antiga", "Investigação recente"], listed_titles
+  end
+
+  test "cartão mostra a data da última atividade" do
+    chat_with_message("Emendas do Orçamento", at: Time.zone.local(2026, 3, 5, 14, 30))
+
+    get chats_path
+
+    assert_select "#chats_list p", text: "05/03/26, 14:30"
+  end
+
+  test "conversa sem mensagens não aparece em Meus Chats, mas continua acessível" do
+    empty = @user.chats.create!(title: "Rascunho vazio")
+    chat_with_message("Emendas do Orçamento")
+
+    get chats_path
+    assert_equal ["Emendas do Orçamento"], listed_titles
+
+    get chat_path(empty)
+    assert_response :success
+  end
+
+  test "só conversas sem mensagens mostra o convite para a primeira conversa" do
+    @user.chats.create!
+
+    get chats_path
+
+    assert_select "#chats_list h3", count: 0
+    assert_select "button", text: /Iniciar Primeira Conversa/
+    assert_select "input#chat-search", count: 0
+  end
+
+  test "busca segue a ordem da última atividade e ignora conversas sem mensagens" do
+    chat_with_message("Emendas antigas", at: 2.hours.ago)
+    chat_with_message("Emendas recentes", content: "E as emendas de hoje?", at: 1.hour.ago)
+    @user.chats.create!(title: "Emendas sem mensagens")
+
+    get chats_path(q: "emendas")
+
+    assert_equal ["Emendas recentes", "Emendas antigas"], listed_titles("#chats_search_results")
+    assert_select "mark", text: "emendas"
+  end
+
   private
+
+  # Conversa como existe na aplicação: só ganha título depois de ter mensagens
+  def chat_with_message(title, content: "Pergunta", at: Time.current)
+    @user.chats.create!(title: title).tap do |chat|
+      chat.messages.create!(role: "user", content: content, created_at: at)
+    end
+  end
+
+  def listed_titles(list = "#chats_list")
+    css_select("#{list} h3").map { |h3| h3.text.strip }
+  end
 
   def question(label, text = label)
     { "type" => "question", "label" => label, "value" => text }
