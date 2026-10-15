@@ -43,7 +43,18 @@ class PageGuideTest < ActiveSupport::TestCase
     assert_not_includes summary, DeputyPanorama::SECTIONS["positioning"][:reading]
   end
 
-  test "só as páginas com ferramenta de dados são conhecidas em qualquer pergunta" do
+  test "comparações por seleção: as seções e a ferramenta de cada página" do
+    %w[parties#compare_selected deputies#compare_selected].each do |key|
+      text = PageGuide.find(key).text
+
+      assert_includes text, "selection_comparison", key
+      assert_includes text, "Como votaram entre si", key
+    end
+    assert_includes PageGuide.find("deputies#compare_selected").text, "votaram diferente"
+    assert_includes PageGuide.find("parties#compare_selected").text, "votaram igual"
+  end
+
+  test "só as páginas com ferramenta de dados são conhecidas em qualquer pergunta, sem as de seleção" do
     assert_equal %w[parties#compare deputies#compare], PageGuide.with_data.map(&:key)
     assert_nil PageGuide.find("pages#home")
   end

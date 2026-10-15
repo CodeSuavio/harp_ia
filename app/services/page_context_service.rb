@@ -18,9 +18,16 @@ class PageContextService
 
   # Gráficos da página (PageGuide), ou nil quando ela não tem gráficos mapeados.
   # Não é salvo com a pergunta, para não repetir o guia a cada mensagem do histórico.
+  # Nas comparações por seleção, só com ao menos 2 escolhidos: com menos, a
+  # página mostra apenas o aviso para escolher.
   def guide
     route, query = recognize
-    PageGuide.find(page_key(route, query)) if route
+    return unless route
+
+    key = page_key(route, query)
+    return if key.end_with?("_selected") && Array(query["ids"]).compact_blank.uniq.size < 2
+
+    PageGuide.find(key)
   end
 
   private
@@ -52,8 +59,8 @@ class PageContextService
                 "#{year_text(query)}"
     when %w[deputies compare]
       if query.key?("ids")
-        names = Deputy.where(id: Array(query["ids"])).map { |d| "#{d.name} (deputy_id #{d.id})" }
-        "Comparação entre os deputados #{names.to_sentence}" if names.any?
+        names = selected_text(Deputy, query["ids"], DeputyComparison::LIMIT, "deputy_id", &:name)
+        "Comparação entre os deputados #{names}" if names
       else
         # Sem deputados escolhidos, é o panorama de todos os deputados
         "Panorama de comparação entre os deputados#{filters_text(query)}#{sort_text(DeputyPanorama::SORTS, query)}"
@@ -68,9 +75,9 @@ class PageContextService
       party && "Página do partido #{party.label} (party_id #{party.id}), " \
                "aba \"#{tab_label(PartiesController::TABS, query['tab'])}\""
     when %w[parties compare]
-      labels = Party.where(id: Array(query["ids"])).map { |p| "#{p.label} (party_id #{p.id})" }
-      if labels.any?
-        "Comparação entre os partidos #{labels.to_sentence}"
+      if query.key?("ids")
+        labels = selected_text(Party, query["ids"], PartySelectionComparison::LIMIT, "party_id", &:label)
+        "Comparação entre os partidos #{labels}" if labels
       else
         "Comparação entre partidos#{sort_text(PartyComparison::SORTS, query)}"
       end
@@ -94,6 +101,15 @@ class PageContextService
     when %w[pages home]
       "Página inicial do Harp_IA"
     end
+  end
+
+  # Registros de uma comparação por seleção (?ids[]=), na ordem da escolha e até
+  # o limite da página: "PSD (party_id 46), UNIÃO (party_id 55) e MDB (party_id 34)"
+  def selected_text(model, ids, limit, id_label)
+    ids = Array(ids).compact_blank.first(limit).map(&:to_i).uniq
+    records = model.where(id: ids).index_by(&:id).values_at(*ids).compact
+    records.map { |record| "#{yield record} (#{id_label} #{record.id})" }
+           .to_sentence(two_words_connector: " e ", last_word_connector: " e ").presence
   end
 
   # Ordenação escolhida pelo usuário, para entender "quem lidera esse ranking?"
