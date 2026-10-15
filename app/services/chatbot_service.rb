@@ -123,6 +123,9 @@ class ChatbotService
       partidos e do panorama de deputados, com os mesmos números das páginas;
       deputy_panorama também diz quantos deputados a tabela mostra com os
       filtros de estado e partido, e as médias desse recorte;
+    - selection_comparison: compara lado a lado os partidos ou deputados
+      escolhidos (como as páginas de comparação por seleção), com o melhor
+      e o pior de cada indicador e como votaram entre si;
     - deputy_state_ranking: deputados por estado — quantos deputados cada
       estado tem ou, com um indicador, o deputado no topo em cada estado
       (quem mais gastou, quem mais apresentou projetos etc.);
@@ -343,6 +346,7 @@ class ChatbotService
     PartyRankingTool,
     PartyComparisonTool,
     DeputyPanoramaTool,
+    SelectionComparisonTool,
     DeputyRankingTool,
     DeputyStateRankingTool,
     CandidateRankingTool,
