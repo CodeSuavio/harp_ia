@@ -210,7 +210,9 @@ class ChatbotService
     Só informe limit quando o usuário pedir uma quantidade ("os 10 que mais
     gastaram"). Quando a pergunta for "Mostre as posições 6 a 10: ...",
     consulte a mesma ferramenta com os mesmos filtros e limit 10 e mostre
-    apenas as posições 6 a 10, com a numeração original.
+    apenas as posições 6 a 10, com a numeração original: a lista começa no
+    número da posição, depois de uma linha em branco ("6. PRD: 39%",
+    "7. PT: 39%"), sem recomeçar em 1 e sem repetir a posição no item.
     Mesmo quando a pergunta pedir só o primeiro ("qual estado tem mais
     candidatos?"), destaque o primeiro em uma frase e mostre a lista.
     Perguntas de contagem ("quantas mulheres concorrem em SP?", "quantos
@@ -301,7 +303,10 @@ class ChatbotService
     @message = message
   end
 
-  def call
+  # Com um bloco, a resposta é recebida em streaming, e o bloco recebe o
+  # texto parcial a cada pedaço (ChatResponseJob envia esse texto à tela).
+  # O retorno é o mesmo com ou sem bloco.
+  def call(&on_text)
     llm_chat = RubyLLM.chat
     llm_chat.with_instructions(SYSTEM_PROMPT)
     llm_chat.with_instructions(page_instructions, append: true) if @message.page_context
@@ -326,7 +331,13 @@ class ChatbotService
       )
     end
 
-    response = llm_chat.ask(@message.content)
+    response = if on_text
+                 # Cada rodada da IA (depois de consultar as ferramentas) traz um JSON novo
+                 llm_chat.before_message { streamed_content.reset }
+                 llm_chat.ask(@message.content) { |chunk| stream(chunk.content, &on_text) }
+               else
+                 llm_chat.ask(@message.content)
+               end
 
     result = response.content
 
@@ -335,6 +346,26 @@ class ChatbotService
       out_of_scope: result.fetch("out_of_scope"),
       actions: result.fetch("out_of_scope") ? [] : actions(result)
     }
+  end
+
+  # ----- STREAMING -----
+  # Repassa ao bloco o texto parcial da resposta a cada pedaço recebido.
+  # Uma falha aqui (na leitura do pedaço ou no envio à tela) nunca
+  # interrompe a resposta: o streaming é desligado até o fim desta resposta,
+  # que aparece inteira no final, como sem streaming.
+
+  def stream(piece)
+    return if @streaming_failed || piece.to_s.empty?
+
+    text = (streamed_content << piece).text
+    yield text if text
+  rescue StandardError => e
+    @streaming_failed = true
+    Rails.logger.error("[ChatbotService] Streaming interrompido: #{e.class} - #{e.message}")
+  end
+
+  def streamed_content
+    @streamed_content ||= StreamedContent.new
   end
 
   # ----- PRÓXIMOS PASSOS E OPÇÕES EM BOTÕES -----

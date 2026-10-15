@@ -3,12 +3,14 @@
   out_of_scope: destaca as respostas a perguntas fora do escopo da Harpia
   loading:      feedback exibido enquanto a IA processa a resposta
   error:        aviso amigável quando a IA não consegue responder
+  id:           alvo do texto parcial da resposta (chats/_streamed_answer)
+  streaming:    marca o texto parcial, que o chat_controller acompanha na rolagem
 %>
 <% modifier = if local_assigns[:error] then "assistant-message--error"
               elsif local_assigns[:out_of_scope] then "assistant-message--out-of-scope"
               end %>
 
-<div class="d-flex justify-content-start mb-4" <%= "data-chat-loading" if local_assigns[:loading] %>>
+<div <%= tag.attributes(id: local_assigns[:id], data: { chat_streaming: local_assigns[:streaming] }) %> class="d-flex justify-content-start mb-4" <%= "data-chat-loading" if local_assigns[:loading] %>>
   <div class="me-2 flex-shrink-0 mt-auto">
     <div class="bg-gold rounded-circle d-flex align-items-center justify-content-center" style="width: 30px; height: 30px;">
       <i class="fa-solid fa-robot text-navy small" aria-hidden="true"></i>

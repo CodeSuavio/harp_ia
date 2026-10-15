@@ -5,6 +5,10 @@ import { Turbo } from "@hotwired/turbo-rails"
 // (ex.: a conexão caiu), o controller pede ao servidor o estado da conversa.
 const REFRESH_DELAY = 10000
 
+// Distância, em pixels, até o fim da conversa em que ela ainda conta como
+// "no fim" e acompanha o texto da Harpia enquanto ele é escrito.
+const FOLLOW_TOLERANCE = 8
+
 // Comportamento compartilhado pelas duas formas de conversar com a Harpia:
 // o chat principal (chats#show) e o chat widget. Cada interface fornece
 // apenas a própria aparência, pelos <template> abaixo.
@@ -111,9 +115,19 @@ export default class extends Controller {
       this.savedScroll = undefined
     }
 
-    // Posiciona a conversa na interação mais recente. Se ela já está
-    // visível (ex.: a resposta chegou abaixo da pergunta), nada se move.
-    this.scrollToLatestInteraction()
+    // Resposta definitiva depois do texto parcial: quem acompanhava o texto
+    // continua no fim, vendo os botões de próximos passos; quem rolou para
+    // cima continua onde estava. A conversa ainda pendente (envio da pergunta,
+    // consulta do estado) segue a regra de sempre, abaixo.
+    const followedStream = this.followedStream
+    this.followedStream = undefined
+    if (followedStream !== undefined && !("chatPending" in messages.dataset)) {
+      if (followedStream) this.scrollToEnd(messages)
+    } else {
+      // Posiciona a conversa na interação mais recente. Se ela já está
+      // visível (ex.: a resposta chegou abaixo da pergunta), nada se move.
+      this.scrollToLatestInteraction()
+    }
 
     // Conversa aguardando a Harpia: confere o estado na hora. Se a IA
     // respondeu (ou falhou) muito rápido, a resposta pelo WebSocket pode ter
@@ -139,9 +153,14 @@ export default class extends Controller {
     this.streamObserver.observe(this.element, { subtree: true, attributeFilter: ["connected"] })
 
     // Guarda a posição da rolagem antes de cada atualização da conversa
-    // (envio da pergunta, resposta pelo WebSocket ou consulta abaixo).
-    this.saveScroll = () => {
-      if (this.hasMessagesTarget) this.savedScroll = this.messagesTarget.scrollTop
+    // (envio da pergunta, resposta pelo WebSocket ou consulta abaixo) e
+    // acompanha o texto da Harpia enquanto ele é escrito.
+    this.saveScroll = (event) => {
+      if (!this.hasMessagesTarget) return
+
+      const messages = this.messagesTarget
+      this.savedScroll = messages.scrollTop
+      this.followStream(event, messages)
     }
     document.addEventListener("turbo:before-stream-render", this.saveScroll)
   }
@@ -150,6 +169,41 @@ export default class extends Controller {
     clearTimeout(this.refreshTimer)
     this.streamObserver?.disconnect()
     document.removeEventListener("turbo:before-stream-render", this.saveScroll)
+  }
+
+  // ----- ROLAGEM DURANTE O STREAMING -----
+  // O texto da Harpia chega aos poucos (ChatResponseJob#broadcast_partial),
+  // substituindo só a resposta, dentro da área de mensagens. Se a conversa
+  // está no fim, ela acompanha o texto; se o usuário rolou para cima, nada se
+  // move até ele voltar ao fim.
+  followStream(event, messages) {
+    const target = document.getElementById(event.target.getAttribute("target"))
+    if (!target) return
+
+    if (messages.contains(target)) {
+      // Confere a posição no instante da atualização, que o Turbo faz um
+      // quadro depois deste evento
+      const render = event.detail.render
+      event.detail.render = async (stream) => {
+        const following = this.atEnd(messages)
+        await render(stream)
+        if (following) this.scrollToEnd(messages)
+      }
+    } else if (target.contains(messages)) {
+      // A conversa inteira vai ser redesenhada: lembra se havia texto parcial
+      // na tela e se o usuário o acompanhava (usado em messagesTargetConnected)
+      this.followedStream = messages.querySelector("[data-chat-streaming]") ? this.atEnd(messages) : undefined
+    }
+  }
+
+  atEnd(messages) {
+    return messages.scrollHeight - messages.scrollTop - messages.clientHeight <= FOLLOW_TOLERANCE
+  }
+
+  // Rolagem instantânea: com várias atualizações por segundo, a rolagem suave
+  // seria interrompida a cada uma e a conversa tremeria.
+  scrollToEnd(messages) {
+    messages.scrollTop = messages.scrollHeight
   }
 
   // Busca o estado atual da conversa (ChatsController#show em Turbo Stream),
@@ -185,6 +239,14 @@ export default class extends Controller {
       if (!this.hasMessagesTarget || !this.hasUserMessageTarget) return
 
       const container = this.messagesTarget
+
+      // Com o texto da Harpia sendo escrito (ex.: widget reaberto no meio da
+      // resposta), o mais recente é o fim desse texto
+      if (container.querySelector("[data-chat-streaming]")) {
+        this.scrollToEnd(container)
+        return
+      }
+
       const lastUserMessage = this.userMessageTargets[this.userMessageTargets.length - 1]
       const offset = lastUserMessage.getBoundingClientRect().top - container.getBoundingClientRect().top
       const padding = parseFloat(getComputedStyle(container).paddingTop) || 0

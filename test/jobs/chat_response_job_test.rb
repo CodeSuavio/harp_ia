@@ -97,6 +97,60 @@ class ChatResponseJobTest < ActiveJob::TestCase
     assert_nil @chat.reload.title
   end
 
+  test "envia o texto parcial ao chat principal e ao widget antes da resposta completa" do
+    broadcasts = capture_turbo_stream_broadcasts(@chat) { ChatResponseJob.perform_now(@question) }
+    targets = broadcasts.map { |stream| stream["target"] }
+
+    conversation_partial = broadcasts.find { |stream| stream["target"] == dom_id(@chat, :stream_conversation) }
+    widget_partial = broadcasts.find { |stream| stream["target"] == dom_id(@chat, :stream_widget) }
+    assert_equal "replace", conversation_partial["action"]
+    assert_equal "replace", widget_partial["action"]
+    # O texto parcial mantém o id, para o próximo trecho substituí-lo
+    assert_includes conversation_partial.to_html, %(id="#{dom_id(@chat, :stream_conversation)}")
+    assert_includes widget_partial.to_html, %(id="#{dom_id(@chat, :stream_widget)}")
+    assert_includes widget_partial.to_html, "chat-widget-assistant-message"
+
+    # A resposta completa vem depois e substitui o texto parcial
+    assert_operator targets.index(dom_id(@chat, :stream_conversation)), :<, targets.index(dom_id(@chat, :conversation))
+    assert_equal 1, @chat.messages.where(role: "assistant").count
+  end
+
+  test "limita a frequência dos envios do texto parcial" do
+    broadcasts = capture_turbo_stream_broadcasts(@chat) { ChatResponseJob.perform_now(@question) }
+
+    # Os pedaços chegam todos de uma vez: só o primeiro texto parcial é enviado
+    assert_equal(1, broadcasts.count { |stream| stream["target"] == dom_id(@chat, :stream_conversation) })
+  end
+
+  test "falha no streaming não impede a resposta e desliga o texto parcial" do
+    FakeChatbot.behavior = lambda do |stream|
+      stream.call(Object.new) # pedaço que não pode ser lido
+      FakeChatbot.json_pieces("Resposta da Harpia", false).each { |piece| stream.call(piece) }
+      { content: "Resposta da Harpia", out_of_scope: false, actions: [] }
+    end
+
+    broadcasts = capture_turbo_stream_broadcasts(@chat) { ChatResponseJob.perform_now(@question) }
+    targets = broadcasts.map { |stream| stream["target"] }
+
+    assert @question.reload.answered?
+    assert_equal "Resposta da Harpia", @chat.messages.find_by(role: "assistant").content
+    assert_not_includes targets, dom_id(@chat, :stream_conversation)
+    assert_includes targets, dom_id(@chat, :conversation)
+  end
+
+  test "falha da IA no meio da resposta troca o texto parcial pelo aviso de erro" do
+    FakeChatbot.fail_midway!
+
+    broadcasts = capture_turbo_stream_broadcasts(@chat) { ChatResponseJob.perform_now(@question) }
+
+    assert @question.reload.failed?
+    assert_equal 1, @chat.messages.count
+    assert(broadcasts.any? { |stream| stream["target"] == dom_id(@chat, :stream_conversation) })
+    conversation = broadcasts.find { |stream| stream["target"] == dom_id(@chat, :conversation) }
+    assert_includes conversation.to_html, ChatResponder::AI_ERROR_MESSAGE
+    assert_not_includes conversation.to_html, "Resposta interrompida"
+  end
+
   test "não responde de novo uma pergunta já respondida" do
     @question.answered!
 
