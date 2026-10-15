@@ -3,7 +3,7 @@ class DeputiesController < ApplicationController
 
   PER_PAGE = 24
   TAB_PER_PAGE = 20
-  COMPARE_LIMIT = 3
+  COMPARE_LIMIT = DeputyComparison::LIMIT
   # Linhas por página na tabela do panorama (/deputies/compare)
   PANORAMA_PER_PAGE = 50
   ALL_TABS = {
@@ -114,11 +114,8 @@ class DeputiesController < ApplicationController
 
     # Deputados escolhidos na listagem (?ids[]=): comparação lado a lado
     if params.key?(:ids)
-      ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT)
-      @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by do |d|
-        d.id.to_s
-      end.values_at(*ids).compact
-      @comparison = DeputyComparison.new(@deputies)
+      @comparison = DeputyComparison.for(params[:ids])
+      @deputies = @comparison.deputies
       return render :compare_selected
     end
 

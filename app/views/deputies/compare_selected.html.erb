@@ -1,4 +1,5 @@
 <% content_for :title, "Comparar deputados · Harpia" %>
+<% sections = DeputyComparison::SECTIONS %>
 
 <div class="container py-5">
   <div class="mb-4">
@@ -23,8 +24,7 @@
     <p class="small text-muted mb-3">
       <span class="compare-legend compare-best me-1" aria-hidden="true"></span> melhor da linha
       <span class="compare-legend compare-worst ms-3 me-1" aria-hidden="true"></span> pior da linha.
-      Gastos menores, mais participação, mais projetos e mais coerência contam como melhor.
-      Alinhamento e votos contra o partido não têm lado melhor.
+      <%= sections["table"][:reading] %>
     </p>
 
     <div class="table-responsive card border-0 shadow-sm rounded-4 bg-white mb-4">
@@ -81,8 +81,8 @@
     <!-- Divergência entre eles -->
     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white">
       <h2 class="h6 fw-bold text-navy text-uppercase tracking-wider mb-3">
-        Como votaram entre si
-        <%= info_tip("Votações em que os dois registraram voto (qualquer tipo) e quantas tiveram votos diferentes.") %>
+        <%= sections["votes"][:title] %>
+        <%= info_tip(sections["votes"][:how]) %>
       </h2>
       <ul class="list-unstyled mb-0">
         <% @comparison.divergences.each do |a, b, divergence| %>
