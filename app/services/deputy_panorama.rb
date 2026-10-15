@@ -26,6 +26,34 @@ class DeputyPanorama
     "bills" => { label: "Projetos de lei", value: :bills, default: :desc }
   }.freeze
 
+  # Seções da página do panorama, na ordem em que aparecem. A página usa os
+  # títulos e as explicações (reading e how); a Harpia recebe os mesmos textos,
+  # mais o tipo de gráfico (chart), para reconhecer o gráfico citado pelo
+  # usuário (PageGuide). Ver PartyComparison::SECTIONS.
+  SECTIONS = {
+    "insights" => {
+      title: "O que os números mostram",
+      chart: "cartões com frases de destaque calculadas a partir dos números dos deputados"
+    },
+    "blocs" => {
+      title: "A Câmara em blocos, deputado a deputado",
+      chart: "barra horizontal dividida pelo número de deputados de cada bloco (governista, centro e oposição)",
+      reading: "A linha marca as #{MAJORITY} cadeiras da maioria absoluta.",
+      how: "Cada deputado entra num bloco pelo próprio governismo: a porcentagem de votações com orientação " \
+           "Sim/Não do Governo em que votou igual. São necessárias ao menos #{MIN_GOVERNMENT_POLLS} votações."
+    },
+    "positioning" => {
+      title: "Mapa de posicionamento",
+      chart: "gráfico de pontos, um por deputado, colorido pelo bloco",
+      reading: "Cada ponto é um deputado. Para a direita, mais votos com o Governo; " \
+               "para cima, mais votos com a maioria do próprio partido."
+    },
+    "indicators" => {
+      title: "Indicadores lado a lado",
+      chart: "tabela com os indicadores de cada deputado, ordenável por coluna, com filtros de estado e partido"
+    }
+  }.freeze
+
   Row = Struct.new(:deputy, :governism, :bloc, :alignment, :participation, :monthly, :bills, :reelection,
                    keyword_init: true) do
     def name = deputy.name

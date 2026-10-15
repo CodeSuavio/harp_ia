@@ -38,6 +38,42 @@ class PartyComparison
     "women" => { label: "Mulheres em 2026",   value: :women_pct, default: :desc }
   }.freeze
 
+  # Seções da página de comparação, na ordem em que aparecem. A página usa os
+  # títulos e as explicações (reading e how); a Harpia recebe os mesmos textos,
+  # mais o tipo de gráfico (chart), para saber a que "este gráfico" se refere e
+  # o que cada eixo e cor significam (PageGuide e PartyComparisonTool).
+  SECTIONS = {
+    "insights" => {
+      title: "O que os números mostram",
+      chart: "cartões com frases de destaque calculadas a partir dos números da comparação"
+    },
+    "blocs" => {
+      title: "A Câmara em blocos",
+      chart: "barra horizontal dividida pelas cadeiras de cada bloco (governista, centro e oposição)",
+      reading: "A linha marca as #{MAJORITY} cadeiras da maioria absoluta.",
+      how: "Cada partido entra num bloco pelo governismo: a porcentagem de votações com orientação Sim/Não do " \
+           "Governo em que a maioria da bancada votou igual. São necessárias ao menos #{MIN_GOVERNMENT_POLLS} votações."
+    },
+    "positioning" => {
+      title: "Mapa de posicionamento",
+      chart: "gráfico de bolhas, uma por partido, com linhas verticais onde começam o centro " \
+             "(#{BLOCS[:center][:min]}%) e os governistas (#{BLOCS[:government][:min]}%)",
+      reading: "Para a direita, mais votos com o Governo; para cima, bancada mais unida. " \
+               "O tamanho da bolha é a bancada."
+    },
+    "indicators" => {
+      title: "Indicadores lado a lado",
+      chart: "tabela com os indicadores de todos os partidos, ordenável por coluna"
+    },
+    "affinity" => {
+      title: "Quem vota com quem",
+      chart: "matriz com a porcentagem de votações em que cada par de partidos votou do mesmo lado",
+      reading: "Partidos do mais governista ao mais oposicionista. Azul mais forte = votam mais vezes do mesmo lado.",
+      how: "Nas votações em que as duas bancadas tiveram maioria (Sim ou Não), em quantas a maioria das duas " \
+           "foi a mesma. Só pares com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum."
+    }
+  }.freeze
+
   Row = Struct.new(:party, :seats, :seats_at_start, :states, :top_state, :cohesion, :governism,
                    :adherence, :participation, :monthly, :bills_per_deputy, :top_theme,
                    :candidates, :women_pct, :reelection, :bloc, keyword_init: true) do
