@@ -36,20 +36,13 @@ class ChatsController < ApplicationController
     @chat = current_user.chats.new
     authorize @chat
 
-    unless @chat.save
-      redirect_to chats_path, alert: "Nao foi possivel criar a conversa."
-      return
-    end
+    return redirect_to(chats_path, alert: "Nao foi possivel criar a conversa.") unless @chat.save
 
     # Quando o chat já é iniciado com uma pergunta, como acontece
     # no widget, salva a pergunta e agenda a resposta da IA
     # (ver MessageProcessorService).
-    if params.dig(:message, :content).present?
-      MessageProcessorService.new(
-        @chat,
-        params[:message][:content],
-        page_path: params.dig(:message, :page_path)
-      ).call
+    if message_params[:content].present?
+      MessageProcessorService.new(@chat, message_params[:content], page_path: message_params[:page_path]).call
     end
 
     respond_with_conversation
@@ -67,5 +60,11 @@ class ChatsController < ApplicationController
   def set_chat
     # Garante que o usuário só consiga acessar os próprios chats.
     @chat = current_user.chats.find(params[:id])
+  end
+
+  def message_params
+    # Pergunta inicial enviada pelo widget e a página em que o usuário está.
+    # O botão "Novo Chat" não envia pergunta.
+    params.fetch(:message, {}).permit(:content, :page_path)
   end
 end

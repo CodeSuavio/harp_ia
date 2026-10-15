@@ -20,6 +20,7 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to chat_path(@user.chats.last)
+    assert_empty @user.chats.last.messages
 
     # O Turbo segue o redirect com o mesmo Accept do formulário e sem
     # Turbo-Frame: a página da conversa deve abrir, sem novo redirect.
@@ -102,10 +103,6 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "chat-quick-replies--widget"
   end
 
-  def question(label, text = label)
-    { "type" => "question", "label" => label, "value" => text }
-  end
-
   test "estado atual da conversa para a tela que não recebeu a resposta pelo WebSocket" do
     chat = @user.chats.create!
     chat.messages.create!(role: "user", content: "Pergunta")
@@ -184,5 +181,11 @@ class ChatsControllerTest < ActionDispatch::IntegrationTest
 
     assert_select "input#chat-search"
     assert_select "#chats_list h3", text: "Emendas do Orçamento"
+  end
+
+  private
+
+  def question(label, text = label)
+    { "type" => "question", "label" => label, "value" => text }
   end
 end
