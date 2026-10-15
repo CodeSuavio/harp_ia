@@ -31,6 +31,22 @@ class ChatResponseJobTest < ActiveJob::TestCase
     assert_not_includes conversation.to_html, "Estamos de olho..."
   end
 
+  test "a resposta é a última atividade da conversa, mesmo depois de gerar o título" do
+    ChatResponseJob.perform_now(@question)
+
+    answer = @chat.messages.find_by(role: "assistant")
+    assert_equal "Título gerado", @chat.reload.title
+    assert_equal answer.created_at, @chat.last_message_at
+  end
+
+  test "falha da IA mantém a pergunta como última atividade" do
+    FakeChatbot.fail!
+
+    ChatResponseJob.perform_now(@question)
+
+    assert_equal @question.reload.created_at, @chat.reload.last_message_at
+  end
+
   test "salva as opções sugeridas em botões" do
     FakeChatbot.reply("Posso organizar de duas formas:",
                       quick_replies: ["Deputados por estado", "Ranking dentro dos estados"])
