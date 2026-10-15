@@ -10,6 +10,7 @@
 <% blocs = @panorama.blocs %>
 <% total = [@panorama.total, 1].max %>
 <% bloc_labels = DeputyPanorama::BLOCS.transform_values { |bloc| bloc[:label] }.merge(DeputyPanorama::NO_DATA => "Sem dados") %>
+<% sections = DeputyPanorama::SECTIONS %>
 
 <%= render "painel/hero", title: "Comparar deputados", highlight: "na Câmara dos Deputados",
       subtitle: "Os #{@panorama.total} deputados federais em exercício: quanto cada um vota com o Governo, quanto segue o próprio partido, quanto gasta e quanto produz." %>
@@ -24,7 +25,7 @@
   <!-- Destaques -->
   <% if @panorama.insights.any? %>
     <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
-      <i class="fa-solid fa-lightbulb me-2 text-gold"></i>O que os números mostram
+      <i class="fa-solid fa-lightbulb me-2 text-gold"></i><%= sections["insights"][:title] %>
     </h2>
     <div class="row g-3 mb-5">
       <% @panorama.insights.each do |icon, title, text| %>
@@ -43,11 +44,11 @@
   <!-- Blocos, deputado a deputado -->
   <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
     <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-      <i class="fa-solid fa-landmark me-2 text-gold"></i>A Câmara em blocos, deputado a deputado
-      <%= info_tip("Cada deputado entra num bloco pelo próprio governismo: a porcentagem de votações com orientação Sim/Não do Governo em que votou igual. São necessárias ao menos #{DeputyPanorama::MIN_GOVERNMENT_POLLS} votações.") %>
+      <i class="fa-solid fa-landmark me-2 text-gold"></i><%= sections["blocs"][:title] %>
+      <%= info_tip(sections["blocs"][:how]) %>
     </h2>
     <p class="small text-muted mb-3">
-      <%= @panorama.total %> deputados em exercício. A linha marca as <%= DeputyPanorama::MAJORITY %> cadeiras da maioria absoluta.
+      <%= @panorama.total %> deputados em exercício. <%= sections["blocs"][:reading] %>
     </p>
 
     <div class="bloc-bar mb-3" role="img"
@@ -101,13 +102,13 @@
   <!-- Mapa de posicionamento -->
   <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4" id="posicionamento">
     <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-      <i class="fa-solid fa-compass me-2 text-gold"></i>Mapa de posicionamento
+      <i class="fa-solid fa-compass me-2 text-gold"></i><%= sections["positioning"][:title] %>
     </h2>
     <% if @positioned.size >= 2 %>
       <% chart = deputy_positioning_chart(@positioned) %>
       <% dims = chart[:chart] %>
       <p class="small text-muted mb-3">
-        Cada ponto é um deputado. Para a direita, mais votos com o Governo; para cima, mais votos com a maioria do próprio partido.
+        <%= sections["positioning"][:reading] %>
         Passe o mouse ou toque num ponto para ver os números; clique para abrir o deputado.
       </p>
 
@@ -168,7 +169,7 @@
   <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 party-compare-card" id="indicadores">
     <div class="p-4 pb-2">
       <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-        <i class="fa-solid fa-table-list me-2 text-gold"></i>Indicadores lado a lado
+        <i class="fa-solid fa-table-list me-2 text-gold"></i><%= sections["indicators"][:title] %>
       </h2>
       <p class="small text-muted mb-0">
         Clique no nome de uma coluna para ordenar. Passe o mouse no ⓘ para ver como calculamos.

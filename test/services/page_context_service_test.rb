@@ -34,4 +34,30 @@ class PageContextServiceSortTest < ActiveSupport::TestCase
     assert_equal "Lista de deputados, ordenada por \"Participação nas votações\", do menor para o maior",
                  PageContextService.new("/deputies?sort=participation&dir=asc").call
   end
+
+  test "identifica o panorama de deputados, com filtros e ordenação, e a comparação de deputados escolhidos" do
+    assert_equal "Panorama de comparação entre os deputados",
+                 PageContextService.new("/deputies/compare").call
+    assert_equal "Panorama de comparação entre os deputados com os filtros state=SP, ordenada por \"Gasto mensal\"",
+                 PageContextService.new("/deputies/compare?state=SP&sort=expenses").call
+
+    ana = deputies(:ana)
+    assert_includes PageContextService.new("/deputies/compare?ids[]=#{ana.id}").call,
+                    "Comparação entre os deputados Ana Souza"
+  end
+end
+
+class PageContextServiceGuideTest < ActiveSupport::TestCase
+  test "reconhece as páginas com gráficos mapeados" do
+    assert_equal "parties#compare", PageContextService.new("/parties/compare?sort=cohesion").guide.key
+    assert_equal "deputies#compare", PageContextService.new("/deputies/compare?state=SP").guide.key
+  end
+
+  test "sem guia nas páginas sem gráficos mapeados e nas comparações de registros escolhidos" do
+    assert_nil PageContextService.new("/parties/compare?ids[]=1&ids[]=2").guide
+    assert_nil PageContextService.new("/deputies/compare?ids[]=1").guide
+    assert_nil PageContextService.new("/deputies/#{deputies(:ana).id}").guide
+    assert_nil PageContextService.new("/chats/1").guide
+    assert_nil PageContextService.new(nil).guide
+  end
 end

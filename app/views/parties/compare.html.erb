@@ -10,6 +10,7 @@
 <% blocs = @comparison.blocs %>
 <% total_seats = [@comparison.total_seats, 1].max %>
 <% bloc_labels = PartyComparison::BLOCS.transform_values { |bloc| bloc[:label] }.merge(PartyComparison::NO_DATA => "Sem dados") %>
+<% sections = PartyComparison::SECTIONS %>
 
 <%= render "painel/hero", title: "Comparar partidos", highlight: "na Câmara dos Deputados",
       subtitle: "Bancadas de deputados federais: quanto cada uma vota com o Governo, quão unida é e o que mais a diferencia das outras." %>
@@ -24,7 +25,7 @@
   <!-- Destaques -->
   <% if @comparison.insights.any? %>
     <h2 class="h6 fw-bold text-navy mb-3 text-uppercase tracking-wider">
-      <i class="fa-solid fa-lightbulb me-2 text-gold"></i>O que os números mostram
+      <i class="fa-solid fa-lightbulb me-2 text-gold"></i><%= sections["insights"][:title] %>
     </h2>
     <div class="row g-3 mb-5">
       <% @comparison.insights.each do |icon, title, text| %>
@@ -43,11 +44,11 @@
   <!-- Blocos e maioria -->
   <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
     <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-      <i class="fa-solid fa-landmark me-2 text-gold"></i>A Câmara em blocos
-      <%= info_tip("Cada partido entra num bloco pelo governismo: a porcentagem de votações com orientação Sim/Não do Governo em que a maioria da bancada votou igual. São necessárias ao menos #{PartyComparison::MIN_GOVERNMENT_POLLS} votações.") %>
+      <i class="fa-solid fa-landmark me-2 text-gold"></i><%= sections["blocs"][:title] %>
+      <%= info_tip(sections["blocs"][:how]) %>
     </h2>
     <p class="small text-muted mb-3">
-      <%= @comparison.total_seats %> deputados em exercício. A linha marca as <%= PartyComparison::MAJORITY %> cadeiras da maioria absoluta.
+      <%= @comparison.total_seats %> deputados em exercício. <%= sections["blocs"][:reading] %>
     </p>
 
     <div class="bloc-bar mb-3" role="img"
@@ -112,10 +113,10 @@
     <% dims = chart[:chart] %>
     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
       <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-        <i class="fa-solid fa-compass me-2 text-gold"></i>Mapa de posicionamento
+        <i class="fa-solid fa-compass me-2 text-gold"></i><%= sections["positioning"][:title] %>
       </h2>
       <p class="small text-muted mb-3">
-        Para a direita, mais votos com o Governo; para cima, bancada mais unida. O tamanho da bolha é a bancada.
+        <%= sections["positioning"][:reading] %>
         Passe o mouse pelo mapa: o partido mais perto do cursor fica em destaque, com os números. Clique para abrir o partido.
         No celular, toque perto de uma bolha para ver os números.
       </p>
@@ -220,7 +221,7 @@
   <div class="card border-0 shadow-sm rounded-4 bg-white mb-4 party-compare-card" id="indicadores">
     <div class="p-4 pb-2">
       <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-        <i class="fa-solid fa-table-list me-2 text-gold"></i>Indicadores lado a lado
+        <i class="fa-solid fa-table-list me-2 text-gold"></i><%= sections["indicators"][:title] %>
       </h2>
       <p class="small text-muted mb-1">
         Bancadas de deputados federais na Câmara dos Deputados (<%= @comparison.total_seats %> cadeiras).
@@ -320,11 +321,11 @@
   <% if affinity[:cells].any? %>
     <div class="card border-0 shadow-sm rounded-4 p-4 bg-white mb-4">
       <h2 class="h6 fw-bold text-navy mb-1 text-uppercase tracking-wider">
-        <i class="fa-solid fa-handshake me-2 text-gold"></i>Quem vota com quem
-        <%= info_tip("Nas votações em que as duas bancadas tiveram maioria (Sim ou Não), em quantas a maioria das duas foi a mesma. Só pares com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum.") %>
+        <i class="fa-solid fa-handshake me-2 text-gold"></i><%= sections["affinity"][:title] %>
+        <%= info_tip(sections["affinity"][:how]) %>
       </h2>
       <p class="small text-muted mb-3">
-        Partidos do mais governista ao mais oposicionista. Azul mais forte = votam mais vezes do mesmo lado.
+        <%= sections["affinity"][:reading] %>
       </p>
 
       <div class="table-responsive">

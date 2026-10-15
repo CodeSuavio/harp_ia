@@ -72,6 +72,25 @@ class MessagesControllerTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "gráficos: o widget recebe as seções da página; o chat principal, a página da pergunta anterior" do
+    perform_enqueued_jobs do
+      send_message("O que esse gráfico mostra?", frame: ChatResponder::WIDGET_FRAME, page_path: "/parties/compare")
+    end
+    widget_question = @chat.messages.where(role: "user").last
+    assert_includes ChatbotService.new(widget_question).page_instructions, PartyComparison::SECTIONS["blocs"][:title]
+
+    send_message("Explique o mapa de posicionamento", frame: ChatResponder::CONVERSATION_FRAME,
+                                                      page_path: "/chats/#{@chat.id}")
+    main_question = @chat.messages.where(role: "user").last
+    service = ChatbotService.new(main_question)
+
+    # Sem página atual, nenhuma página anterior vira "atual": ela chega só no histórico,
+    # e os números do gráfico vêm de party_comparison, a mesma ferramenta do widget
+    assert_nil main_question.page_context
+    assert_equal "[Pergunta feita na página: Comparação entre partidos]\nO que esse gráfico mostra?",
+                 service.history_content(widget_question)
+  end
+
   test "na página da própria conversa não há registro em foco" do
     send_message("Continue", frame: ChatResponder::CONVERSATION_FRAME, page_path: "/chats/#{@chat.id}")
 

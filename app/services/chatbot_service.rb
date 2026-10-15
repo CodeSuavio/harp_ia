@@ -119,6 +119,9 @@ class ChatbotService
       por um indicador (cadeiras, gastos, coesão, participação etc.); o
       deputy_ranking com bills aceita um tema (quem tem mais projetos sobre
       saúde);
+    - party_comparison: os gráficos da comparação de partidos (blocos,
+      mapa de posicionamento, quem vota com quem e destaques), com os mesmos
+      números da página;
     - deputy_state_ranking: deputados por estado — quantos deputados cada
       estado tem ou, com um indicador, o deputado no topo em cada estado
       (quem mais gastou, quem mais apresentou projetos etc.);
@@ -271,6 +274,50 @@ class ChatbotService
     conversa podem indicar a página em que foram feitas; use isso para saber
     de quem ou do que o usuário falava, mesmo que ele tenha mudado de página.
 
+    GRÁFICOS DAS PÁGINAS:
+    Perguntas sobre os gráficos e as páginas da plataforma estão sempre
+    dentro do escopo.
+    Quando a página atual listar as seções, "este gráfico" ou "esta tabela"
+    se refere a uma delas. O usuário pode citar um gráfico por um nome
+    aproximado, pelo formato ou pelas cores ("gráfico de bolhas", "o quadro
+    azul"): procure o gráfico correspondente primeiro nas seções da página
+    atual, depois nas páginas das perguntas anteriores e, por fim, nos
+    gráficos descritos pelas ferramentas.
+    Quando houver mais de uma interpretação conhecida (duas seções que
+    combinam com o nome, ou "esse gráfico" numa página com vários gráficos),
+    não escolha uma: pergunte qual, com as opções em quick_replies, escritas
+    como pedido e com o título em minúsculas ("Explique o mapa de
+    posicionamento"); acrescente a página quando ela não for a atual
+    ("Explique o mapa de posicionamento dos partidos"). Ofereça só seções
+    listadas na página atual ou gráficos descritos pelas ferramentas; nunca
+    invente nomes de gráficos.
+    Quando o gráfico citado não existir (ex.: "gráfico de pizza"), diga em
+    uma frase que a plataforma não tem esse gráfico e ofereça em
+    quick_replies até 3 gráficos reais mais próximos do que o usuário
+    procura. Sem página informada e sem nenhum gráfico parecido, pergunte em
+    uma frase de qual página e de qual gráfico o usuário fala, com
+    quick_replies vazio.
+    Identificado o gráfico, consulte a ferramenta dele, com ou sem página
+    informada: os gráficos mostram os mesmos dados para todos. Use os dados
+    de uma ferramenta de gráficos só quando a página atual ou a pergunta
+    tratarem do mesmo assunto dela (partidos, deputados...). Para explicar
+    um gráfico, use os números da ferramenta, nunca estimativas ou dados de
+    outro gráfico, e explique o que os eixos, as cores e os tamanhos
+    representam com o texto da seção. Se nenhuma ferramenta trouxer os dados
+    do gráfico, diga que ainda não consegue ler os números dele e que eles
+    estão na página, sem descrever eixos, cores ou valores que não foram
+    informados.
+    Os gráficos de páginas de perguntas anteriores são só referência: o
+    usuário não está nessas páginas agora, então não as chame de "esta
+    página". Quando a pergunta não deixar claro de qual gráfico ou página
+    fala, não suponha que o usuário ainda está falando dessas páginas:
+    pergunte. Quando forem informados gráficos com o mesmo nome em mais de
+    uma página e a pergunta citar um deles sem dizer a página, pergunte
+    qual, com botões que digam a página. Um gráfico que só existe em uma
+    página conhecida não é ambíguo: explique-o, dizendo de qual página é.
+    Sem página informada, diga na resposta de qual página é o gráfico
+    explicado ("O mapa de posicionamento da comparação de partidos...").
+
     CLASSIFICAÇÃO DE ESCOPO:
     Para cada pergunta, identifique se ela está dentro ou fora do escopo
     definido acima.
@@ -291,6 +338,7 @@ class ChatbotService
     PollDetailsTool,
     CandidateDetailsTool,
     PartyRankingTool,
+    PartyComparisonTool,
     DeputyRankingTool,
     DeputyStateRankingTool,
     CandidateRankingTool,
@@ -309,7 +357,8 @@ class ChatbotService
   def call(&on_text)
     llm_chat = RubyLLM.chat
     llm_chat.with_instructions(SYSTEM_PROMPT)
-    llm_chat.with_instructions(page_instructions, append: true) if @message.page_context
+    instructions = page_instructions
+    llm_chat.with_instructions(instructions, append: true) if instructions
     # Todas as ferramentas registram os próximos passos no mesmo lugar
     @actions = HarpiaActions.new
     llm_chat.with_tools(*TOOLS.map { |tool| tool.new(@actions) })
@@ -388,8 +437,71 @@ class ChatbotService
   # Informado a cada pergunta, porque o usuário pode trocar de página
   # no meio da conversa
 
+  # Páginas com gráficos de perguntas anteriores, além da atual, cujos
+  # gráficos a Harpia recebe para reconhecer um gráfico citado pelo nome
+  PREVIOUS_GUIDES = 2
+  # Perguntas anteriores consultadas para encontrar essas páginas
+  PREVIOUS_QUESTIONS = 20
+
+  # Página atual, com as seções quando ela tem gráficos (PageGuide), os
+  # gráficos das páginas anteriores, como referência, e os títulos repetidos
+  # entre páginas, que admitem mais de uma interpretação
   def page_instructions
-    "PÁGINA ATUAL DO USUÁRIO: #{@message.page_context}"
+    previous = previous_chart_pages
+    [current_page_instructions,
+     *previous.map { |message, guide| previous_page_text(message, guide) },
+     shared_titles_text(previous.map(&:last))].compact.join("\n\n").presence
+  end
+
+  def current_page_instructions
+    return unless @message.page_context
+
+    ["PÁGINA ATUAL DO USUÁRIO: #{@message.page_context}", current_guide&.text].compact.join("\n")
+  end
+
+  def current_guide
+    @current_guide ||= PageContextService.new(@message.page_path).guide
+  end
+
+  # [[pergunta, guia]] das páginas com gráficos das perguntas anteriores, da
+  # mais recente para a mais antiga, sem a página atual
+  def previous_chart_pages
+    return [] unless @message.chat
+
+    pages = previous_questions.filter_map do |message|
+      guide = PageContextService.new(message.page_path).guide
+      [message, guide] if guide && guide.key != current_guide&.key
+    end
+    pages.uniq { |_, guide| guide.key }.first(PREVIOUS_GUIDES)
+  end
+
+  # Servem para reconhecer um gráfico citado pelo nome: não indicam que a
+  # pergunta atual é sobre essa página
+  def previous_page_text(message, guide)
+    "PÁGINA DE UMA PERGUNTA ANTERIOR (o usuário não está nela agora): #{message.page_context}. " \
+      "Gráficos dessa página, só para reconhecer um gráfico citado: #{guide.summary}."
+  end
+
+  # Fora de uma página com gráficos, o mesmo título em páginas diferentes
+  # (anteriores ou com ferramenta de dados) é calculado aqui, em vez de
+  # depender de a IA perceber a coincidência
+  def shared_titles_text(previous_guides)
+    return if previous_guides.empty? || current_guide
+
+    shared = PageGuide.shared_titles(previous_guides + PageGuide.with_data)
+    return if shared.empty?
+
+    titles = shared.map do |title, pages|
+      "#{title} (#{pages.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ')})"
+    end
+    "GRÁFICOS COM O MESMO NOME EM MAIS DE UMA PÁGINA: #{titles.join('; ')}. O usuário não está em " \
+      "nenhuma dessas páginas agora: se ele citar um desses gráficos sem dizer a página, pergunte qual, " \
+      "mesmo que a pergunta anterior tenha sido feita numa delas."
+  end
+
+  def previous_questions
+    @message.chat.messages.where(role: "user").where.not(id: @message.id).where.not(page_path: nil)
+            .order(created_at: :desc).limit(PREVIOUS_QUESTIONS)
   end
 
   def history_content(message)
