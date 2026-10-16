@@ -9,6 +9,7 @@ class CandidateDetailsTool < ApplicationTool
     return not_found("Candidato") unless candidate
 
     deputy = candidate.current_deputy
+    cite_deputy(deputy)
 
     {
       candidato: {

@@ -66,6 +66,7 @@ class PartyRankingTool < ApplicationTool
       acoes: continuation(shown: rows.size, total: present.size, max: MAX_LIMIT,
                           description: "partidos por #{PartyComparison::SORTS[criterion][:label].downcase}, " \
                                        "#{order_label(direction)}",
+                          last: rows.last&.dig(:sigla),
                           page: routes.compare_parties_path(sort: criterion, dir: direction, anchor: "indicadores"))
     }.compact
   end
@@ -73,6 +74,7 @@ class PartyRankingTool < ApplicationTool
   private
 
   def ranking_row(row, value, index)
+    cite_party(row.party)
     {
       posicao: index + 1,
       party_id: row.party.id,

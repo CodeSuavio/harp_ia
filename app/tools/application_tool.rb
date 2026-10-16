@@ -6,17 +6,20 @@
 #
 # Além dos dados, cada ferramenta oferece os próximos passos possíveis no
 # campo "acoes" (HarpiaActions): perguntas que a Harpia responde e páginas
-# da plataforma ligadas ao que foi consultado.
+# da plataforma ligadas ao que foi consultado. Os deputados e partidos dos
+# dados vão para o registro da resposta (HarpiaRecords).
 class ApplicationTool < RubyLLM::Tool
   LIST_LIMIT = 10
   # Itens de um ranking por resposta: o que cabe no widget
   RANKING_LIMIT = 5
 
-  attr_reader :actions
+  attr_reader :actions, :records
 
-  # Todas as ferramentas de uma resposta compartilham o mesmo registro de ações
-  def initialize(actions = HarpiaActions.new)
+  # Todas as ferramentas de uma resposta compartilham os mesmos registros de
+  # ações e de deputados e partidos consultados
+  def initialize(actions = HarpiaActions.new, records = HarpiaRecords.new)
     @actions = actions
+    @records = records
   end
 
   private
@@ -41,6 +44,16 @@ class ApplicationTool < RubyLLM::Tool
 
   def party_label(record)
     record.party&.label
+  end
+
+  # Deputado ou partido devolvido à IA: se a resposta o apresentar, a Harpia
+  # entende "esse deputado" ou "qual deles" nas perguntas seguintes
+  def cite_deputy(deputy)
+    records.deputy(deputy)
+  end
+
+  def cite_party(party)
+    records.party(party)
   end
 
   # Tema pelo nome, sem diferenciar maiúsculas e acentos, ou por parte dele
@@ -73,19 +86,20 @@ class ApplicationTool < RubyLLM::Tool
 
   # ----- PRÓXIMOS PASSOS -----
 
-  def question(label, text, required: false)
-    actions.question(label, text, required: required)
+  def question(label, text)
+    actions.question(label, text)
   end
 
-  def link(label, path, required: false)
-    actions.link(label, path, required: required)
+  def link(label, path)
+    actions.link(label, path)
   end
 
   # ----- RANKINGS EM PARTES -----
   # Os rankings trazem RANKING_LIMIT itens por vez. Quando a lista foi
-  # cortada, o campo "recorte" avisa a IA e as ações "Ver mais" (a próxima
-  # parte, pela própria Harpia) e "Ver lista completa" (página existente,
-  # quando houver) entram sempre abaixo da resposta.
+  # cortada, o campo "recorte" avisa a IA, e a continuação entra abaixo da
+  # resposta que mostrou a lista: "Ver lista completa" quando existe a página
+  # com a lista inteira, ou "Ver mais" (a próxima parte, pela própria Harpia)
+  # quando não existe.
 
   def ranking_limit(limit, max)
     limit.to_i.positive? ? [limit.to_i, max].min : RANKING_LIMIT
@@ -97,18 +111,23 @@ class ApplicationTool < RubyLLM::Tool
 
   # description: o ranking em palavras, para a pergunta "Ver mais" ser
   # entendida sozinha (ex.: "deputados por gasto mensal, do maior para o menor, em SP").
-  # required: false quando a lista é só uma parte da resposta, que a IA pode
-  # nem mostrar (ex.: o ranking que acompanha a contagem do panorama)
-  def continuation(shown:, total:, max:, description:, page: nil, required: true) # rubocop:disable Metrics/ParameterLists
+  # last: como o último item aparece na resposta (nome, sigla, número do
+  # projeto...). A continuação só entra se a resposta mostrou esse item, pelo
+  # texto ou pela posição numerada ("10.").
+  def continuation(shown:, total:, max:, description:, last:, page: nil) # rubocop:disable Metrics/ParameterLists
     return if shown >= total
 
+    shown_if = [/(?<![\d.,])#{shown}\.(?!\d)/, *Array(last).compact_blank.map { |text| word(text) }]
+    return [actions.link("Ver lista completa", page, shown_if: shown_if, list_page: page)] if page
+
     upto = [shown + RANKING_LIMIT, max, total].min
-    [
-      (if upto > shown
-         question("Ver mais", "Mostre as posições #{shown + 1} a #{upto}: #{description}", required: required)
-       end),
-      (link("Ver lista completa", page, required: required) if page)
-    ].compact.presence
+    return unless upto > shown
+
+    [actions.question("Ver mais", "Mostre as posições #{shown + 1} a #{upto}: #{description}", shown_if: shown_if)]
+  end
+
+  def word(text)
+    /(?<![[:alnum:]])#{Regexp.escape(text.to_s)}(?![[:alnum:]])/
   end
 
   def order_label(direction)

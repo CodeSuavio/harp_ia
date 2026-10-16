@@ -52,6 +52,7 @@ class BillListTool < ApplicationTool
   end
 
   def bill_row(bill)
+    cite_deputy(bill.deputy)
     { id: bill.id, numero: number(bill), apresentado_em: bill.submission_date&.to_date,
       ementa: bill.summary.to_s.truncate(200), autor: bill.deputy&.name, partido: party_label(bill),
       temas: bill.themes.map(&:name) }.compact
@@ -64,7 +65,7 @@ class BillListTool < ApplicationTool
     [
       *continuation(shown: bills.size, total: total, max: MAX_LIMIT,
                     description: "#{"projetos de lei #{filters_text}".strip}, dos mais recentes para os mais antigos",
-                    page: page_path),
+                    last: number(bills.last), page: page_path),
       question("Sobre o #{number(bills.first)}", "Do que trata o #{number(bills.first)}?")
     ]
   end

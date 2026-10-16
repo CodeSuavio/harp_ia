@@ -43,6 +43,7 @@ class SearchPlatformTool < ApplicationTool
 
   def search_deputado(_term, like)
     Deputy.includes(:party).where("deputies.name ILIKE ?", like).order(:name).limit(LIST_LIMIT).map do |deputy|
+      cite_deputy(deputy)
       { id: deputy.id, nome: deputy.name, partido: party_label(deputy), uf: deputy.state_label,
         situacao: deputy.status }
     end
@@ -51,6 +52,7 @@ class SearchPlatformTool < ApplicationTool
   def search_partido(term, like)
     Party.where("label ILIKE :t OR name ILIKE :l OR former_labels ILIKE :l", t: term, l: like)
          .order(:label).limit(LIST_LIMIT).map do |party|
+      cite_party(party)
       { id: party.id, sigla: party.label, nome: party.name, ativo: party.active }
     end
   end

@@ -31,9 +31,10 @@ class PartySelectionComparison
   attr_reader :parties
 
   # Partidos escolhidos na listagem (ids na ordem da escolha), como a página
-  # monta a comparação: ignora ids vazios, desconhecidos e repetidos, até LIMIT
-  def self.for(ids, comparison = PartyComparison.new)
-    ids = Array(ids).compact_blank.first(LIMIT).map(&:to_i)
+  # monta a comparação: ignora ids vazios, desconhecidos e repetidos, até o
+  # limite (o da página, ou outro na consulta da Harpia)
+  def self.for(ids, comparison = PartyComparison.new, limit: LIMIT)
+    ids = Array(ids).compact_blank.first(limit).map(&:to_i)
     rows = comparison.rows.index_by { |row| row.party.id }
     new(rows.values_at(*ids).compact.uniq, comparison)
   end

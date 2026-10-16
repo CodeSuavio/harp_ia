@@ -41,6 +41,7 @@ class PollListTool < ApplicationTool
     @filters = { theme: find_theme(theme), party: find_party(party), year: year.presence&.to_i,
                  result: (result if RESULTS.key?(result)), government: GOVERNMENT[government],
                  query: query.to_s.strip.presence }.compact
+    cite_party(@filters[:party])
     list(ranking_limit(limit, MAX_LIMIT))
   end
 
@@ -118,7 +119,7 @@ class PollListTool < ApplicationTool
     [
       *continuation(shown: polls.size, total: total, max: MAX_LIMIT,
                     description: "#{"votações #{filters_text}".strip}, das mais recentes para as mais antigas",
-                    page: page_path),
+                    last: polls.last.date&.strftime("%d/%m/%Y"), page: page_path),
       link("Ver votação de #{first.date&.strftime('%d/%m/%Y')}", routes.poll_path(first)),
       (if @filters[:party]
          link("Ver votações do #{@filters[:party].label}",

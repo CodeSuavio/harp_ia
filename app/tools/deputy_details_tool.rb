@@ -16,6 +16,9 @@ class DeputyDetailsTool < ApplicationTool
     deputy = Deputy.includes(:party).find_by(id: deputy_id)
     return not_found("Deputado") unless deputy
 
+    cite_deputy(deputy)
+    cite_party(deputy.party)
+
     stats = DeputyStats.new(deputy)
     years = deputy.expenses.distinct.order(year: :desc).pluck(:year)
     year = years.include?(year.to_i) ? year.to_i : years.first

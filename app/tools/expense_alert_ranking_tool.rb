@@ -69,6 +69,7 @@ class ExpenseAlertRankingTool < ApplicationTool
   end
 
   def ranking_row(row, deputy, index)
+    cite_deputy(deputy)
     {
       posicao: index + 1, deputy_id: deputy.id, nome: deputy.name, partido: party_label(deputy),
       uf: deputy.state_label, alertas: row[:count], pontuacao: row[:score],
@@ -87,7 +88,7 @@ class ExpenseAlertRankingTool < ApplicationTool
     [
       *continuation(shown: shown.size, total: rows.size, max: MAX_LIMIT,
                     description: "deputados com alertas de gastos, #{filters_text(filters)}",
-                    page: page_path(filters)),
+                    last: deputies[shown.last[:deputy_id]]&.name, page: page_path(filters)),
       link("Ver notas com alerta de #{first.name}",
            routes.deputy_path(first, tab: "expenses", year: filters[:year], alerts: "1"))
     ]

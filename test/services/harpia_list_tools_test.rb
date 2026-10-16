@@ -24,9 +24,10 @@ class HarpiaListToolsTest < ActiveSupport::TestCase
     result = tool.call("theme" => "Saúde", "party" => "PT", "year" => 2025)
 
     assert_equal({ exibindo: 5, de: 6 }, result[:recorte])
-    more, page, first = result[:acoes].map { |action| tool.actions.find(action[:id]) }
-    assert_equal "Mostre as posições 6 a 6: projetos de lei sobre Saúde, do PT, de 2025, " \
-                 "dos mais recentes para os mais antigos", more.value
+    page, first = result[:acoes].map { |action| tool.actions.find(action[:id]) }
+    # A continuação entra se a resposta mostrou o último projeto da lista
+    assert_equal ["Ver lista completa"], tool.actions.pick([], content: "PL 6/2025 ... PL 2/2025").pluck("label")
+    assert_empty tool.actions.pick([], content: "PL 6/2025")
     assert_equal "/bills?party=#{parties(:pt).id}&theme=#{themes(:saude).id}&year=2025", page.value
     assert_equal "Do que trata o PL 6/2025?", first.value
   end

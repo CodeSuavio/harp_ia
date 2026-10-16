@@ -30,11 +30,9 @@ class ExpenseAlertRankingToolTest < ActiveSupport::TestCase
     assert_equal [["Davi Rocha", 5, 1]], (result[:ranking].map { |row| [row[:nome], row[:pontuacao], row[:alertas]] })
     assert_equal({ exibindo: 1, de: 3 }, result[:recorte])
     assert_equal 4, result[:total_de_alertas]
-    assert_equal ["Ver mais", "Ver lista completa", "Ver notas com alerta de Davi Rocha"],
+    assert_equal ["Ver lista completa", "Ver notas com alerta de Davi Rocha"],
                  (result[:acoes].map { |action| action[:rotulo] })
-    assert_equal "Mostre as posições 2 a 3: deputados com alertas de gastos, todas as gravidades, em 2025",
-                 @tool.actions.all.first.value
-    assert_equal "/alertas?year=2025", @tool.actions.all.second.value
+    assert_equal "/alertas?year=2025", @tool.actions.all.first.value
   end
 
   test "ordena pela parte do gasto em notas com alerta" do

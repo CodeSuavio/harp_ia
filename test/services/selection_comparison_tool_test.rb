@@ -61,17 +61,17 @@ class SelectionComparisonToolTest < ActiveSupport::TestCase
 
   # ----- DEPUTADOS -----
 
-  test "deputados: mesma tabela e a divergência entre cada par, na ordem escolhida" do
+  test "deputados: mesma tabela, na ordem escolhida, e os pares do mais parecido ao mais diferente" do
     ana, bruno, davi = %i[ana bruno davi].map { |name| deputies(name) }
     result = @tool.call("kind" => "deputados", "ids" => "#{davi.id}, #{ana.id}, #{bruno.id}")
     comparison = DeputyComparison.for([davi.id, ana.id, bruno.id])
 
     assert_equal [davi.name, ana.name, bruno.name], result[:escolhidos].pluck(:nome)
     assert_equal comparison.rows.map(&:label), result[:linhas].pluck(:indicador)
-    expected = comparison.divergences.map { |_, _, divergence| divergence[:pct] }
+    expected = comparison.divergences.map { |_, _, divergence| divergence[:pct] if divergence[:common].positive? }
     pairs = result[:como_votaram_entre_si][:pares]
-    assert_equal "#{davi.name} e #{ana.name}", pairs.first[:deputados]
-    assert_equal expected, pairs.pluck(:votaram_diferente_pct)
+    assert_equal expected.compact.sort + ([nil] * expected.count(nil)), pairs.pluck(:votaram_diferente_pct)
+    assert_equal "do par mais parecido ao mais diferente", result[:como_votaram_entre_si][:ordem]
     assert_includes result[:acoes].pluck(:rotulo), "Ver perfil de #{ana.name}"
   end
 
@@ -83,12 +83,34 @@ class SelectionComparisonToolTest < ActiveSupport::TestCase
     assert_includes SelectionComparisonTool.new.description, "search_platform"
   end
 
-  test "respeita o limite da página e avisa" do
-    ids = %i[ana bruno carla davi].map { |name| deputies(name).id }.join(", ")
-    result = @tool.call("kind" => "deputados", "ids" => ids)
+  test "compara mais registros que a página, sem o link da página" do
+    names = %i[ana bruno carla davi].map { |name| deputies(name) }
+    result = @tool.call("kind" => "deputados", "ids" => names.map(&:id).join(", "))
 
-    assert_equal DeputyComparison::LIMIT, result[:escolhidos].size
-    assert_match(/até #{DeputyComparison::LIMIT}/, result[:aviso])
+    assert_operator DeputyComparison::LIMIT, :<, 4
+    assert_equal names.map(&:name), result[:escolhidos].pluck(:nome)
+    assert_equal 6, result[:como_votaram_entre_si][:pares].size
+    assert_nil result[:acoes]
+    assert_nil result[:aviso]
+  end
+
+  test "com muitos pares, só os mais parecidos e os mais diferentes" do
+    pairs = (1..12).map { |pct| { deputados: "par #{pct}", votaram_diferente_pct: pct, votacoes_em_comum: 10 } }
+    votes = @tool.send(:votes, pairs + [{ deputados: "sem dados", aviso: "x" }], :votaram_diferente_pct, :asc)
+
+    assert_equal 13, votes[:total_de_pares]
+    assert_equal [1, 2, 3, 4, 5], votes[:mais_parecidos].pluck(:votaram_diferente_pct)
+    assert_equal [12, 11, 10, 9, 8], votes[:mais_diferentes].pluck(:votaram_diferente_pct)
+    assert_equal 1, votes[:pares_sem_dados]
+  end
+
+  test "registra os escolhidos para as próximas perguntas" do
+    ana = deputies(:ana)
+    bruno = deputies(:bruno)
+    @tool.call("kind" => "deputados", "ids" => "#{ana.id}, #{bruno.id}")
+    @tool.call("kind" => "partidos", "ids" => "PT, MDB")
+
+    assert_equal [ana.name, "PT"], @tool.records.presented_in("#{ana.name} e o PT").pluck("name")
   end
 
   test "recusa tipo desconhecido e menos de 2 registros" do
