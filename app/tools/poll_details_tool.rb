@@ -30,6 +30,8 @@ class PollDetailsTool < ApplicationTool
       votos_contra_o_proprio_partido: breakdown.dissidents.first(20).map do |vote, majority|
         { deputado: vote.deputy.name, partido: vote.deputy.party.label, voto: vote.vote, maioria_do_partido: majority }
       end,
+      # Como votou cada estado, na ordem da página
+      por_estado: breakdown.by_state.map { |uf, votes| { uf: uf, sim: votes["Sim"], nao: votes["Não"] } }.presence,
       acoes: next_steps(poll)
     }
   end

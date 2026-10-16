@@ -54,9 +54,22 @@ class PageGuideTest < ActiveSupport::TestCase
     assert_includes PageGuide.find("parties#compare_selected").text, "votaram igual"
   end
 
-  test "só as páginas com ferramenta de dados são conhecidas em qualquer pergunta, sem as de seleção" do
-    assert_equal %w[parties#compare deputies#compare], PageGuide.with_data.map(&:key)
-    assert_nil PageGuide.find("pages#home")
+  test "só as páginas com ferramenta de dados são conhecidas em qualquer pergunta, sem as de um registro" do
+    assert_equal %w[parties#compare deputies#compare pages#home deputies#index expense_alerts#index],
+                 PageGuide.with_data.map(&:key)
+    assert_includes PageGuide.all.map(&:key), "site"
+    assert_nil PageGuide.find("bills#index")
+  end
+
+  test "páginas de um registro: cada seção diz de onde vêm os números" do
+    guide = PageGuide.find("deputies#show/expenses")
+    text = guide.text
+
+    assert_includes text, "Gastos por mês (id monthly)"
+    assert_includes text, "números: deputy_details com o deputy_id e section gastos_por_mes"
+    assert_includes text, PageGuide::BY_SECTION
+    assert_not_includes PageGuide.with_data.map(&:key), guide.key
+    assert_equal "pages#home", PageGuide.find("parties#index").key
   end
 
   test "aponta as seções presentes em mais de uma página pelo id, com os títulos de cada uma" do

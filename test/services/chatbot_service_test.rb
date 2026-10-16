@@ -104,9 +104,9 @@ class ChatbotServiceTest < ActiveSupport::TestCase
 
   test "páginas anteriores com gráficos chegam como referência, da mais recente para a mais antiga" do
     chat = users(:renata).chats.create!
+    ask(chat, "Quem é esta deputada?", "/deputies/#{deputies(:ana).id}")
     ask(chat, "Explique o mapa de posicionamento", "/parties/compare")
     ask(chat, "E aqui?", "/deputies/compare?sort=expenses")
-    ask(chat, "Quem é esta deputada?", "/deputies/#{deputies(:ana).id}")
     instructions = ChatbotService.new(ask(chat, "Explique o mapa de posicionamento", "/chats/#{chat.id}"))
                                  .page_instructions
 
@@ -150,9 +150,49 @@ class ChatbotServiceTest < ActiveSupport::TestCase
     assert_not_includes instructions, "PERGUNTA ANTERIOR"
   end
 
+  test "o perfil visitado antes chega como referência, com as seções e o deputado" do
+    chat = users(:renata).chats.create!
+    ana = deputies(:ana)
+    ask(chat, "Quanto ela gastou?", "/deputies/#{ana.id}?tab=expenses")
+    instructions = ChatbotService.new(ask(chat, "Explique o gráfico de gastos por mês", "/chats/#{chat.id}"))
+                                 .page_instructions
+
+    assert_includes instructions, "PÁGINA DE UMA PERGUNTA ANTERIOR (o usuário não está nela agora): Perfil do " \
+                                  "deputado #{ana.name}"
+    assert_includes instructions, PageSections::DEPUTY.dig("expenses", "monthly", :title)
+  end
+
+  test "o aviso de gráficos parecidos é uma lista completa: os demais não são ambíguos" do
+    chat = users(:renata).chats.create!
+    instructions = ChatbotService.new(ask(chat, "Explique quem vota com quem", "/chats/#{chat.id}")).page_instructions
+
+    assert_includes instructions, "GRÁFICOS PARECIDOS EM MAIS DE UMA PÁGINA, lista completa"
+    assert_includes instructions, "Qualquer outro gráfico ou elemento citado existe em uma página só"
+    assert_not_includes instructions, PartyComparison::SECTIONS["affinity"][:title]
+  end
+
+  test "o aviso diz quando a pergunta cita pelo título um gráfico da lista" do
+    chat = users(:renata).chats.create!
+    cited = ChatbotService.new(ask(chat, "Explique o mapa de posicionamento", "/chats/#{chat.id}")).page_instructions
+    other = ChatbotService.new(ask(chat, "Explique quem vota com quem", "/chats/#{chat.id}")).page_instructions
+
+    assert_includes cited, "A pergunta atual cita \"Mapa de posicionamento\" (comparação de partidos e " \
+                           "panorama de deputados)."
+    assert_not_includes other, "A pergunta atual cita"
+  end
+
+  test "numa página sem esses gráficos (ex.: o perfil), o aviso continua; na comparação, não" do
+    chat = users(:renata).chats.create!
+    profile = ChatbotService.new(ask(chat, "Explique o mapa", "/deputies/#{deputies(:ana).id}")).page_instructions
+    compare = ChatbotService.new(ask(chat, "Explique o mapa", "/parties/compare")).page_instructions
+
+    assert_includes profile, "GRÁFICOS PARECIDOS EM MAIS DE UMA PÁGINA"
+    assert_not_includes compare, "GRÁFICOS PARECIDOS EM MAIS DE UMA PÁGINA"
+  end
+
   test "fora de uma página com gráficos, sem histórico, recebe só o aviso de gráficos parecidos" do
     chat = users(:renata).chats.create!
-    ask(chat, "Quem é esta deputada?", "/deputies/#{deputies(:ana).id}")
+    ask(chat, "Quais projetos existem?", "/bills")
     instructions = ChatbotService.new(ask(chat, "Explique o mapa de posicionamento", "/chats/#{chat.id}"))
                                  .page_instructions
 
@@ -177,6 +217,7 @@ class ChatbotServiceTest < ActiveSupport::TestCase
     assert_includes ChatbotService::TOOLS, PartyComparisonTool
     assert_includes ChatbotService::TOOLS, DeputyPanoramaTool
     assert_includes ChatbotService::TOOLS, SelectionComparisonTool
+    assert_includes ChatbotService::TOOLS, PageGuideTool
   end
 
   test "as ferramentas, instanciadas com o registro de ações, mantêm a descrição e o nome do RubyLLM" do

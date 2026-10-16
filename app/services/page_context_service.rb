@@ -5,6 +5,9 @@
 # usuário precise dizer de qual deputado, partido ou votação está falando.
 # Os dados em si são buscados pela IA com as ferramentas de app/tools.
 class PageContextService
+  # Páginas com abas, com a regra de cada controller para a aba aberta
+  TABBED = { "deputies" => DeputiesController, "parties" => PartiesController }.freeze
+
   def initialize(path)
     @path = path.to_s
   end
@@ -47,10 +50,14 @@ class PageContextService
     nil
   end
 
-  # A comparação com registros escolhidos (?ids[]=) é outra página
+  # A comparação com registros escolhidos (?ids[]=) é outra página; nas
+  # páginas com abas, a aba faz parte da página ("deputies#show/expenses")
   def page_key(route, query)
     key = "#{route[:controller]}##{route[:action]}"
-    route[:action] == "compare" && query.key?("ids") ? "#{key}_selected" : key
+    return "#{key}_selected" if route[:action] == "compare" && query.key?("ids")
+
+    tabs = TABBED[route[:controller]] if route[:action] == "show"
+    tabs ? "#{key}/#{tabs.tab_for(query['tab'])}" : key
   end
 
   def describe(route, query)
@@ -88,7 +95,7 @@ class PageContextService
         "Comparação entre partidos#{sort_text(PartyComparison::SORTS, query)}"
       end
     when %w[parties index]
-      "Lista de partidos#{filters_text(query)}"
+      "Lista de partidos#{filters_text(query.except('uf'))}#{map_state_text(query)}"
     when %w[bills show]
       bill = Bill.find_by(id: id)
       bill && "Projeto de lei #{bill.bill_type} #{bill.number}/#{bill.year} (bill_id #{bill.id})"
@@ -105,8 +112,15 @@ class PageContextService
     when %w[candidates index]
       "Lista de candidatos de 2026#{filters_text(query)}"
     when %w[pages home]
-      "Página inicial do Harp_IA"
+      "Página inicial do Harp_IA#{map_state_text(query)}"
     end
+  end
+
+  # Estado escolhido no mapa de partidos (?uf=SP), como a página reconhece
+  def map_state_text(query)
+    uf = query["uf"].to_s.upcase
+    name = PartiesController::STATES[uf]
+    ", com o mapa de partidos em #{name} (#{uf})" if name
   end
 
   # Registros de uma comparação por seleção (?ids[]=), na ordem da escolha e até
