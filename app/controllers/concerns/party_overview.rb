@@ -6,14 +6,13 @@ module PartyOverview
 
   def load_party_overview
     parties = policy_scope(Party).order(:label).to_a
-    seats = Deputy.group(:state_label, :party_id).count
+    seats = PartySeats.new
 
-    @state_seats = Hash.new(0)
-    seats.each { |(uf, _), count| @state_seats[uf] += count }
+    @state_seats = seats.state_totals
 
-    bench_ids = seats.keys.to_set(&:last)
+    bench_ids = seats.party_ids
     with_bench, @parties_without_bench = parties.partition { |p| bench_ids.include?(p.id) }
-    @map_data = party_map_data(with_bench, seats)
+    @map_data = party_map_data(with_bench, seats.seats)
     @uf = params[:uf].to_s.upcase.presence_in(PartiesController::STATES.keys)
   end
 

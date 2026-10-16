@@ -300,21 +300,23 @@ class ChatbotService
     Quando a página atual listar as seções, "este gráfico" ou "esta tabela"
     se refere a uma delas. O usuário pode citar um gráfico por um nome
     aproximado, pelo formato ou pelas cores ("gráfico de bolhas", "o quadro
-    azul"): procure o gráfico correspondente primeiro nas seções da página
-    atual, depois nas páginas das perguntas anteriores e, por fim, nos
-    gráficos descritos pelas ferramentas.
+    azul"): procure-o nas seções da página atual. Se ela não o listar,
+    consulte o page_guide (sem page, o resumo de todas as páginas) antes de
+    responder ou de perguntar qual: não explique de memória gráficos, seções
+    ou funcionalidades da plataforma (como comparar, filtrar, alertas,
+    dicas), nem pergunte qual sem ter visto o resumo.
     Quando houver mais de uma interpretação conhecida (duas seções que
     combinam com o nome, ou "esse gráfico" numa página com vários gráficos),
     não escolha uma: pergunte qual, com as opções em quick_replies, escritas
     como pedido e com o título em minúsculas ("Explique o mapa de
     posicionamento"); acrescente a página quando ela não for a atual
     ("Explique o mapa de posicionamento dos partidos"). Ofereça só seções
-    listadas na página atual ou gráficos descritos pelas ferramentas; nunca
-    invente nomes de gráficos.
+    listadas na página atual, gráficos descritos pelas ferramentas ou seções
+    do page_guide; nunca invente nomes de gráficos.
     Quando o gráfico citado não existir (ex.: "gráfico de pizza"), diga em
     uma frase que a plataforma não tem esse gráfico e ofereça em
     quick_replies até 3 gráficos reais mais próximos do que o usuário
-    procura. Sem página informada e sem nenhum gráfico parecido, pergunte em
+    procura. Se nem o page_guide trouxer um gráfico parecido, pergunte em
     uma frase de qual página e de qual gráfico o usuário fala, com
     quick_replies vazio.
     Identificado o gráfico, consulte a ferramenta dele, com ou sem página
@@ -360,6 +362,7 @@ class ChatbotService
     PartyRankingTool,
     PartyComparisonTool,
     DeputyPanoramaTool,
+    PageGuideTool,
     SelectionComparisonTool,
     DeputyRankingTool,
     DeputyStateRankingTool,
@@ -521,16 +524,30 @@ class ChatbotService
   # (anteriores ou com ferramenta de dados) é calculada aqui, em vez de
   # depender de a IA perceber a coincidência
   def shared_sections_text(previous_guides)
-    return if current_guide
-
     shared = PageGuide.shared_sections(previous_guides + PageGuide.with_data)
-    return if shared.empty?
+    # Numa página que tem um desses gráficos, a página atual decide
+    return if shared.empty? || shared.any? { |section| section[:pages].include?(current_guide&.name) }
 
-    "GRÁFICOS PARECIDOS EM MAIS DE UMA PÁGINA (#{shared_groups(shared)}). O usuário não está em nenhuma " \
-      "dessas páginas agora: se ele citar um desses gráficos sem dizer a página, pergunte qual, mesmo que a " \
-      "pergunta anterior tenha sido feita numa delas. Se a pergunta já disser de quem é o gráfico " \
+    "GRÁFICOS PARECIDOS EM MAIS DE UMA PÁGINA, lista completa (#{shared_groups(shared)}). O usuário não está " \
+      "em nenhuma dessas páginas agora: se ele citar um desses gráficos sem dizer a página, pergunte qual, " \
+      "mesmo que a pergunta anterior tenha sido feita numa delas. Se a pergunta já disser de quem é o gráfico " \
       "(\"dos partidos\", \"dos deputados\", \"quais partidos votam juntos\"), não pergunte: " \
-      "use o gráfico dessa página."
+      "use o gráfico dessa página. Qualquer outro gráfico ou elemento citado existe em uma página só ou não " \
+      "é um gráfico: não pergunte a página; identifique-o e explique.#{cited_shared_text(shared)}"
+  end
+
+  # Um gráfico da lista citado pelo título na pergunta atual: o fato vai
+  # junto, para a IA não tomar a página da pergunta anterior como a página do
+  # gráfico. Descrições sem o título continuam com a interpretação da IA.
+  def cited_shared_text(shared)
+    question = I18n.transliterate(@message.content.to_s).downcase
+    cited = shared.select do |section|
+      section[:titles].any? { |title| question.include?(I18n.transliterate(title).downcase) }
+    end
+    return if cited.empty?
+
+    " A pergunta atual cita #{cited.map { |section| "\"#{section[:titles].first}\" (#{section[:pages].join(' e ')})" }
+                                     .join(' e ')}."
   end
 
   # "comparação de partidos e panorama de deputados: Mapa de posicionamento; ...",

@@ -82,8 +82,29 @@ class PageContextServiceGuideTest < ActiveSupport::TestCase
     assert_nil PageContextService.new("/parties/compare?ids[]=999999").call
   end
 
+  test "a aba faz parte da página, com a mesma regra do controller" do
+    ana = deputies(:ana).id
+    pt = parties(:pt).id
+
+    assert_equal "deputies#show/expenses", PageContextService.new("/deputies/#{ana}?tab=expenses").key
+    assert_equal "deputies#show/expenses", PageContextService.new("/deputies/#{ana}?tab=gastos").key
+    assert_equal "deputies#show/overview", PageContextService.new("/deputies/#{ana}?tab=promises").key
+    assert_equal "parties#show/votes", PageContextService.new("/parties/#{pt}?tab=votes").key
+    assert_equal "parties#show/overview", PageContextService.new("/parties/#{pt}").key
+    assert_equal "perfil do deputado, aba Gastos", PageContextService.new("/deputies/#{ana}?tab=expenses").guide.name
+  end
+
+  test "mapa de partidos: o estado escolhido, na página inicial e na lista de partidos" do
+    assert_equal "Página inicial do Harp_IA, com o mapa de partidos em São Paulo (SP)",
+                 PageContextService.new("/?uf=sp").call
+    assert_equal "Lista de partidos, com o mapa de partidos em Bahia (BA)",
+                 PageContextService.new("/parties?uf=BA").call
+    assert_equal "Lista de partidos", PageContextService.new("/parties?uf=XX").call
+    assert_equal "mapa de partidos", PageContextService.new("/parties").guide.name
+  end
+
   test "sem guia nas páginas sem gráficos mapeados" do
-    assert_nil PageContextService.new("/deputies/#{deputies(:ana).id}").guide
+    assert_nil PageContextService.new("/bills").guide
     assert_nil PageContextService.new("/chats/1").guide
     assert_nil PageContextService.new(nil).guide
   end

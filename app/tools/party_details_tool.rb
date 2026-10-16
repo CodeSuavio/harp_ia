@@ -26,6 +26,7 @@ class PartyDetailsTool < ApplicationTool
                  ativo: party.active, lider: party.leader_name },
       bancada: { deputados: stats.deputies.size, no_inicio_da_legislatura: party.seats_at_start,
                  variacao: stats.bench_change, por_estado: stats.state_bench },
+      historico: history(party, stats),
       gastos: expenses && expenses.except(:top).merge(
         total: money(expenses[:total]), monthly: money(expenses[:monthly]), chamber_monthly: money(expenses[:chamber_monthly]),
         maiores_gastos_mensais: expenses[:top].map do |deputy, value|
@@ -39,6 +40,7 @@ class PartyDetailsTool < ApplicationTool
           votacoes_contra_orientacao: adherence[:against].map { |poll, row| poll_row(poll, row) }
         ),
         votacoes_mais_divididas: stats.divided_polls.map { |poll, row| poll_row(poll, row) },
+        votacoes_mais_disputadas: stats.contested_polls.map { |poll, row| contested_row(poll, row) },
         afinidade: affinity&.transform_values { |rows| rows.map { |p, row| row.merge(partido: p.label) } },
         quem_mais_vota_contra_o_partido: dissidents.map do |deputy, row|
           row.merge(deputado: deputy.name, id: deputy.id)
@@ -75,6 +77,28 @@ class PartyDetailsTool < ApplicationTool
          question("Candidatos do #{label} por estado", "Quantos candidatos o #{label} tem em cada estado?")
        end)
     ].compact
+  end
+
+  # Como o Histórico da Visão geral: registro, siglas anteriores, fusões e a federação
+  def history(party, stats)
+    {
+      registro_no_tse: party.registered_on,
+      siglas_anteriores: party.former_labels.to_s.split.presence,
+      fusoes_e_incorporacoes: party.absorbed.map do |sigla, merger|
+        { sigla: sigla, nome: merger[:name], ano: merger[:year] }
+      end.presence,
+      federacao_na_camara: stats.federation&.then do |federation|
+        { nome: federation[:label], partidos: federation[:parties].map(&:label) }
+      end
+    }.compact.presence
+  end
+
+  # Como a lista da aba Votações: o placar da Câmara, o voto da bancada e a orientação da liderança
+  def contested_row(poll, row)
+    { id: poll.id, data: poll.date&.to_date, descricao: poll.description.to_s.truncate(160),
+      placar_da_camara: { sim: row[:total][:sim], nao: row[:total][:nao] },
+      bancada: { posicao: helpers.bench_position(row[:party]), sim: row[:party][:sim], nao: row[:party][:nao] },
+      orientacao_da_lideranca: row[:orientation] }.compact
   end
 
   def poll_row(poll, row)
