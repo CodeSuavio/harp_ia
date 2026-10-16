@@ -29,9 +29,10 @@ class DeputyComparison
   attr_reader :deputies, :year
 
   # Deputados escolhidos na listagem (ids na ordem da escolha), como a página
-  # monta a comparação: ignora ids vazios e desconhecidos, até LIMIT
-  def self.for(ids)
-    ids = Array(ids).compact_blank.first(LIMIT).map(&:to_s)
+  # monta a comparação: ignora ids vazios e desconhecidos, até o limite (o da
+  # página, ou outro na consulta da Harpia)
+  def self.for(ids, limit: LIMIT)
+    ids = Array(ids).compact_blank.first(limit).map(&:to_s)
     deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids)
                      .index_by { |deputy| deputy.id.to_s }.values_at(*ids).compact
     new(deputies)

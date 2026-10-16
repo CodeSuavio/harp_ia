@@ -23,6 +23,7 @@ class PartyComparisonTool < ApplicationTool
     return { erro: "Seção inválida. Use uma destas: #{SECTIONS.join(', ')}." } unless SECTIONS.include?(section)
 
     info = PartyComparison::SECTIONS[section]
+    comparison.rows.each { |row| cite_party(row.party) }
     {
       secao: info[:title],
       o_que_mostra: [info[:chart], info[:reading]].compact.join(". "),

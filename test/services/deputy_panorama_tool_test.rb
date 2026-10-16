@@ -67,12 +67,11 @@ class DeputyPanoramaToolTest < ActiveSupport::TestCase
     assert_equal(["Davi Rocha"], result[:ranking_por_governismo].pluck(:nome))
     assert_equal({ exibindo: 1, de: 2 }, result[:recorte])
     assert_equal 2, result[:com_governismo_calculado]
-    more, page = result[:acoes].map { |action| @tool.actions.find(action[:id]) }
-    assert_equal "Mostre as posições 2 a 2: deputados por governismo, do menor para o maior, em RJ", more.value
+    page = @tool.actions.find(result[:acoes].first[:id])
     assert_equal "/deputies/compare?dir=asc&state=RJ", page.value
-    # O ranking acompanha a contagem: a continuação só entra se a IA mostrou a lista
-    assert_not(more.required || page.required)
-    assert_empty @tool.actions.pick([])
+    # O ranking acompanha a contagem: a continuação só entra se a resposta mostrou a lista
+    assert_empty @tool.actions.pick([], content: "No RJ, a tabela mostra 2 deputados.")
+    assert_equal ["Ver lista completa"], @tool.actions.pick([], content: "1. Davi Rocha").pluck("label")
   end
 
   test "o link da tabela é descartado quando o usuário já está nela" do

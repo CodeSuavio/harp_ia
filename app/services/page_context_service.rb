@@ -16,6 +16,12 @@ class PageContextService
     describe(route, query) if route
   end
 
+  # Página renderizada ("deputies#index", "parties#compare_selected"), ou nil
+  def key
+    route, query = recognize
+    page_key(route, query) if route
+  end
+
   # Gráficos da página (PageGuide), ou nil quando ela não tem gráficos mapeados.
   # Não é salvo com a pergunta, para não repetir o guia a cada mensagem do histórico.
   # Nas comparações por seleção, só com ao menos 2 escolhidos: com menos, a

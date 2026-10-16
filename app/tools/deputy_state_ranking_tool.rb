@@ -53,7 +53,8 @@ class DeputyStateRankingTool < ApplicationTool
       ranking: sorted.first(limit).each_with_index.map do |(uf, count), index|
         { posicao: index + 1, uf: uf, deputados: count, percentual: (count * 100.0 / total).round(1) }
       end
-    }.merge(partial(sorted.size, limit, "número de deputados por estado, #{order_label(direction)}")).compact
+    }.merge(partial(sorted.size, limit, "número de deputados por estado, #{order_label(direction)}",
+                    sorted.first(limit).last&.first)).compact
   end
 
   # Em cada estado, o deputado com o maior (ou menor) valor do indicador
@@ -71,7 +72,8 @@ class DeputyStateRankingTool < ApplicationTool
       estados: sorted.first(limit).each_with_index.map do |deputy, index|
         leader_row(deputy, values, criterion, index)
       end
-    }.merge(partial(sorted.size, limit, leaders_description(criterion, direction, year))).compact
+    }.merge(partial(sorted.size, limit, leaders_description(criterion, direction, year),
+                    sorted.first(limit).last&.name)).compact
   end
 
   # O deputado no topo de cada estado, ordenados pelo valor
@@ -82,13 +84,14 @@ class DeputyStateRankingTool < ApplicationTool
   end
 
   # Recorte e "Ver mais" (não há página com estes rankings)
-  def partial(total, limit, description)
+  def partial(total, limit, description, last)
     shown = [limit, total].min
     { recorte: recorte(shown, total),
-      acoes: continuation(shown: shown, total: total, max: STATES_LIMIT, description: description) }
+      acoes: continuation(shown: shown, total: total, max: STATES_LIMIT, description: description, last: last) }
   end
 
   def leader_row(deputy, values, criterion, index)
+    cite_deputy(deputy)
     value = values[deputy.id]
     { posicao: index + 1, uf: deputy.state_label, deputy_id: deputy.id, nome: deputy.name,
       partido: party_label(deputy), valor: criterion.start_with?("expenses") ? money(value) : value }

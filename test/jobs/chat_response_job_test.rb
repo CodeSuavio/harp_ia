@@ -69,6 +69,15 @@ class ChatResponseJobTest < ActiveJob::TestCase
     assert_includes widget.to_html, "Ranking dentro dos estados"
   end
 
+  test "salva os deputados e partidos que a resposta apresentou" do
+    records = [{ "type" => "party", "id" => parties(:pt).id, "name" => "PT" }]
+    FakeChatbot.reply("O PT tem 1 deputado.", records: records)
+
+    ChatResponseJob.perform_now(@question)
+
+    assert_equal records, @chat.messages.find_by(role: "assistant").records
+  end
+
   test "pergunta fora do escopo não gera título" do
     FakeChatbot.reply("Fora do escopo", out_of_scope: true)
 

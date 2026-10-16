@@ -13,6 +13,8 @@ class PartyDetailsTool < ApplicationTool
     party = Party.find_by(id: party_id)
     return not_found("Partido") unless party
 
+    cite_party(party)
+
     stats = PartyStats.new(party)
     expenses = stats.expenses
     adherence = stats.orientation_adherence

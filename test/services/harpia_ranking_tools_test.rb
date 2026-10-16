@@ -16,16 +16,18 @@ class HarpiaRankingToolsTest < ActiveSupport::TestCase
     assert_nil result[:acoes]
   end
 
-  test "ranking de partidos cortado avisa o recorte e oferece ver mais e a lista completa" do
+  test "ranking de partidos cortado avisa o recorte e continua pela comparação, se a resposta mostrou a lista" do
     tool = PartyRankingTool.new
     result = tool.call("criterion" => "seats", "limit" => 1)
+    first = result[:ranking].first[:sigla]
 
     assert_equal({ exibindo: 1, de: 2 }, result[:recorte])
-    assert_equal ["Ver mais", "Ver lista completa"], (result[:acoes].map { |action| action[:rotulo] })
-    more, page = result[:acoes].map { |action| tool.actions.find(action[:id]) }
-    assert_equal "Mostre as posições 2 a 2: partidos por cadeiras, do maior para o menor", more.value
-    assert_equal "/parties/compare?dir=desc&sort=seats#indicadores", page.value
-    assert(more.required && page.required)
+    # A página tem a lista inteira: sem "Ver mais" pela Harpia
+    assert_equal ["Ver lista completa"], (result[:acoes].map { |action| action[:rotulo] })
+    assert_equal "/parties/compare?dir=desc&sort=seats#indicadores", tool.actions.all.first.value
+    assert_equal ["Ver lista completa"], tool.actions.pick([], content: "O maior é o #{first}.").pluck("label")
+    assert_empty tool.actions.pick([], content: "São 2 partidos.")
+    assert_empty tool.actions.pick([], content: "O maior é o #{first}.", current_path: "/parties/compare")
   end
 
   test "inverte a ordem e limita o ranking de partidos" do
@@ -65,20 +67,30 @@ class HarpiaRankingToolsTest < ActiveSupport::TestCase
     result = tool.call("criterion" => "expenses_total", "state" => "sp", "order" => "asc", "limit" => 1)
 
     assert_equal({ exibindo: 1, de: 2 }, result[:recorte])
-    more, page = result[:acoes].map { |action| tool.actions.find(action[:id]) }
-    assert_equal "Mostre as posições 2 a 2: deputados por gasto total no ano, do menor para o maior, em SP, " \
-                 "gastos de 2025", more.value
-    assert_equal "/deputies?dir=asc&sort=expenses_total&state=SP", page.value
+    assert_equal ["Ver lista completa"], (result[:acoes].map { |action| action[:rotulo] })
+    assert_equal "/deputies?dir=asc&sort=expenses_total&state=SP", tool.actions.all.first.value
   end
 
-  test "ver mais vai até o limite máximo da ferramenta; depois, só a lista completa" do
+  test "sem página com a lista, ver mais vai até o limite máximo da ferramenta" do
     tool = DeputyRankingTool.new
-    continuation = ->(shown) { tool.send(:continuation, shown: shown, total: 30, max: 20, description: "x", page: "/deputies") }
+    continuation = lambda do |shown, page = nil|
+      tool.send(:continuation, shown: shown, total: 30, max: 20, description: "x", last: "Ana", page: page)
+    end
 
-    assert_equal ["Ver mais", "Ver lista completa"], (continuation.call(18).map { |action| action[:rotulo] })
+    assert_equal ["Ver mais"], (continuation.call(18).map { |action| action[:rotulo] })
     assert_equal "Mostre as posições 19 a 20: x", tool.actions.all.first.value
-    assert_equal ["Ver lista completa"], (continuation.call(20).map { |action| action[:rotulo] })
-    assert_nil continuation.call(30)
+    assert_nil continuation.call(20)
+    assert_equal ["Ver lista completa"], (continuation.call(20, "/deputies").map { |action| action[:rotulo] })
+    assert_nil continuation.call(30, "/deputies")
+  end
+
+  test "a continuação reconhece a lista mostrada pelo último item ou pela posição numerada" do
+    tool = DeputyRankingTool.new
+    tool.send(:continuation, shown: 10, total: 30, max: 20, description: "x", last: "Rui Falcão")
+
+    assert_equal ["Ver mais"], tool.actions.pick([], content: "9. Túlio\n10. Rui Falcão: 98%").pluck("label")
+    assert_equal ["Ver mais"], tool.actions.pick([], content: "6. Welter\n...\n10. Rui").pluck("label")
+    assert_empty tool.actions.pick([], content: "O menor gasto é R$ 10.000,00, de Celso Sabino.")
   end
 
   test "usa o ano pedido no ranking de gastos" do

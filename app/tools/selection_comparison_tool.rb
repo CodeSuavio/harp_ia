@@ -3,19 +3,30 @@
 # por seleção (PartySelectionComparison e DeputyComparison, que têm o mesmo
 # formato de linhas).
 #
+# A consulta aceita mais registros que as páginas (LIMIT): os limites delas
+# são de espaço na tela, não das contas. Assim a Harpia responde "quais dois
+# votam mais parecido entre esses cinco?" sem pedir que o usuário reduza a
+# lista; o link para a página só entra quando o conjunto cabe nela.
+#
 # Atenção ao significado dos pares: entre partidos, a página mostra em quantas
 # votações as maiorias votaram IGUAL (afinidade); entre deputados, em quantas
 # votaram DIFERENTE (divergência). Os campos levam isso no nome.
 class SelectionComparisonTool < ApplicationTool
   KINDS = %w[partidos deputados].freeze
   UNITS = { currency: "R$", percent: "%", decimal: "", integer: "", text: "" }.freeze
+  # Registros por consulta
+  LIMIT = 10
+  # Acima disso, os pares vão resumidos: os mais parecidos e os mais diferentes
+  PAIRS_LIMIT = 10
+  PAIRS_SUMMARY = 5
 
   description <<~DESC
-    Compara lado a lado de 2 a #{PartySelectionComparison::LIMIT} partidos ou de 2 a #{DeputyComparison::LIMIT}
-    deputados escolhidos, com a mesma tabela (melhor e pior de cada linha) e os
-    mesmos pares "como votaram entre si" das páginas de comparação por seleção.
-    Use para comparar registros escolhidos ("compare PT e PL", "quem gasta menos
-    entre esses deputados?", "quanto esses deputados divergem nas votações?").
+    Compara lado a lado de 2 a #{LIMIT} partidos ou deputados escolhidos, com a
+    mesma tabela (melhor e pior de cada linha) e os mesmos pares "como votaram
+    entre si" das páginas de comparação por seleção, do par mais parecido ao
+    mais diferente. Use para comparar registros escolhidos ou já citados na
+    conversa ("compare PT e PL", "quem gasta menos entre esses deputados?",
+    "quais dois votam mais parecido?").
     Partidos: sigla ou party_id. Deputados: deputy_id (use search_platform para achar).
   DESC
 
@@ -36,17 +47,17 @@ class SelectionComparisonTool < ApplicationTool
 
   def parties(tokens)
     found, missing = resolve(tokens) { |token| party_for(token)&.id }
-    selection = PartySelectionComparison.for(found)
+    selection = PartySelectionComparison.for(found, limit: LIMIT)
     # Partidos sem deputados em exercício não entram na tabela da página
-    missing += found.first(PartySelectionComparison::LIMIT).map(&:to_s) - selection.parties.map { |row| row.party.id.to_s }
+    missing += found.first(LIMIT).map(&:to_s) - selection.parties.map { |row| row.party.id.to_s }
     entities = selection.parties.map do |row|
+      cite_party(row.party)
       entity(row.party.id, row.label, row.party.name, bloco: selection.bloc_label(row.bloc))
     end
-    party_ids = selection.parties.map { |row| row.party.id }
     pairs = selection.affinities.map { |a, b, cell| affinity_pair(a, b, cell) }
 
-    result(entities, selection, PartySelectionComparison, found, missing, pairs) do
-      [link("Ver comparação dos partidos", routes.compare_parties_path(ids: party_ids)),
+    result(entities, selection, PartySelectionComparison, found, missing, votes(pairs, :votaram_igual_pct, :desc)) do
+      [link("Ver comparação dos partidos", routes.compare_parties_path(ids: entities.pluck(:id))),
        *selection.parties.map { |row| link("Ver página do #{row.label}", routes.party_path(row.party)) }]
     end
   end
@@ -69,14 +80,15 @@ class SelectionComparisonTool < ApplicationTool
 
   def deputies(tokens)
     found, missing = resolve(tokens) { |token| token.to_i if token.match?(/\A\d+\z/) && Deputy.exists?(token.to_i) }
-    comparison = DeputyComparison.for(found)
+    comparison = DeputyComparison.for(found, limit: LIMIT)
     entities = comparison.deputies.map do |deputy|
+      cite_deputy(deputy)
       entity(deputy.id, deputy.name, nil, partido: party_label(deputy), uf: deputy.state_label)
     end
     pairs = comparison.divergences.map { |a, b, divergence| divergence_pair(a, b, divergence) }
 
-    result(entities, comparison, DeputyComparison, found, missing, pairs) do
-      [link("Ver comparação dos deputados", routes.compare_deputies_path(ids: comparison.deputies.map(&:id))),
+    result(entities, comparison, DeputyComparison, found, missing, votes(pairs, :votaram_diferente_pct, :asc)) do
+      [link("Ver comparação dos deputados", routes.compare_deputies_path(ids: entities.pluck(:id))),
        *comparison.deputies.map { |deputy| link("Ver perfil de #{deputy.name}", routes.deputy_path(deputy)) }]
     end
   end
@@ -101,8 +113,21 @@ class SelectionComparisonTool < ApplicationTool
     { id: id, nome: name, nome_completo: full_name, **extra }.compact
   end
 
-  # Mesma tabela e mesmos pares da página; erro com menos de 2 registros
-  def result(entities, comparison, service, found, missing, pairs) # rubocop:disable Metrics/ParameterLists
+  # Pares do mais parecido ao mais diferente (key: o percentual do par;
+  # direction: :desc quando mais é mais parecido), os sem dados no fim. Com
+  # muitos pares, só os mais parecidos e os mais diferentes.
+  def votes(pairs, key, direction)
+    with_data, without = pairs.partition { |pair| pair[key] }
+    sorted = with_data.sort_by { |pair| [direction == :desc ? -pair[key] : pair[key], -pair[:votacoes_em_comum]] }
+    return { ordem: "do par mais parecido ao mais diferente", pares: sorted + without } if pairs.size <= PAIRS_LIMIT
+
+    { total_de_pares: pairs.size, mais_parecidos: sorted.first(PAIRS_SUMMARY),
+      mais_diferentes: sorted.last(PAIRS_SUMMARY).reverse, pares_sem_dados: without.size.nonzero? }.compact
+  end
+
+  # Mesma tabela e mesmos pares da página; erro com menos de 2 registros. Os
+  # links só quando o conjunto cabe na página (service::LIMIT)
+  def result(entities, comparison, service, found, missing, votes) # rubocop:disable Metrics/ParameterLists
     if entities.size < 2
       return { erro: "A comparação precisa de ao menos 2 registros encontrados.",
                nao_encontrados: missing.presence }.compact
@@ -112,14 +137,14 @@ class SelectionComparisonTool < ApplicationTool
       escolhidos: entities,
       como_ler: service::SECTIONS["table"][:reading],
       linhas: comparison.rows.map { |row| line(row, entities, comparison) },
-      como_votaram_entre_si: { como_e_calculado: service::SECTIONS["votes"][:how], pares: pairs },
+      como_votaram_entre_si: { como_e_calculado: service::SECTIONS["votes"][:how], **votes },
       nao_encontrados: missing.presence,
-      aviso: (limit_notice(service::LIMIT) if found.size > service::LIMIT),
-      acoes: yield
+      aviso: (limit_notice if found.size > LIMIT),
+      acoes: (yield if entities.size <= service::LIMIT)
     }.compact
   end
 
-  def limit_notice(limit) = "A página compara até #{limit}; ficaram os #{limit} primeiros."
+  def limit_notice = "A consulta compara até #{LIMIT}; ficaram os #{LIMIT} primeiros."
 
   # Uma linha da tabela: valor de cada registro e, nas linhas com direção, o
   # melhor e o pior, como a página marca (highlight)

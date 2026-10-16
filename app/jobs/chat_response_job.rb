@@ -38,10 +38,11 @@ class ChatResponseJob < ApplicationJob
   def answer(question, chatbot)
     result = chatbot.call { |text| broadcast_partial(text) }
 
-    # Salva a resposta da IA na mesma conversa
-    # e registra se a pergunta estava fora do escopo e os próximos passos em botões
+    # Salva a resposta da IA na mesma conversa e registra se a pergunta estava
+    # fora do escopo, os próximos passos em botões e os deputados e partidos
+    # que a resposta apresentou
     Message.transaction do
-      @chat.messages.create!(role: "assistant", **result.slice(:content, :out_of_scope, :actions).compact)
+      @chat.messages.create!(role: "assistant", **result.slice(:content, :out_of_scope, :actions, :records).compact)
       question.answered!
     end
 

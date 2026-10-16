@@ -17,13 +17,19 @@ class ChatbotService
         description: "Ids dos próximos passos (campo acoes das ferramentas) exibidos como botões. " \
                      "Vazio quando não houver próximo passo útil."
       },
+      descobertas: {
+        type: "array",
+        items: { type: "string" },
+        description: "Até 2 perguntas para o usuário continuar explorando, exibidas como botões. " \
+                     "Vazio quando não houver aprofundamento útil."
+      },
       quick_replies: {
         type: "array",
         items: { type: "string" },
         description: "Opções para o usuário escolher antes de consultar os dados. Vazio quando não houver escolha."
       }
     },
-    required: ["content", "out_of_scope", "acoes", "quick_replies"],
+    required: ["content", "out_of_scope", "acoes", "descobertas", "quick_replies"],
     additionalProperties: false
   }.freeze
 
@@ -105,6 +111,11 @@ class ChatbotService
 
     Responda em português do Brasil.
 
+    Use linguagem simples, como a das páginas da plataforma: não mencione
+    ferramentas, ids, nomes de campos ou limites de consulta, nem como os
+    dados foram obtidos. Para uma lista parcial, diga "os 5 primeiros de
+    490", sem chamá-la de recorte.
+
     Responda de forma concisa e direta, priorizando respostas curtas.
     Use no máximo 2 ou 3 parágrafos, a menos que o usuário peça uma explicação
     detalhada.
@@ -169,33 +180,25 @@ class ChatbotService
     informação, consulte a ferramenta e responda diretamente, na mesma
     resposta. Não diga que vai consultar, não peça permissão para consultar
     e não sugira ao usuário outra forma de fazer a pergunta.
-    Exemplo:
-    Usuário: "estado com maior número de candidatos?"
-    Harpia: consulta candidate_ranking agrupado por estado e responde com o
-    estado no topo e a lista dos estados com mais candidatos.
 
     Peça esclarecimento somente quando a pergunta admitir interpretações que
     levem a respostas realmente diferentes (por exemplo, um nome compartilhado
     por dois deputados). Nos demais casos, adote a interpretação mais provável
     e, se for útil, diga em uma frase qual foi a interpretação usada.
 
-    PRÓXIMOS PASSOS (acoes):
-    Responda primeiro. Depois, quando houver valor, conduza o usuário ao
-    próximo passo. As ferramentas devolvem, no campo "acoes", os próximos
-    passos possíveis a partir dos dados consultados, cada um com id, tipo e
-    rótulo: "pergunta" (um aprofundamento que você mesma responde se o
-    usuário escolher) ou "página" (uma página da plataforma com esses dados).
-    Coloque no campo acoes os ids de até 3 passos que continuem o assunto da
-    pergunta de forma natural: os mais úteis, não todos. Prefira aprofundar o
-    que o usuário perguntou (ex.: depois do gasto de um deputado, os alertas
-    dele ou os gastos dos deputados do mesmo estado). Deixe acoes vazio
-    quando não houver próximo passo útil, como em perguntas conceituais.
+    PRÓXIMOS PASSOS (descobertas e acoes):
+    Depois de responder, decida se vale um aprofundamento, uma página ou
+    nada (respostas conceituais e esclarecimentos podem ficar sem botões).
+    - descobertas: até 2 perguntas que levem adiante a intenção do usuário
+      (ex.: depois de "quem gasta menos entre eles?", "Quais deles votam
+      mais parecido?"), que as ferramentas consigam responder e que não
+      repitam a resposta ou a página atual, escritas como o usuário
+      perguntaria.
+    - acoes: ids de até 2 passos do campo "acoes" das ferramentas.
     Só existem os passos devolvidos pelas ferramentas: não sugira no texto
-    outras páginas, rankings ou funcionalidades. Não escreva links nem
-    caminhos de página no texto, não repita os rótulos dos passos e não
-    ofereça próximos passos no texto ("Se quiser, posso..."): eles
-    aparecem como botões abaixo da resposta. "Ver mais" e "Ver lista
-    completa" aparecem sozinhos quando uma lista foi cortada.
+    outras páginas, rankings, funcionalidades, links ou próximos passos
+    ("Se quiser, posso..."); eles aparecem como botões. A continuação de
+    uma lista cortada aparece sozinha.
 
     LISTAS E RANKINGS:
     Apresente rankings como lista numerada com o valor de cada item; não use
@@ -207,8 +210,7 @@ class ChatbotService
     exemplo "Os 5 deputados com maior gasto mensal em 2025 são:", e diga de
     quantos itens é o ranking (campo "de"). Nunca apresente uma parte como a
     lista completa. Quando a resposta não mostrar a lista (uma contagem, uma
-    média, um total), não fale dela, do recorte nem de limites de exibição,
-    e não escolha "Ver mais" nem "Ver lista completa".
+    média, um total), não fale dela, do recorte nem de limites de exibição.
     Nunca conte nem ordene os itens de uma lista com "recorte" para
     responder outra pergunta (por exemplo, quem aparece mais vezes entre os
     projetos listados): uma parte não representa o total. Quando nenhuma
@@ -226,7 +228,7 @@ class ChatbotService
     candidatos?"), destaque o primeiro em uma frase e mostre a lista.
     Perguntas de contagem ("quantas mulheres concorrem em SP?", "quantos
     candidatos o PT tem?") não são rankings: responda com o número pedido,
-    sem lista e sem mencionar as ferramentas ou como a consulta foi feita.
+    sem lista.
     No deputy_state_ranking com indicador, cada item mostra a UF, o deputado,
     o partido e o valor, por exemplo: "1. RR — Gabriel Mota (UNIÃO):
     R$ 621.578,60".
@@ -279,6 +281,18 @@ class ChatbotService
     gráfico" se referem ao registro dessa página. Perguntas anteriores da
     conversa podem indicar a página em que foram feitas; use isso para saber
     de quem ou do que o usuário falava, mesmo que ele tenha mudado de página.
+
+    CONTINUIDADE DA CONVERSA:
+    Os deputados e partidos das últimas respostas são informados abaixo,
+    com os ids. "Esses deputados", "qual deles" ou "os dois primeiros" se
+    referem a eles: use os da resposta mais recente que combine com a
+    pergunta, sem pedir os nomes. O grupo é o que a conversa vem
+    analisando, mesmo que a última resposta tenha destacado só parte dele.
+    Pergunta com assunto ou nomes novos segue o que diz. Pergunte quais
+    (quick_replies) quando a referência não fechar, como "os dois" depois
+    de uma lista com mais de dois, sem dizer quais nem um critério; um
+    critério ("os que votam mais parecido", "quem gasta menos") não é
+    dúvida.
 
     GRÁFICOS DAS PÁGINAS:
     Perguntas sobre os gráficos e as páginas da plataforma estão sempre
@@ -367,9 +381,11 @@ class ChatbotService
     llm_chat.with_instructions(SYSTEM_PROMPT)
     instructions = page_instructions
     llm_chat.with_instructions(instructions, append: true) if instructions
-    # Todas as ferramentas registram os próximos passos no mesmo lugar
+    # Todas as ferramentas registram os próximos passos e os deputados e
+    # partidos consultados no mesmo lugar
     @actions = HarpiaActions.new
-    llm_chat.with_tools(*TOOLS.map { |tool| tool.new(@actions) })
+    @records = HarpiaRecords.new
+    llm_chat.with_tools(*TOOLS.map { |tool| tool.new(@actions, @records) })
     llm_chat.with_schema(RESPONSE_SCHEMA)
 
     # Busque as mensagens desse chat, exclua a mensagem
@@ -397,11 +413,14 @@ class ChatbotService
                end
 
     result = response.content
+    out_of_scope = result.fetch("out_of_scope")
 
     {
       content: result.fetch("content"),
-      out_of_scope: result.fetch("out_of_scope"),
-      actions: result.fetch("out_of_scope") ? [] : actions(result)
+      out_of_scope: out_of_scope,
+      actions: out_of_scope ? [] : actions(result),
+      # Deputados e partidos que a resposta apresentou, para as próximas perguntas
+      records: out_of_scope ? [] : @records.presented_in(result["content"])
     }
   end
 
@@ -427,18 +446,25 @@ class ChatbotService
 
   # ----- PRÓXIMOS PASSOS E OPÇÕES EM BOTÕES -----
 
-  # Ações escolhidas pela IA entre as oferecidas pelas ferramentas (ids
-  # desconhecidos são descartados) e as opções de escolha, sem link para a
+  # A continuação da lista que a resposta mostrou, as perguntas de descoberta
+  # e as ações escolhidas pela IA entre as oferecidas pelas ferramentas (ids
+  # desconhecidos são descartados), ou as opções de escolha; sem link para a
   # página em que o usuário já está
   def actions(result)
-    @actions.pick(result["acoes"], current_path: @message.page_path,
+    @actions.pick(result["acoes"], content: result["content"], current_path: @message.page_path,
+                                   discoveries: buttons(result["descobertas"], MAX_DISCOVERIES),
                                    clarifications: quick_replies(result["quick_replies"]))
   end
 
   MAX_QUICK_REPLIES = 4
+  MAX_DISCOVERIES = 2
 
   def quick_replies(replies)
-    Array(replies).map { |reply| reply.to_s.strip }.compact_blank.uniq.first(MAX_QUICK_REPLIES)
+    buttons(replies, MAX_QUICK_REPLIES)
+  end
+
+  def buttons(texts, max)
+    Array(texts).map { |text| text.to_s.strip }.compact_blank.uniq.first(max)
   end
 
   # ----- PÁGINA ATUAL -----
@@ -458,7 +484,8 @@ class ChatbotService
     previous = previous_chart_pages
     [current_page_instructions,
      *previous.map { |message, guide| previous_page_text(message, guide) },
-     shared_sections_text(previous.map(&:last))].compact.join("\n\n").presence
+     shared_sections_text(previous.map(&:last)),
+     recent_records_text].compact.join("\n\n").presence
   end
 
   def current_page_instructions
@@ -513,6 +540,48 @@ class ChatbotService
       "#{pages.to_sentence(two_words_connector: ' e ', last_word_connector: ' e ')}: " \
         "#{sections.map { |section| section[:titles].join(' ou ') }.join('; ')}"
     end.join(". ")
+  end
+
+  # ----- REGISTROS DAS ÚLTIMAS RESPOSTAS -----
+  # Deputados e partidos que as últimas respostas apresentaram (HarpiaRecords),
+  # com os ids, para a IA entender "esses deputados" ou "qual deles". Cada
+  # resposta vem com a pergunta que respondeu, da mais recente para a mais
+  # antiga, inclusive as sem registros, para a IA perceber a troca de assunto.
+
+  RECENT_ANSWERS = 3
+
+  def recent_records_text
+    answers = recent_answers
+    return if answers.none? { |_, answer| answer.records.any? }
+
+    lines = answers.map do |question, answer|
+      "- Resposta à pergunta \"#{question&.content.to_s.squish.truncate(120)}\": #{records_text(answer.records)}"
+    end
+    "DEPUTADOS E PARTIDOS DAS ÚLTIMAS RESPOSTAS (da mais recente para a mais antiga):\n#{lines.join("\n")}"
+  end
+
+  # [[pergunta, resposta]] das últimas respostas, da mais recente para a mais antiga
+  def recent_answers
+    return [] unless @message.chat
+
+    messages = @message.chat.messages.where.not(id: @message.id).order(:created_at).last((RECENT_ANSWERS * 2) + 1)
+    messages.each_with_index.filter_map do |message, index|
+      next unless message.role == "assistant"
+
+      [messages[...index].reverse.find { |previous| previous.role == "user" }, message]
+    end.last(RECENT_ANSWERS).reverse
+  end
+
+  def records_text(records)
+    return "nenhum deputado ou partido" if records.empty?
+
+    deputies, parties = records.partition { |record| record["type"] == "deputy" }
+    [("deputados #{names_with_ids(deputies, 'deputy_id')}" if deputies.any?),
+     ("partidos #{names_with_ids(parties, 'party_id')}" if parties.any?)].compact.join("; ")
+  end
+
+  def names_with_ids(records, id_label)
+    records.map { |record| "#{record['name']} (#{id_label} #{record['id']})" }.join(", ")
   end
 
   def previous_questions

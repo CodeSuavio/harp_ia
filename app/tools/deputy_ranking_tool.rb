@@ -31,7 +31,8 @@ class DeputyRankingTool < ApplicationTool # rubocop:disable Metrics/ClassLength 
     conjunto dos deputados, como "quem mais gastou?", "quem mais falta às
     votações?" ou "quem mais vota contra o partido no PT?". Com bills, pode
     filtrar por tema ("quem tem mais projetos sobre saúde?"); para mais de um
-    tema, consulte um tema por vez.
+    tema, consulte um tema por vez. Não tem governismo: o ranking de
+    governismo é o da tabela do deputy_panorama.
   DESC
 
   param :criterion, desc: "Indicador do ranking: #{CRITERIA.keys.join(', ')}"
@@ -116,6 +117,7 @@ class DeputyRankingTool < ApplicationTool # rubocop:disable Metrics/ClassLength 
   def next_steps(rows, total, criterion, direction, state, party, year) # rubocop:disable Metrics/ParameterLists
     steps = continuation(shown: rows.size, total: total, max: MAX_LIMIT,
                          description: ranking_description(criterion, direction, state, party, year),
+                         last: rows.last&.dig(:nome),
                          page: (page_path(criterion, direction, state, party, year) unless @theme))
     return steps unless @theme && rows.any?
 
@@ -139,6 +141,7 @@ class DeputyRankingTool < ApplicationTool # rubocop:disable Metrics/ClassLength 
   end
 
   def ranking_row(deputy, value, criterion, index)
+    cite_deputy(deputy)
     row = { posicao: index + 1, deputy_id: deputy.id, nome: deputy.name, partido: party_label(deputy),
             uf: deputy.state_label, valor: criterion.start_with?("expenses") ? money(value) : value }
     # Contexto do percentual, para a IA não tratar 2 de 2 votações como 100% de assiduidade
