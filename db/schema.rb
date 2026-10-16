@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_031228) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_16_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -175,6 +175,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_031228) do
     t.boolean "out_of_scope", default: false, null: false
     t.text "page_context"
     t.string "page_path"
+    t.jsonb "records", default: [], null: false
     t.string "role", null: false
     t.string "status", default: "answered", null: false
     t.datetime "updated_at", null: false
