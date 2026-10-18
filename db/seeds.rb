@@ -150,6 +150,10 @@ end
 puts "importado #{Candidate.count} candidatos"
 upload_photos(Candidate, photos, "candidatos")
 
+# Votos e prestação de contas de 2026 (TSE), já agregados por candidato em db/seed_data
+campaigns = CampaignFinanceImporter.new.call
+puts "importado votos e contas de #{campaigns[:imported]} candidatos"
+
 
 URL_PRPOSICAO = "https://raw.githubusercontent.com/gabsgarcia/harpia-seed-data/refs/heads/main/db/seeds/proposicoes.json"
 

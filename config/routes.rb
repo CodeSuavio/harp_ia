@@ -27,6 +27,9 @@ Rails.application.routes.draw do
   # Ranking de deputados pelos alertas de gastos
   get "alertas", to: "expense_alerts#index", as: :expense_alerts
 
+  # Gastos de campanha e votos dos candidatos de 2026 (custo por voto)
+  get "gastos-de-campanha", to: "campaign_finances#index", as: :campaign_finances
+
   # ==========================================
   # ÁREA LOGADA (Utilizadores Autenticados)
   # ==========================================

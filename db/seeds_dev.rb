@@ -136,8 +136,11 @@ ActiveRecord::Base.transaction do
   end
 end
 
+campaigns = CampaignFinanceImporter.new(load_json("campanhas_2026.json")).call
+
 puts "partidos:   #{stats[:parties_created]} criados, #{stats[:parties_updated]} atualizados"
 puts "deputados:  #{stats[:deputies_created]} criados, #{stats[:deputies_updated]} atualizados, #{stats[:deputies_skipped]} pulados"
 puts "candidatos: #{stats[:candidates_created]} criados, #{stats[:candidates_updated]} atualizados, #{stats[:candidates_skipped]} pulados"
 puts "total no banco: #{Party.count} partidos, #{Deputy.count} deputados, #{Candidate.count} candidatos"
+puts "campanhas:  #{campaigns[:imported]} com votos e contas, #{campaigns[:skipped]} sem candidato"
 puts "siglas sem partido: #{missing_parties.sort_by { |_, v| -v }.first(20).to_h}" if missing_parties.any?
