@@ -207,7 +207,7 @@ Arquivo: `app/views/layouts/application.html.erb`.
 1. `content_for(:title) || "Harpia"`: título da aba; cada página pode definir o próprio.
 2. `csrf_meta_tags` e `csp_meta_tag`: proteções de segurança dos formulários do Rails.
 3. `stylesheet_link_tag "application"` e `javascript_importmap_tags`: carregam o CSS e o JavaScript (Stimulus).
-4. `render "shared/navbar"`: menu do topo (HOME, CANDIDATOS, DEPUTADOS, ALERTAS, VOTAÇÕES, PROJETOS). Usa `current_page?` para marcar o link ativo (o link ALERTAS leva ao ranking de alertas de gastos, /alertas). Partidos não tem aba própria: o mapa de partidos fica na home. Usa `user_signed_in?` para mostrar "Entrar/Cadastre-se" ou "Sair". O "Sair" usa `data: { turbo_method: :delete }` porque o logout do Devise é um DELETE.
+4. `render "shared/navbar"`: menu do topo (HOME, CANDIDATOS, CAMPANHAS, DEPUTADOS, PARTIDOS, ALERTAS, VOTAÇÕES, PROJETOS). Usa `current_page?` para marcar o link ativo (o link ALERTAS leva ao ranking de alertas de gastos, /alertas). Partidos não tem aba própria: o mapa de partidos fica na home. Usa `user_signed_in?` para mostrar "Entrar/Cadastre-se" ou "Sair". O "Sair" usa `data: { turbo_method: :delete }` porque o logout do Devise é um DELETE.
 5. `render "shared/flashes"`: mostra `notice` e `alert` (mensagens de sucesso ou erro depois de um redirect).
 6. `yield`: onde entra o conteúdo da página.
 7. `render "shared/chat_widget"`: botão flutuante da Harpia. Usa `turbo_frame_tag "chat_widget_messages"` para trocar só as mensagens sem recarregar a página e o Stimulus `chat-widget` para abrir, fechar e mostrar "carregando".
@@ -429,6 +429,14 @@ Rota `get "alertas", to: "expense_alerts#index"` → `ExpenseAlertsController#in
 8. `@note_counts` conta as notas de cada deputado da página.
 
 Na view (`expense_alerts/index`): `painel/hero` no topo e um aviso fixo de que alerta não é prova de irregularidade. Acima dos cards, "Alertas calculados em dd/mm/aaaa"; ano sem cálculo mostra "ainda não foram calculados" em vez de "nenhum deputado". O formulário de filtros usa o Stimulus `filter-form`. Cada card (grid `row-cols-1 row-cols-md-2 row-cols-xl-3`) mostra posição, foto, nome, partido/UF, total gasto, notas, valor em notas com alerta (e o percentual do gasto), alertas e pontuação, e badges por gravidade (`text-bg-danger`, `text-bg-warning`, `text-bg-secondary`). O card leva a `deputy_path(deputy, tab: "expenses", year:)`. `shared/pagination` faz a paginação.
+
+### Gastos de campanha (`/gastos-de-campanha`)
+
+Rota `get "gastos-de-campanha", to: "campaign_finances#index"` → `CampaignFinancesController#index`, pública, com `authorize CampaignFinance` e `policy_scope` (`CampaignFinancePolicy`). Mostra quanto cada candidato a deputado federal de 2026 gastou, quantos votos teve e quanto custou cada voto.
+
+Dados: tabela `campaign_finances` (um registro por candidato), importada por `CampaignFinanceImporter` de `db/seed_data/campanhas_2026.json.gz` no `db:seed`, no `seeds_dev` e com `bin/rails harpia:campaign_finances`. O arquivo é gerado dos dados abertos do TSE (`votacao_candidato_munzona_2026` e `prestacao_de_contas_eleitorais_candidatos_2026`, só cargo Deputado Federal): votos nominais do 1º turno somados por município e zona, situação no turno (`DS_SIT_TOT_TURNO`), despesas contratadas, receitas por fonte (FEFC e Fundo Partidário = dinheiro público) e por origem (recursos próprios, pessoas físicas) e as 5 maiores categorias de despesa. O TSE publica só a prestação mais recente de cada candidato, então não há dupla contagem entre parciais. Para atualizar, gere o JSON de novo com `script/tse_campanhas_2026.py` (o cabeçalho diz de onde baixar os zips) e rode a tarefa.
+
+`CampaignFinanceRanking` faz os filtros (busca, UF, partido, resultado), a ordenação (maior gasto, mais votos, voto mais caro/barato; as duas últimas só com quem gastou e teve voto) e os indicadores do topo: gasto total, votos, custo médio por voto (gasto total ÷ votos), parte pública das receitas, mediana do custo por voto de eleitos x demais e a taxa de eleição por faixa de gasto (`NTILE(4)`). Cada card compara o custo por voto com a mediana da UF (`state_benchmarks`) e mostra a parte dos votos nominais do estado, a parte de fundos públicos e de recursos próprios na receita e onde o candidato mais gastou.
 
 ### Partido — perfil (`/parties/:id`)
 

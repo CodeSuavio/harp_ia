@@ -34,4 +34,10 @@ namespace :harpia do
     ExpenseAlerts::RefreshJob.refresh_all_now
     puts "#{ExpenseAlert.count} alertas de gastos"
   end
+
+  desc "Importa votos e prestação de contas de 2026 (db/seed_data/campanhas_2026.json.gz) para a página de gastos de campanha"
+  task campaign_finances: :environment do
+    result = CampaignFinanceImporter.new.call
+    puts "#{result[:imported]} candidatos com votos e contas · #{result[:skipped]} sem candidato no banco"
+  end
 end

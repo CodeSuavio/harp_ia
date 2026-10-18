@@ -1,0 +1,294 @@
+<% page_description = "Quanto cada candidato a deputado federal gastou na campanha de 2026, quantos votos teve e quanto custou cada voto." %>
+<% content_for :title, "Gastos de campanha · Harpia" %>
+<% content_for :head do %>
+  <meta name="description" content="<%= page_description %>">
+  <meta property="og:title" content="Gastos de campanha 2026">
+  <meta property="og:description" content="<%= page_description %>">
+  <meta property="og:url" content="<%= campaign_finances_url %>">
+<% end %>
+
+<%= render "painel/hero", title: "Gastos", highlight: "de campanha",
+      subtitle: "Quanto cada candidato a deputado federal gastou em 2026, quantos votos teve e quanto custou cada voto." %>
+
+<% filter_params = { q: params[:q].presence, state: @state, party: @party&.id, result: @result.presence,
+                    sort: (@sort unless @sort == "expenses") }.compact %>
+
+<section class="container search-container pb-5">
+  <!-- Filtros (mesmo padrão das páginas de candidatos e alertas) -->
+  <%= form_with url: campaign_finances_path, method: :get,
+        data: { controller: "filter-form", action: "change->filter-form#submit" },
+        class: "card search-card shadow-lg bg-white rounded-4 p-3 border-0 mb-4" do %>
+    <div class="row g-0 border-bottom pb-2 mb-2">
+      <div class="col-12 px-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted ps-2">
+            <i class="fa-solid fa-magnifying-glass text-gold fa-lg"></i>
+          </span>
+          <%= search_field_tag :q, params[:q], placeholder: "Nome do candidato ou sigla do partido...",
+                aria: { label: "Buscar candidatos" },
+                class: "form-control form-control-lg border-0 shadow-none bg-transparent fw-medium" %>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-0 align-items-center">
+      <div class="col-md-6 col-xl border-end-lg px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Estado">
+            <i class="fa-solid fa-location-crosshairs text-gold"></i>
+          </span>
+          <%= select_tag :state, options_for_select([["Todos os estados", ""]] + @states, @state), aria: { label: "Estado" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-xl border-end-lg px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Partido">
+            <i class="fa-solid fa-flag text-gold"></i>
+          </span>
+          <%= select_tag :party, options_for_select([["Todos os partidos", ""]] + @parties.map { |p| [p.label, p.id] }, @party&.id),
+                aria: { label: "Partido" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-xl border-end-lg px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Resultado">
+            <i class="fa-solid fa-check-to-slot text-gold"></i>
+          </span>
+          <%= select_tag :result, options_for_select(CampaignFinancesController::RESULTS.invert, @result),
+                aria: { label: "Resultado" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+
+      <div class="col-md-6 col-xl px-2 py-2">
+        <div class="input-group border-0">
+          <span class="input-group-text bg-transparent border-0 text-muted" title="Ordenar">
+            <i class="fa-solid fa-arrow-down-wide-short text-gold"></i>
+          </span>
+          <%= select_tag :sort, options_for_select(CampaignFinancesController::SORTS.invert, @sort),
+                aria: { label: "Ordenar por" },
+                class: "form-select border-0 shadow-none bg-transparent text-muted fw-medium" %>
+        </div>
+      </div>
+    </div>
+    <noscript><button type="submit" class="btn btn-sm btn-dark mt-2">Filtrar</button></noscript>
+  <% end %>
+
+  <!-- Indicadores do recorte -->
+  <div class="row row-cols-2 row-cols-lg-4 g-3 mb-3">
+    <% [
+         ["Gasto declarado", brl(@summary[:expenses], precision: 0), "Soma das despesas contratadas de #{vote_count(@summary[:count])} candidatos."],
+         ["Votos nominais", vote_count(@summary[:votes]), "Votos dados ao número do candidato no 1º turno (sem os votos de legenda)."],
+         ["Custo médio por voto", (@summary[:cost_per_vote] ? brl(@summary[:cost_per_vote]) : "—"), "Gasto total do recorte dividido pelo total de votos nominais."],
+         ["Dinheiro público", (@summary[:public_share] ? percent_br(@summary[:public_share]) : "—"), "Parte das receitas que veio do Fundo Eleitoral (FEFC) e do Fundo Partidário."]
+       ].each do |label, value, tip| %>
+      <div class="col">
+        <div class="campaign-stat bg-white border rounded-4 p-3 h-100">
+          <div class="small text-muted"><%= label %> <%= info_tip(tip) %></div>
+          <div class="h4 fw-bold text-navy mb-0"><%= value %></div>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <div class="row g-3 mb-4">
+    <!-- Custo por voto: eleitos x demais -->
+    <div class="col-lg-5">
+      <div class="bg-white border rounded-4 p-3 p-md-4 h-100">
+        <h2 class="h6 fw-bold text-navy mb-1">
+          Quanto custou cada voto
+          <%= info_tip("Mediana do gasto dividido pelos votos de cada candidato. Metade gastou mais, metade menos por voto. Só entram candidatos com gasto e voto.") %>
+        </h2>
+        <p class="small text-muted mb-3">Mediana entre os candidatos do recorte</p>
+        <dl class="row mb-0">
+          <dt class="col-7 fw-medium text-navy"><%= pluralize(@summary[:elected], "eleito", plural: "eleitos") %></dt>
+          <dd class="col-5 text-end h5 fw-bold text-navy mb-2"><%= @summary[:median_cost_elected] ? brl(@summary[:median_cost_elected]) : "—" %></dd>
+          <dt class="col-7 fw-medium text-muted">Suplentes e não eleitos</dt>
+          <dd class="col-5 text-end h5 fw-bold text-muted mb-0"><%= @summary[:median_cost_others] ? brl(@summary[:median_cost_others]) : "—" %></dd>
+        </dl>
+        <% if @summary[:median_cost_elected] && @summary[:median_cost_others] && @summary[:median_cost_elected] < @summary[:median_cost_others] %>
+          <p class="small text-muted mt-3 mb-0">
+            Quem se elegeu pagou menos por voto: o gasto é maior, mas os votos crescem mais rápido.
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Faixas de gasto x taxa de eleição -->
+    <div class="col-lg-7">
+      <div class="bg-white border rounded-4 p-3 p-md-4 h-100">
+        <h2 class="h6 fw-bold text-navy mb-1">
+          Quem gasta mais se elege mais?
+          <%= info_tip("Candidatos com gasto divididos em quatro faixas com a mesma quantidade de pessoas, do menor para o maior gasto. A barra mostra a parte de cada faixa que se elegeu.") %>
+        </h2>
+        <p class="small text-muted mb-3">Parte de cada faixa de gasto que se elegeu</p>
+        <% if @quartiles.empty? %>
+          <p class="small text-muted mb-0">Sem candidatos com gasto nesse recorte.</p>
+        <% else %>
+          <ul class="list-unstyled mb-0 campaign-quartiles">
+            <% @quartiles.each do |q| %>
+              <li class="mb-3" title="<%= "#{q[:elected]} de #{q[:count]} eleitos · custo mediano por voto #{q[:median_cost] ? brl(q[:median_cost]) : '—'}" %>">
+                <div class="d-flex justify-content-between small mb-1 gap-2">
+                  <span class="text-navy">
+                    <%= brl(q[:min], precision: 0) %> a <%= brl(q[:max], precision: 0) %>
+                  </span>
+                  <span class="text-muted flex-shrink-0">
+                    <strong class="text-navy"><%= percent_br(q[:elected_share]) %></strong> eleitos
+                    (<%= q[:elected] %> de <%= vote_count(q[:count]) %>)
+                  </span>
+                </div>
+                <div class="progress rounded-pill" style="height: 8px;" role="progressbar"
+                     aria-label="Eleitos entre quem gastou de <%= brl(q[:min], precision: 0) %> a <%= brl(q[:max], precision: 0) %>"
+                     aria-valuenow="<%= q[:elected_share] %>" aria-valuemin="0" aria-valuemax="100">
+                  <div class="progress-bar bg-gold" style="width: <%= q[:elected_share] %>%"></div>
+                </div>
+              </li>
+            <% end %>
+          </ul>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Aviso fixo -->
+  <div class="bg-white border rounded-4 small mb-4 p-3">
+    <div class="d-flex gap-2 align-items-start">
+      <i class="fa-solid fa-circle-info text-gold mt-1" aria-hidden="true"></i>
+      <div>
+        <p class="mb-1 text-navy fw-semibold">As contas ainda podem mudar.</p>
+        <p class="mb-0">
+          A maior parte dos candidatos entregou só a prestação de contas parcial; a final vai até 30 dias depois da eleição.
+          Gasto aqui são as despesas contratadas declaradas ao TSE, inclusive as ainda não pagas. Votos são os nominais do 1º turno, somados em todos os municípios.
+          Fonte: dados abertos do TSE (votação por município e zona e prestação de contas eleitorais de 2026).
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
+    <span class="text-muted small"><%= vote_count(@total) %> <%= @total == 1 ? "candidato" : "candidatos" %></span>
+    <% if @sort.start_with?("cost") %>
+      <span class="small text-muted">· só quem declarou gasto e teve voto</span>
+    <% end %>
+  </div>
+
+  <% if @finances.empty? %>
+    <p class="text-muted text-center py-5">Nenhum candidato nesse recorte.</p>
+  <% else %>
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-4">
+      <% @finances.each_with_index do |finance, index| %>
+        <% candidate = finance.candidate %>
+        <% position = (@page - 1) * CampaignFinancesController::PER_PAGE + index + 1 %>
+        <% benchmark = @benchmarks[candidate.state_label] || {} %>
+        <% cost = finance.cost_per_vote %>
+        <% vote_share = (finance.votes.to_f / benchmark[:votes] * 100 if benchmark[:votes].to_i.positive? && finance.votes.to_i.positive?) %>
+        <div class="col">
+          <article class="card alert-rank-card campaign-card border-0 shadow-sm rounded-4 h-100 bg-white">
+            <div class="card-body p-4 d-flex flex-column">
+              <!-- Quem é -->
+              <div class="d-flex align-items-center gap-3 mb-3">
+                <div class="position-relative flex-shrink-0">
+                  <% if candidate.photo.attached? %>
+                    <%= cl_image_tag candidate.photo.key, class: "alert-rank-photo rounded-circle", alt: "", loading: "lazy" %>
+                  <% else %>
+                    <div class="alert-rank-photo candidate-photo-placeholder rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="fa-solid fa-user text-muted" aria-hidden="true"></i>
+                    </div>
+                  <% end %>
+                  <span class="alert-rank-position" title="Posição na lista"><span class="visually-hidden">Posição </span><%= position %>º</span>
+                </div>
+                <div class="min-w-0">
+                  <h2 class="h6 fw-bold text-navy mb-0 text-truncate">
+                    <%= link_to candidate.ballot_name, candidate_path(candidate), class: "text-reset text-decoration-none stretched-link" %>
+                  </h2>
+                  <span class="small text-muted"><%= [candidate.party&.label, candidate.state_label].compact.join(" · ") %></span>
+                  <div class="mt-1"><%= campaign_result_badge(finance.result) %></div>
+                </div>
+              </div>
+
+              <!-- Gasto, votos e custo por voto -->
+              <div class="alert-rank-money rounded-3 p-3 mb-3">
+                <div class="row g-2 text-center">
+                  <div class="col-4">
+                    <div class="small text-muted">Gastou</div>
+                    <div class="fw-bold text-navy"><%= finance.expenses ? brl(finance.expenses, precision: 0) : "—" %></div>
+                  </div>
+                  <div class="col-4">
+                    <div class="small text-muted">Votos</div>
+                    <div class="fw-bold text-navy"><%= finance.votes ? vote_count(finance.votes) : "—" %></div>
+                  </div>
+                  <div class="col-4">
+                    <div class="small text-muted">Por voto</div>
+                    <div class="fw-bold text-navy campaign-cost"><%= cost ? brl(cost) : "—" %></div>
+                  </div>
+                </div>
+                <% if cost && (comparison = cost_vs_median(cost, benchmark[:median_cost])) %>
+                  <div class="small text-muted text-center mt-2">
+                    <%= comparison %> de <%= candidate.state_label %> (<%= brl(benchmark[:median_cost]) %>)
+                  </div>
+                <% end %>
+              </div>
+
+              <!-- Outros indicadores -->
+              <ul class="list-unstyled small mb-3">
+                <% if vote_share %>
+                  <li class="d-flex justify-content-between gap-2">
+                    <span class="text-muted">Votos nominais de <%= candidate.state_label %></span>
+                    <span class="text-navy fw-medium"><%= percent_br(vote_share, precision: vote_share < 0.1 ? 3 : 2) %></span>
+                  </li>
+                <% end %>
+                <% if finance.public_share %>
+                  <li class="d-flex justify-content-between gap-2">
+                    <span class="text-muted">Receita de fundos públicos</span>
+                    <span class="text-navy fw-medium"><%= percent_br(finance.public_share) %></span>
+                  </li>
+                <% end %>
+                <% if finance.own_share.to_f.positive? %>
+                  <li class="d-flex justify-content-between gap-2">
+                    <span class="text-muted">Dinheiro do próprio bolso</span>
+                    <span class="text-navy fw-medium"><%= percent_br(finance.own_share) %></span>
+                  </li>
+                <% end %>
+                <% if finance.revenues.to_f.positive? && finance.expenses %>
+                  <li class="d-flex justify-content-between gap-2">
+                    <span class="text-muted">Arrecadou</span>
+                    <span class="text-navy fw-medium"><%= brl(finance.revenues, precision: 0) %></span>
+                  </li>
+                <% end %>
+              </ul>
+
+              <!-- Onde gastou -->
+              <% if finance.top_expenses.any? && finance.expenses.to_f.positive? %>
+                <div class="small mb-3">
+                  <div class="text-muted mb-1">Onde mais gastou</div>
+                  <ul class="list-unstyled mb-0">
+                    <% finance.top_expenses.first(3).each do |item| %>
+                      <li class="d-flex justify-content-between gap-2">
+                        <span class="text-navy text-truncate"><%= item["label"] %></span>
+                        <span class="text-muted flex-shrink-0"><%= percent_br(item["value"].to_f / finance.expenses * 100, precision: 0) %></span>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
+              <% end %>
+
+              <div class="d-flex justify-content-between align-items-center gap-2 mt-auto pt-2 border-top small">
+                <span class="text-muted">
+                  <%= finance.accounts_kind.present? ? "Prestação: #{finance.accounts_kind.downcase}" : "Sem prestação de contas" %>
+                </span>
+                <span class="text-gold fw-bold">Ver candidato<%= internal_link_icon %></span>
+              </div>
+            </div>
+          </article>
+        </div>
+      <% end %>
+    </div>
+
+    <%= render "shared/pagination", page: @page, total_pages: @total_pages,
+          path_for: ->(p) { campaign_finances_path(filter_params.merge(page: p)) } %>
+  <% end %>
+</section>

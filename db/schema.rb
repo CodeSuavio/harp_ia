@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_10_15_031228) do
+ActiveRecord::Schema[8.1].define(version: 2026_10_18_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
   enable_extension "unaccent"
@@ -77,6 +77,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_031228) do
     t.index ["bill_type", "number", "year"], name: "index_bills_on_bill_type_and_number_and_year", unique: true
     t.index ["deputy_id"], name: "index_bills_on_deputy_id"
     t.index ["party_id"], name: "index_bills_on_party_id"
+  end
+
+  create_table "campaign_finances", force: :cascade do |t|
+    t.string "accounts_kind"
+    t.bigint "candidate_id", null: false
+    t.datetime "created_at", null: false
+    t.decimal "expenses", precision: 14, scale: 2
+    t.integer "expenses_count"
+    t.decimal "individual_donations", precision: 14, scale: 2
+    t.decimal "own_funds", precision: 14, scale: 2
+    t.decimal "public_funds", precision: 14, scale: 2
+    t.string "result"
+    t.decimal "revenues", precision: 14, scale: 2
+    t.jsonb "top_expenses", default: [], null: false
+    t.datetime "updated_at", null: false
+    t.integer "valid_votes"
+    t.integer "votes"
+    t.index ["candidate_id"], name: "index_campaign_finances_on_candidate_id", unique: true
   end
 
   create_table "candidates", force: :cascade do |t|
@@ -534,6 +552,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_15_031228) do
   add_foreign_key "bill_themes", "themes"
   add_foreign_key "bills", "deputies"
   add_foreign_key "bills", "parties"
+  add_foreign_key "campaign_finances", "candidates"
   add_foreign_key "candidates", "deputies", column: "current_deputy_id", primary_key: "json_id"
   add_foreign_key "candidates", "parties"
   add_foreign_key "chats", "users"
