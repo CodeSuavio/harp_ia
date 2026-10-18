@@ -113,7 +113,8 @@ class DeputyPanoramaTool < ApplicationTool
     rows = panorama.sorted_rows("governism", @direction, state: @state, party_id: @party&.id)
     ranked = rows.select(&:governism)
     shown = ranked.first(@limit)
-    @ranking = { shown: shown.size, total: ranked.size } # para a continuação, em next_steps
+    # para a continuação, em next_steps
+    @ranking = { shown: shown.size, total: ranked.size, last: shown.last&.name }
     {
       filtros: filters,
       deputados_exibidos: rows.size,
@@ -156,6 +157,7 @@ class DeputyPanoramaTool < ApplicationTool
   end
 
   def deputy_row(row)
+    cite_deputy(row.deputy)
     { deputy_id: row.deputy.id, nome: row.name, partido: row.party_label, uf: row.state,
       bloco: DeputyPanorama::BLOCS.dig(row.bloc, :label), governismo_pct: row.governism_pct }.compact
   end
@@ -199,7 +201,7 @@ class DeputyPanoramaTool < ApplicationTool
     description = ["deputados por governismo", order_label(@direction), ("em #{@state}" if @state),
                    ("do #{@party.label}" if @party)].compact.join(", ")
     continuation(shown: @ranking[:shown], total: @ranking[:total], max: MAX_LIMIT, description: description,
-                 page: panorama_path(filters: true), required: false) || [panorama_link(filters: true)]
+                 last: @ranking[:last], page: panorama_path(filters: true)) || [panorama_link(filters: true)]
   end
 
   # Ordenação padrão da página (governismo, do maior para o menor) fica fora

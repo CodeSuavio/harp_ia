@@ -33,17 +33,22 @@ class PartyRankingTool < ApplicationTool
     #{CRITERIA.keys.map { |key| "#{key} (#{PartyComparison::SORTS[key][:label]})" }.join(', ')}.
     Use para perguntas sobre o conjunto dos partidos, como "quais partidos têm
     mais deputados?", "qual é o mais governista?" ou "qual gasta menos?".
+    Com seats, aceita um estado: as cadeiras de cada partido no estado, como o
+    mapa de partidos ("quais partidos têm mais deputados em SP?").
   DESC
 
   param :criterion, desc: "Indicador do ranking: #{CRITERIA.keys.join(', ')}"
   param :order, desc: "desc (do maior para o menor, padrão) ou asc (do menor para o maior)", required: false
+  param :state, desc: "UF, só com seats: cadeiras de cada partido no estado, ex.: SP (opcional)", required: false
   param :limit, type: "integer", desc: "Quantidade de partidos (padrão #{RANKING_LIMIT}, máximo #{MAX_LIMIT})",
                 required: false
 
-  def execute(criterion:, order: nil, limit: nil)
+  def execute(criterion:, order: nil, state: nil, limit: nil)
     return { erro: "Critério inválido. Use um destes: #{CRITERIA.keys.join(', ')}." } unless CRITERIA.key?(criterion)
 
     direction = order.to_s == "asc" ? :asc : :desc
+    return state_seats(criterion, state.to_s.upcase, direction, ranking_limit(limit, MAX_LIMIT)) if state.present?
+
     comparison = PartyComparison.new
     value = PartyComparison::SORTS[criterion][:value]
     present, missing = comparison.sorted_rows(criterion, direction).partition { |row| row.public_send(value) }
@@ -66,13 +71,45 @@ class PartyRankingTool < ApplicationTool
       acoes: continuation(shown: rows.size, total: present.size, max: MAX_LIMIT,
                           description: "partidos por #{PartyComparison::SORTS[criterion][:label].downcase}, " \
                                        "#{order_label(direction)}",
+                          last: rows.last&.dig(:sigla),
                           page: routes.compare_parties_path(sort: criterion, dir: direction, anchor: "indicadores"))
     }.compact
   end
 
   private
 
+  # Cadeiras de cada partido no estado, na ordem do mapa de partidos (mais
+  # cadeiras primeiro; empate pela sigla)
+  def state_seats(criterion, state, direction, limit)
+    return { erro: "Por estado, só o critério seats (cadeiras)." } unless criterion == "seats"
+    return { erro: "Estado inválido. Use a sigla da UF, ex.: SP." } unless PartiesController::STATES.key?(state)
+
+    in_state = PartySeats.new.in_state(state)
+    parties = Party.where(id: in_state.keys).index_by(&:id)
+    seats = in_state.map { |party_id, count| [parties[party_id], count] }
+    sorted = seats.sort_by { |party, count| [direction == :desc ? -count : count, party.label] }
+    rows = sorted.first(limit).each_with_index.map { |(party, count), index| state_row(party, count, index) }
+    {
+      criterio: "Cadeiras em #{state}",
+      como_e_calculado: "deputados federais em exercício eleitos por #{PartiesController::STATES[state]}, por partido.",
+      unidade: "deputados",
+      ordem: order_label(direction),
+      total_de_cadeiras_no_estado: seats.sum(&:last),
+      ranking: rows,
+      recorte: recorte(rows.size, sorted.size),
+      acoes: continuation(shown: rows.size, total: sorted.size, max: MAX_LIMIT,
+                          description: "partidos por cadeiras em #{state}, #{order_label(direction)}",
+                          last: rows.last&.dig(:sigla), page: routes.root_path(uf: state))
+    }.compact
+  end
+
+  def state_row(party, count, index)
+    cite_party(party)
+    { posicao: index + 1, party_id: party.id, sigla: party.label, nome: party.name, valor: count }
+  end
+
   def ranking_row(row, value, index)
+    cite_party(row.party)
     {
       posicao: index + 1,
       party_id: row.party.id,

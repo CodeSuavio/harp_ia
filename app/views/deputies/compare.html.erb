@@ -1,11 +1,5 @@
 <% page_description = "Compare os 513 deputados federais em exercício: governismo, alinhamento ao partido, participação nas votações, gastos da cota e projetos de lei." %>
-<% content_for :title, "Comparar deputados · Harpia" %>
-<% content_for :head do %>
-  <meta name="description" content="<%= page_description %>">
-  <meta property="og:title" content="Comparar deputados">
-  <meta property="og:description" content="<%= page_description %>">
-  <meta property="og:url" content="<%= compare_deputies_url %>">
-<% end %>
+<% meta title: "Comparar deputados", description: page_description %>
 
 <% blocs = @panorama.blocs %>
 <% total = [@panorama.total, 1].max %>

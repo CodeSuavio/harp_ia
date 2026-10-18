@@ -3,7 +3,7 @@ class PartiesController < ApplicationController
 
   skip_before_action :authenticate_user!, only: %i[index show compare]
 
-  COMPARE_LIMIT = 4
+  COMPARE_LIMIT = PartySelectionComparison::LIMIT
 
   TABS = {
     "overview" => "Visão geral",
@@ -27,11 +27,15 @@ class PartiesController < ApplicationController
     load_party_overview
   end
 
+  # Aba pedida pela URL; desconhecidas caem na Visão geral. Também usada pela
+  # Harpia (PageContextService)
+  def self.tab_for(tab) = TABS.key?(tab) ? tab : "overview"
+
   def show
     @party = Party.find(params[:id])
     authorize @party
 
-    @tab = TABS.key?(params[:tab]) ? params[:tab] : "overview"
+    @tab = self.class.tab_for(params[:tab])
     @deputies = @party.deputies.with_attached_photo.order(:name).to_a
     @stats = PartyStats.new(@party, @deputies)
     @candidate_count = @party.candidates.count
@@ -44,9 +48,7 @@ class PartiesController < ApplicationController
 
     # Partidos escolhidos na listagem (?ids[]=): comparação lado a lado
     if params.key?(:ids)
-      ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT).map(&:to_i)
-      rows = @comparison.rows.index_by { |row| row.party.id }
-      @selection = PartySelectionComparison.new(rows.values_at(*ids).compact.uniq, @comparison)
+      @selection = PartySelectionComparison.for(params[:ids], @comparison)
       return render :compare_selected
     end
 

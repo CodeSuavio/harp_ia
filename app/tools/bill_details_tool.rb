@@ -9,6 +9,7 @@ class BillDetailsTool < ApplicationTool
     return not_found("Projeto de lei") unless bill
 
     polls = bill.votings.order(date: :desc).limit(LIST_LIMIT).to_a
+    bill.authors.each { |deputy| cite_deputy(deputy) }
 
     {
       projeto: {

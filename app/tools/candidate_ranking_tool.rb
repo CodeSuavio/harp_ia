@@ -63,7 +63,8 @@ class CandidateRankingTool < ApplicationTool
       # as candidaturas de cada grupo (ou as contadas, com os filtros)
       acoes: [
         *continuation(shown: rows.size, total: counts.size, max: MAX_LIMIT,
-                      description: ranking_description(group_by, direction, filters, party_record)),
+                      description: ranking_description(group_by, direction, filters, party_record),
+                      last: rows.last&.dig(:grupo).to_s),
         *group_links(group_by, rows, filters),
         (link("Ver os candidatos#{filters_text(filters, party_record)}", candidates_page(filters)) if filters.any?)
       ].compact.presence

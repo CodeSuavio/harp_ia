@@ -5,8 +5,38 @@
 # (ex.: alinhamento com o partido não é bom nem ruim em si).
 class DeputyComparison
   Row = Struct.new(:label, :format, :better, :values, :info, keyword_init: true)
+  # Deputados comparados de uma vez
+  LIMIT = 3
+
+  # Seções da página, na ordem em que aparecem. A página usa a legenda
+  # (reading) e a explicação (how); a Harpia recebe os mesmos textos, mais o
+  # tipo de gráfico (chart), para reconhecer a seção citada (PageGuide)
+  SECTIONS = {
+    "table" => {
+      title: "Comparação lado a lado",
+      chart: "tabela com uma coluna por deputado escolhido e uma linha por indicador, marcando o melhor e o " \
+             "pior da linha",
+      reading: "Gastos menores, mais participação, mais projetos e mais coerência contam como melhor. " \
+               "Alinhamento e votos contra o partido não têm lado melhor."
+    },
+    "votes" => {
+      title: "Como votaram entre si",
+      chart: "lista dos pares de deputados escolhidos, com a % de votações em que votaram diferente",
+      how: "Votações em que os dois registraram voto (qualquer tipo) e quantas tiveram votos diferentes."
+    }
+  }.freeze
 
   attr_reader :deputies, :year
+
+  # Deputados escolhidos na listagem (ids na ordem da escolha), como a página
+  # monta a comparação: ignora ids vazios e desconhecidos, até o limite (o da
+  # página, ou outro na consulta da Harpia)
+  def self.for(ids, limit: LIMIT)
+    ids = Array(ids).compact_blank.first(limit).map(&:to_s)
+    deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids)
+                     .index_by { |deputy| deputy.id.to_s }.values_at(*ids).compact
+    new(deputies)
+  end
 
   def initialize(deputies, year: DeputyMetrics.reference_year)
     @deputies = deputies

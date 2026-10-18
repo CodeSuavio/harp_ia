@@ -193,6 +193,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_10_18_190000) do
     t.boolean "out_of_scope", default: false, null: false
     t.text "page_context"
     t.string "page_path"
+    t.jsonb "records", default: [], null: false
     t.string "role", null: false
     t.string "status", default: "answered", null: false
     t.datetime "updated_at", null: false

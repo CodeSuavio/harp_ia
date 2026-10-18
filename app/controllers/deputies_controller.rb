@@ -3,7 +3,7 @@ class DeputiesController < ApplicationController
 
   PER_PAGE = 24
   TAB_PER_PAGE = 20
-  COMPARE_LIMIT = 3
+  COMPARE_LIMIT = DeputyComparison::LIMIT
   # Linhas por página na tabela do panorama (/deputies/compare)
   PANORAMA_PER_PAGE = 50
   ALL_TABS = {
@@ -24,7 +24,7 @@ class DeputiesController < ApplicationController
     "geral" => "overview", "gastos" => "expenses", "projetos" => "bills",
     "votacoes" => "votes", "promessas" => "promises", "eleicoes" => "elections"
   }.freeze
-  AGAINST_PARTY = "against_party".freeze
+  AGAINST_PARTY = DeputyVoteHistory::AGAINST_PARTY
 
   BILLS_COUNT_SQL = <<~SQL.squish.freeze
     (SELECT COUNT(*) FROM bills WHERE bills.deputy_id = deputies.id
@@ -97,12 +97,18 @@ class DeputiesController < ApplicationController
     @parties = Party.where(id: @party_counts.keys + [params[:party]].compact_blank).order(:label)
   end
 
+  # Aba pedida pela URL (nomes antigos em português valem; abas escondidas e
+  # desconhecidas caem na Visão geral). Também usada pela Harpia (PageContextService)
+  def self.tab_for(tab)
+    tab = LEGACY_TABS.fetch(tab, tab)
+    TABS.key?(tab) ? tab : "overview"
+  end
+
   def show
     @deputy = Deputy.includes(:party).find(params[:id])
     authorize @deputy
 
-    tab = LEGACY_TABS.fetch(params[:tab], params[:tab])
-    @tab = TABS.key?(tab) ? tab : "overview"
+    @tab = self.class.tab_for(params[:tab])
     @stats = DeputyStats.new(@deputy)
     @candidate = @deputy.candidates.first
 
@@ -114,11 +120,8 @@ class DeputiesController < ApplicationController
 
     # Deputados escolhidos na listagem (?ids[]=): comparação lado a lado
     if params.key?(:ids)
-      ids = Array(params[:ids]).reject(&:blank?).first(COMPARE_LIMIT)
-      @deputies = Deputy.includes(:party, photo_attachment: :blob).where(id: ids).index_by do |d|
-        d.id.to_s
-      end.values_at(*ids).compact
-      @comparison = DeputyComparison.new(@deputies)
+      @comparison = DeputyComparison.for(params[:ids])
+      @deputies = @comparison.deputies
       return render :compare_selected
     end
 
@@ -175,15 +178,12 @@ class DeputiesController < ApplicationController
     @anomaly_expense_ids = @alerts_by_expense.keys.to_set
     @anomaly_documents = expenses.where(id: @anomaly_expense_ids.to_a).where.not(document_url: [nil, ""])
                                  .pluck(:id, :document_url).to_h
-    @monthly = expenses.group(:month).sum(:net_amount)
+    breakdown = DeputyExpenseBreakdown.new(expenses)
+    @monthly = breakdown.monthly
     @by_type = @stats.expenses_by_type(year: @year)
-    @top_suppliers = expenses.group(Expense::SUPPLIER_KEY)
-                             .order(Arel.sql("SUM(net_amount) DESC"))
-                             .limit(10)
-                             .pluck(Expense::SUPPLIER_NAME, Arel.sql("MAX(supplier_cnpj_cpf)"),
-                                    Arel.sql("SUM(net_amount)"), Arel.sql("COUNT(*)"))
+    @top_suppliers = breakdown.top_suppliers
 
-    @expenses = paginate(filtered_expenses(expenses).order(document_date: :desc, id: :desc))
+    @expenses = paginate(DeputyExpenseBreakdown.new(filtered_expenses(expenses)).notes)
     @suppliers = Supplier.where(cnpj: @expenses.map { |e| Supplier.normalize_value_for(:cnpj, e.supplier_cnpj_cpf) })
                          .index_by(&:cnpj)
   end
@@ -236,21 +236,15 @@ class DeputiesController < ApplicationController
     @participation = @stats.vote_participation
     @alignment = @stats.party_alignment
     @vote_counts = @deputy.votes.group(:vote).count
-    @against_party_ids = @stats.against_party_poll_ids
-    @themes = themes_with_counts(DeputyThemeProfile.new(@deputy).votes_by_theme)
+    history = DeputyVoteHistory.new(@deputy, @stats)
+    @against_party_ids = history.against_party_ids
+    @themes = history.themes
 
     @vote_filter = params[:vote].presence
     @theme = Theme.find_by(slug: params[:theme]) if params[:theme].present?
 
-    votes = @deputy.votes.joins(:poll).includes(poll: :bill)
-    if @vote_filter == AGAINST_PARTY
-      votes = votes.where(poll_id: @against_party_ids)
-    elsif @vote_filter
-      votes = votes.where(vote: @vote_filter)
-    end
-    votes = votes.where(poll_id: PollTheme.where(theme: @theme).select(:poll_id)) if @theme
-    @votes = paginate(votes.order("polls.date DESC, votes.id DESC"))
-    @majorities = @stats.party_majorities(@votes.map(&:poll_id))
+    @votes = paginate(history.votes(filter: @vote_filter, theme: @theme))
+    @majorities = history.majorities(@votes.map(&:poll_id))
   end
 
   def load_promises

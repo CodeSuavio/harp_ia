@@ -1,3 +1,4 @@
+<% meta title: truncate(poll_summary(@poll), length: 60, separator: " "), description: "Votação de #{@poll.date&.strftime("%d/%m/%Y")} na Câmara dos Deputados: #{poll_summary(@poll)}" %>
 <section class="container py-5">
   <%= link_to "← Votações", polls_path, class: "small text-gold text-decoration-none fw-semibold" %>
 

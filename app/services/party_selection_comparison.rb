@@ -6,8 +6,38 @@
 # (governismo, coesão e disciplina não são bons nem ruins em si).
 class PartySelectionComparison
   Row = DeputyComparison::Row
+  # Partidos comparados de uma vez
+  LIMIT = 4
+
+  # Seções da página, na ordem em que aparecem. A página usa a legenda
+  # (reading) e a explicação (how); a Harpia recebe os mesmos textos, mais o
+  # tipo de gráfico (chart), para reconhecer a seção citada (PageGuide)
+  SECTIONS = {
+    "table" => {
+      title: "Comparação lado a lado",
+      chart: "tabela com uma coluna por partido escolhido e uma linha por indicador, marcando o melhor e o " \
+             "pior da linha",
+      reading: "Gastos menores, mais participação, mais projetos por deputado e mais mulheres candidatas " \
+               "contam como melhor. Governismo, coesão e disciplina não têm lado melhor."
+    },
+    "votes" => {
+      title: "Como votaram entre si",
+      chart: "lista dos pares de partidos escolhidos, com a % de votações em que as maiorias votaram igual",
+      how: "Nas votações em que as duas bancadas tiveram maioria (Sim ou Não), em quantas a maioria das duas " \
+           "foi a mesma. Só pares com ao menos #{PartyStats::AFFINITY_MIN_POLLS} votações em comum."
+    }
+  }.freeze
 
   attr_reader :parties
+
+  # Partidos escolhidos na listagem (ids na ordem da escolha), como a página
+  # monta a comparação: ignora ids vazios, desconhecidos e repetidos, até o
+  # limite (o da página, ou outro na consulta da Harpia)
+  def self.for(ids, comparison = PartyComparison.new, limit: LIMIT)
+    ids = Array(ids).compact_blank.first(limit).map(&:to_i)
+    rows = comparison.rows.index_by { |row| row.party.id }
+    new(rows.values_at(*ids).compact.uniq, comparison)
+  end
 
   # parties: [PartyComparison::Row] na ordem em que foram escolhidos
   def initialize(parties, comparison)

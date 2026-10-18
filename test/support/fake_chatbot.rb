@@ -3,6 +3,7 @@
 #   FakeChatbot.reply("Resposta")   # a IA responde com esse conteúdo
 #   FakeChatbot.reply("Escolha:", quick_replies: ["A", "B"]) # com opções de escolha em botões
 #   FakeChatbot.reply("Resposta", actions: [{ "type" => "link", "label" => "Ver", "value" => "/parties" }])
+#   FakeChatbot.reply("Resposta", records: [{ "type" => "party", "id" => 1, "name" => "PT" }]) # registros apresentados
 #   FakeChatbot.reply("Resposta", pause: 0.3) # o texto chega aos poucos, com pausas entre os pedaços
 #   FakeChatbot.fail!               # a IA lança um erro
 #   FakeChatbot.fail_midway!        # a IA lança um erro depois de escrever parte da resposta
@@ -19,7 +20,7 @@ module FakeChatbot
 
   # delay: segundos de espera, para observar o estado "processando" nos testes de sistema
   # pause: segundos entre os pedaços da resposta, para observar o texto parcial
-  def self.reply(content, out_of_scope: false, quick_replies: [], actions: [], delay: nil, pause: nil)
+  def self.reply(content, out_of_scope: false, quick_replies: [], actions: [], records: [], delay: nil, pause: nil) # rubocop:disable Metrics/ParameterLists
     choices = quick_replies.map { |text| { "type" => "question", "label" => text, "value" => text } }
     self.behavior = lambda do |stream|
       sleep(delay) if delay
@@ -27,7 +28,7 @@ module FakeChatbot
         stream.call(piece)
         sleep(pause) if pause
       end
-      { content: content, out_of_scope: out_of_scope, actions: actions + choices }
+      { content: content, out_of_scope: out_of_scope, actions: actions + choices, records: records }
     end
   end
 
@@ -53,7 +54,7 @@ module FakeChatbot
 
   # JSON no formato do ChatbotService::RESPONSE_SCHEMA, em pedaços
   def self.json_pieces(content, out_of_scope)
-    json = { content: content, out_of_scope: out_of_scope, acoes: [], quick_replies: [] }.to_json
+    json = { content: content, out_of_scope: out_of_scope, acoes: [], descobertas: [], quick_replies: [] }.to_json
     json.chars.each_slice((json.length / PIECES.to_f).ceil).map(&:join)
   end
 
